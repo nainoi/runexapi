@@ -1,0 +1,12 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - "~/runex-api:/upload"
+    container_name: runex-api
+    ports:
+      - "3006:3006"
+    tty: true

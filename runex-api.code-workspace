@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"go.useLanguageServer": true,
+		"go.languageServerFlags": [
+			"-logfile=/tmp/golsp.log",
+			"-rpc.trace"
+		],
+		"go.languageServerExperimentalFeatures": {
+			"format": true,
+			"autoComplete": true,
+			"rename": true,
+			"goToDefinition": true,
+			"hover": true,
+			"signatureHelp": true,
+			"goToTypeDefinition": true,
+			"goToImplementation": true,
+			"documentSymbols": true,
+			"workspaceSymbols": true,
+			"findReferences": true
+		}
+	}
+}
