@@ -9,6 +9,7 @@ import (
 	handle_activity "bitbucket.org/suthisakch/runex/api/v1/activity"
 	handle_admin "bitbucket.org/suthisakch/runex/api/v1/admin"
 	handle_banner "bitbucket.org/suthisakch/runex/api/v1/banner"
+	"bitbucket.org/suthisakch/runex/api/v1/board"
 	handle_category "bitbucket.org/suthisakch/runex/api/v1/category"
 	handle_coupon "bitbucket.org/suthisakch/runex/api/v1/coupon"
 	handle_event "bitbucket.org/suthisakch/runex/api/v1/event"
@@ -92,6 +93,7 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 	CouponRoute(route, connectionDB, middleware)
 	RunHistoryRoute(route, connectionDB, middleware)
 	AdminRoute(route, connectionDB, middleware)
+	BoardRoute(route, connectionDB, middleware)
 	//ImportDataRoute(route, connectionDB, middleware)
 }
 
@@ -262,7 +264,7 @@ func CouponRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jw
 	}
 }
 
-//Run history
+//RunHistoryRoute history
 func RunHistoryRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
 	runHistoryRepository := repository.RunHistoryRepositoryMongo{
 		ConnectionDB: connectionDB,
@@ -283,7 +285,26 @@ func RunHistoryRoute(route *gin.Engine, connectionDB *mongo.Database, middleware
 	}
 }
 
-//Run history
+//BoardRoute ready board
+func BoardRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+	boardRepository := repository.BoardRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	boardAPI := board.BoardAPI{
+		BoardRepository: &boardRepository,
+	}
+	api := route.Group("/api/v1/board")
+	{
+
+		api.Use(middleware.MiddlewareFunc())
+		{
+			api.GET("/ranking/:eventID", boardAPI.GetBoardByEvent)
+
+		}
+	}
+}
+
+//AdminRoute route
 func AdminRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
 	adminRepository := repository.AdminRepositoryMongo{
 		ConnectionDB: connectionDB,

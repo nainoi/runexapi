@@ -11,9 +11,9 @@ import (
 )
 
 //const db_host = "mongodb://localhost:27017"
-const db_host = "mongodb://farmme.in.th:27017"
+// const db_host = "mongodb://farmme.in.th:27017"
 
-// const db_host = "mongodb://runex.co:27017"
+const db_host = "mongodb://runex.co:27017"
 
 // const db_host = "mongodb://mongodb:27017"
 const db_user = "idever"
