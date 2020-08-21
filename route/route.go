@@ -11,11 +11,6 @@ import (
 	handle_banner "thinkdev.app/think/runex/runexapi/api/v1/banner"
 	"thinkdev.app/think/runex/runexapi/api/v1/board"
 
-	// handle_category "bitbucket.org/suthisakch/runex/api/v1/category"
-	// handle_coupon "bitbucket.org/suthisakch/runex/api/v1/coupon"
-	// handle_event "bitbucket.org/suthisakch/runex/api/v1/event"
-	// handle_runHistory "bitbucket.org/suthisakch/runex/api/v1/runhistory"
-
 	//handle_importData "bitbucket.org/suthisakch/runex/api/v1/importdata"
 	// handle_register "thinkdev.app/think/runex/runexapi/api/v1/register"
 	// "thinkdev.app/think/runex/runexapi/api/v1/uploads"
