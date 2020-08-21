@@ -1,11 +1,11 @@
 package routers
 
 import (
-	handle_activity "bitbucket.org/suthisakch/runex/api/v1/activity"
-	handle_event "bitbucket.org/suthisakch/runex/api/v1/event"
-	"bitbucket.org/suthisakch/runex/repository"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	handle_activity "thinkdev.app/think/runex/runexapi/api/v1/activity"
+	handle_event "thinkdev.app/think/runex/runexapi/api/v1/event"
+	"thinkdev.app/think/runex/runexapi/repository"
 )
 
 func EventRoute(route *gin.Engine, connectionDB *mongo.Database) {

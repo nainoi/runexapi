@@ -5,13 +5,12 @@ import (
 	// "log"
 	// "net/http"
 
-	// "bitbucket.org/suthisakch/runex/model"
-	// "bitbucket.org/suthisakch/runex/pkg/app"
-	// "bitbucket.org/suthisakch/runex/pkg/e"
-	"bitbucket.org/suthisakch/runex/repository"
+	// "thinkdev.app/think/runex/runexapi/model"
+	// "thinkdev.app/think/runex/runexapi/pkg/app"
+	// "thinkdev.app/think/runex/runexapi/pkg/e"
+	"thinkdev.app/think/runex/runexapi/repository"
 	// "github.com/gin-gonic/gin"
 	// "go.mongodb.org/mongo-driver/bson/primitive"
-
 	// "github.com/360EntSecGroup-Skylar/excelize"
 )
 

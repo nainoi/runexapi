@@ -10,11 +10,11 @@ import (
 	"os"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/config/db"
-	routes "bitbucket.org/suthisakch/runex/route"
+	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/config/db"
+	routes "thinkdev.app/think/runex/runexapi/route"
 
-	//routes2 "bitbucket.org/suthisakch/runex/routers"
+	//routes2 "thinkdev.app/think/runex/runexapi/routers"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -23,9 +23,9 @@ import (
 
 	//"github.com/swaggo/swag" // gin-swagger middleware
 	// swagger embed files
-	_ "bitbucket.org/suthisakch/runex/docs"
 	"github.com/gin-contrib/cors"
-	//"bitbucket.org/suthisakch/runex/middleware"
+	_ "thinkdev.app/think/runex/runexapi/docs"
+	//"thinkdev.app/think/runex/runexapi/middleware"
 )
 
 // type key string

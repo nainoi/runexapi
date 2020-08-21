@@ -4,13 +4,13 @@ import (
 	"log"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/api/v1/user"
-	config "bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/model"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	//"bitbucket.org/suthisakch/runex/repository"
+	"thinkdev.app/think/runex/runexapi/api/v1/user"
+	config "thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/model"
+	//"thinkdev.app/think/runex/runexapi/repository"
 )
 
 var api user.UserAPI
@@ -21,8 +21,8 @@ func Auth(userApi user.UserAPI) *jwt.GinJWTMiddleware {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "test zone",
 		Key:         []byte(config.SECRET_KEY),
-		Timeout:     time.Hour* 72 * 24 * 365,
-		MaxRefresh:  time.Hour* 72 * 24 * 365,
+		Timeout:     time.Hour * 72 * 24 * 365,
+		MaxRefresh:  time.Hour * 72 * 24 * 365,
 		IdentityKey: config.ID_KEY,
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(*model.UserAuth); ok {
@@ -64,7 +64,7 @@ func Auth(userApi user.UserAPI) *jwt.GinJWTMiddleware {
 				}
 				//log.Println(user)
 				return &user, nil
-			}else{
+			} else {
 				user, err := userApi.LoginPD(c)
 				if err != nil {
 					return "", jwt.ErrMissingLoginValues
@@ -84,8 +84,8 @@ func Auth(userApi user.UserAPI) *jwt.GinJWTMiddleware {
 		},
 		Unauthorized: func(c *gin.Context, code int, message string) {
 			c.JSON(code, gin.H{
-				"code":    code,
-				"msg": message,
+				"code": code,
+				"msg":  message,
 			})
 		},
 		// TokenLookup is a string in the form of "<source>:<name>" that is used

@@ -5,14 +5,14 @@ import (
 	"log"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/model"
-	"bitbucket.org/suthisakch/runex/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"golang.org/x/crypto/bcrypt"
+	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/utils"
 )
 
 type UserRepository interface {
@@ -37,7 +37,7 @@ type UserRepository interface {
 	AddAddress(userID string, address model.Address) (model.User, error)
 	UpdateAddress(userID string, address model.Address) (model.User, error)
 	ChangePassword(userID string, oldPassword string, newPassword string) error
-	ForgotPassword(email string,) (model.UserForgot ,error)
+	ForgotPassword(email string) (model.UserForgot, error)
 	UpdatePassword(userID string, newPassword string) error
 }
 
@@ -367,9 +367,9 @@ func (userMongo UserRepositoryMongo) UpdatePassword(userID string, newPassword s
 }
 
 //ForgotPassword api change password
-func (userMongo UserRepositoryMongo) ForgotPassword(email string,) (model.UserForgot ,error) {
+func (userMongo UserRepositoryMongo) ForgotPassword(email string) (model.UserForgot, error) {
 	var user model.UserForgot
 	filter := bson.D{{"email", email}}
 	err := userMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
-	return user,err
+	return user, err
 }

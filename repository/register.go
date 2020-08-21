@@ -6,15 +6,16 @@ import (
 	"log"
 	"math"
 	"time"
-	"bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/model"
+
 	"github.com/omise/omise-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/model"
 
-	"bitbucket.org/suthisakch/runex/api/mail"
+	"thinkdev.app/think/runex/runexapi/api/mail"
 )
 
 type RegisterRepository interface {
@@ -305,13 +306,13 @@ func (registerMongo RegisterRepositoryMongo) AdminNotifySlipRegister(registerID 
 	var register model.Register
 	err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filter).Decode(&register)
 	paymentType := config.PAYMENT_TRANSFER
-	if( err == nil){
+	if err == nil {
 		if register.PaymentType != "" {
 			paymentType = register.PaymentType
 		}
 	}
 
-	updated := bson.M{"$set": bson.M{"slip": slip, "status": config.PAYMENT_WAITING_APPROVE, "payment_type" : paymentType, "updated_at": time.Now()}}
+	updated := bson.M{"$set": bson.M{"slip": slip, "status": config.PAYMENT_WAITING_APPROVE, "payment_type": paymentType, "updated_at": time.Now()}}
 
 	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {

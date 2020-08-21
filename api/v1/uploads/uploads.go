@@ -13,13 +13,13 @@ import (
 	"strings"
 
 	//"bitbucket.org/suthisakch/evenex/pkg/upload"
-	config "bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/pkg/app"
-	"bitbucket.org/suthisakch/runex/pkg/e"
-	"bitbucket.org/suthisakch/runex/utils"
 	"github.com/gin-gonic/gin"
 	guuid "github.com/google/uuid"
 	"github.com/nfnt/resize"
+	config "thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/pkg/app"
+	"thinkdev.app/think/runex/runexapi/pkg/e"
+	"thinkdev.app/think/runex/runexapi/utils"
 )
 
 // GetImageFullUrl get the full access path

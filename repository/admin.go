@@ -5,17 +5,17 @@ import (
 	"log"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 type AdminRepository interface {
 	EditShppingAddress(registerID string, shippingAddress model.ShipingAddressUpdateForm) error
 	UpdateSlip(slipUpdate model.SlipUpdateForm, updateBy string) error
 	GetSlipByReg(regID string) (model.SlipHistory, error)
-	GetRegEventByID(regID string) (model.Register, error) 
+	GetRegEventByID(regID string) (model.Register, error)
 }
 
 type AdminRepositoryMongo struct {

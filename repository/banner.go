@@ -6,10 +6,10 @@ import (
 	"log"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 type BannerRepository interface {
