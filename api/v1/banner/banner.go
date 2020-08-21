@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"bitbucket.org/suthisakch/runex/model"
-	"bitbucket.org/suthisakch/runex/pkg/app"
-	"bitbucket.org/suthisakch/runex/pkg/e"
-	"bitbucket.org/suthisakch/runex/repository"
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/pkg/app"
+	"thinkdev.app/think/runex/runexapi/pkg/e"
+	"thinkdev.app/think/runex/runexapi/repository"
 
-	"bitbucket.org/suthisakch/runex/api/mail"
+	"thinkdev.app/think/runex/runexapi/api/mail"
 )
 
 type BannerAPI struct {

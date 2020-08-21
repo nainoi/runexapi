@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	// "github.com/gin-gonic/gin"
-	config "bitbucket.org/suthisakch/runex/config"
 	"golang.org/x/crypto/bcrypt"
+	config "thinkdev.app/think/runex/runexapi/config"
 )
 
 // HashAndSalt hash password user

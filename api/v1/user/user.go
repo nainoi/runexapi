@@ -9,18 +9,18 @@ import (
 
 	guuid "github.com/google/uuid"
 
-	config "bitbucket.org/suthisakch/runex/config"
+	config "thinkdev.app/think/runex/runexapi/config"
 	//"github.com/appleboy/gin-jwt/v2"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin/binding"
 
-	"bitbucket.org/suthisakch/runex/api/mail"
-	"bitbucket.org/suthisakch/runex/model"
-	"bitbucket.org/suthisakch/runex/pkg/app"
-	"bitbucket.org/suthisakch/runex/pkg/e"
-	"bitbucket.org/suthisakch/runex/repository"
-	"bitbucket.org/suthisakch/runex/utils"
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/api/mail"
+	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/pkg/app"
+	"thinkdev.app/think/runex/runexapi/pkg/e"
+	"thinkdev.app/think/runex/runexapi/repository"
+	"thinkdev.app/think/runex/runexapi/utils"
 	//jwt "github.com/dgrijalva/jwt-go"
 	//"golang.org/x/crypto/bcrypt"
 )
@@ -454,5 +454,5 @@ func (api UserAPI) ForgotPasswordMobile(context *gin.Context) {
 		appG.Response(http.StatusInternalServerError, e.ERROR, gin.H{"message": "Can not send email."})
 		return
 	}
-	appG.Response(http.StatusOK, e.SUCCESS, gin.H{"message": e.SUCCESS, "data":token})
+	appG.Response(http.StatusOK, e.SUCCESS, gin.H{"message": e.SUCCESS, "data": token})
 }

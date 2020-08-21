@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
-	"bitbucket.org/suthisakch/runex/config"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"thinkdev.app/think/runex/runexapi/config"
 )
 
 //const db_host = "mongodb://localhost:27017"

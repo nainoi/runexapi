@@ -8,10 +8,10 @@ import (
 	"path"
 	"strings"
 
-	config "bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/pkg/file"
 	"github.com/EDDYCJY/go-gin-example/pkg/logging"
 	guuid "github.com/google/uuid"
+	config "thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/pkg/file"
 )
 
 // GetImageFullUrl get the full access path

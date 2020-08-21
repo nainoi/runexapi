@@ -9,15 +9,15 @@ import (
 
 	guuid "github.com/google/uuid"
 
-	//handle_user "bitbucket.org/suthisakch/runex/api/v1/user"
-	"bitbucket.org/suthisakch/runex/repository"
-	"bitbucket.org/suthisakch/runex/utils"
+	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"thinkdev.app/think/runex/runexapi/repository"
+	"thinkdev.app/think/runex/runexapi/utils"
 
-	"bitbucket.org/suthisakch/runex/model"
-	"bitbucket.org/suthisakch/runex/pkg/app"
-	"bitbucket.org/suthisakch/runex/pkg/e"
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/pkg/app"
+	"thinkdev.app/think/runex/runexapi/pkg/e"
 )
 
 type EventAPI struct {

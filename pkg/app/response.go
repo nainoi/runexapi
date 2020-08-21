@@ -1,8 +1,8 @@
 package app
 
 import (
-	"bitbucket.org/suthisakch/runex/pkg/e"
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/pkg/e"
 )
 
 type Gin struct {
