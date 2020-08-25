@@ -9,11 +9,11 @@ import (
 	"text/template"
 	"time"
 
-	config "bitbucket.org/suthisakch/runex/config"
-	"bitbucket.org/suthisakch/runex/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jordan-wright/email"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	config "thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 //SendWithGmail with gmail mail server
@@ -112,7 +112,7 @@ func SendRegRaceRun(data model.EmailTemplateData2) {
 		e.To = []string{data.Email}
 		//e.Bcc = []string{"test_bcc@example.com"}
 		//e.Cc = []string{"test_cc@example.com"}
-		e.Subject = "ลงทะเบียน "+ data.EventName
+		e.Subject = "ลงทะเบียน " + data.EventName
 		//e.Text = []byte("Welcome to Runex\n")
 		e.HTML = []byte(r.body)
 		err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "runex.contact@gmail.com", "zkwzkunlbfmesyvd", "smtp.gmail.com"))

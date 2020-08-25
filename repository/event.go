@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	"bitbucket.org/suthisakch/runex/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 type EventRepository interface {
@@ -43,7 +43,7 @@ type EventRepositoryMongo struct {
 
 const (
 	eventCollection = "event"
-	ebibCollection = "ebib"
+	ebibCollection  = "ebib"
 )
 
 func (eventMongo EventRepositoryMongo) AddEvent(event model.Event) (string, error) {
@@ -61,7 +61,7 @@ func (eventMongo EventRepositoryMongo) AddEvent(event model.Event) (string, erro
 	ebib.LastNo = 0
 	ebib.CreatedAt = time.Now()
 	ebib.UpdatedAt = time.Now()
-	eventMongo.ConnectionDB.Collection(ebibCollection).InsertOne(context.TODO(),ebib)
+	eventMongo.ConnectionDB.Collection(ebibCollection).InsertOne(context.TODO(), ebib)
 
 	fmt.Println("Inserted a single document: ", res.InsertedID)
 	return res.InsertedID.(primitive.ObjectID).Hex(), err

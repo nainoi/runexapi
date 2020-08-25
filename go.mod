@@ -1,4 +1,4 @@
-module bitbucket.org/suthisakch/runex
+module thinkdev.app/think/runex/runexapi
 
 go 1.12
 
