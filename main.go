@@ -12,6 +12,7 @@ import (
 
 	"bitbucket.org/suthisakch/runex/config"
 	"bitbucket.org/suthisakch/runex/config/db"
+	"bitbucket.org/suthisakch/runex/docs"
 	routes "bitbucket.org/suthisakch/runex/route"
 
 	//routes2 "bitbucket.org/suthisakch/runex/routers"
@@ -25,6 +26,7 @@ import (
 	// swagger embed files
 	_ "bitbucket.org/suthisakch/runex/docs"
 	"github.com/gin-contrib/cors"
+	//"./docs"
 	//"bitbucket.org/suthisakch/runex/middleware"
 )
 
@@ -67,7 +69,17 @@ func main() {
 
 	//routes.ProjectRoute(router, database)
 	routes.Route(router, database)
+
+	docs.SwaggerInfo.Title = "Swagger Example API"
+	docs.SwaggerInfo.Description = "This is a sample server Petstore server."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "petstore.swagger.io"
+	docs.SwaggerInfo.BasePath = "/v2"
+	docs.SwaggerInfo.Schemes = []string{"http", "https"}
+
+	//url := ginSwagger.URL("http://localhost:3006/swg/api_v2.json")
 	router.GET("/swg/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
 	// use ginSwagger middleware to serve the API docs
 	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//router.Static("/upload", "./upload")
