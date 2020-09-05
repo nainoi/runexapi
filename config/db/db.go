@@ -10,13 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
-	"thinkdev.app/think/runex/runexapi/logger"
+	//"thinkdev.app/think/runex/runexapi/logger"
 )
 
-//const db_host = "mongodb://localhost:27017"
+const db_host = "mongodb://localhost:27017"
+
 // const db_host = "mongodb://farmme.in.th:27017"
 
-const db_host = "mongodb://178.128.85.151:27017"
+// const db_host = "mongodb://178.128.85.151:27017"
 
 // const db_host = "mongodb://mongodb:27017"
 const db_user = "idever"
@@ -33,7 +34,7 @@ func GetEnv(key, fallback string) string {
 		return value
 	}
 
-	logger.Logger.Info("Setting default values for ENV variable " + key)
+	//logger.Logger.Info("Setting default values for ENV variable " + key)
 	return fallback
 }
 
@@ -55,7 +56,7 @@ func GetDBCollection() (*mongo.Database, error) {
 		log.Print("can't connect database!!!")
 		return nil, err
 	}
-	db := client.Database("Runex")
+	db := client.Database("runex_v2")
 	return db, nil
 }
 
@@ -75,25 +76,36 @@ func connectDB(ctx context.Context) (*mongo.Database, error) {
 
 func ConnectRedisDB() *redis.Client {
 
-	redisHost := GetEnv("REDIS_HOST", "0.0.0.0")
+	redisHost := GetEnv("REDIS_HOST", "localhost")
 	redisPort := GetEnv("REDIS_PORT", "6379")
-	redisPassword := GetEnv("REDIS_PASSWORD", "secret")
+	//redisPassword := GetEnv("REDIS_PASSWORD", "__@redis__P@ss")
 
 	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: redisPassword,
+		Password: "__@redis__P@ss",
 		DB:       0,
 	})
 
-	pong, err := RedisClient.Ping(context.TODO()).Result()
-	logger.Logger.Infof("Reply from Redis %s", pong)
+	_, err := RedisClient.Ping(context.TODO()).Result()
+	//logger.Logger.Infof("Reply from Redis %s", pong)
 	if err != nil {
-		//fmt.Errorf(err.Error())
-		logger.Logger.Fatalf("Failed connecting to redis db %s", err.Error())
+		fmt.Println(err.Error())
+		//logger.Logger.Fatalf("Failed connecting to redis db %s", err.Error())
 		os.Exit(1)
 	}
-	logger.Logger.Infof("Successfully connected to redis database")
+	//logger.Logger.Infof("Successfully connected to redis database")
 	return RedisClient
+}
+
+// CloseDB accepst Session as input to close Connection to the database
+func CloseDB(s *mongo.Database) {
+
+	err := s.Client().Disconnect(context.TODO())
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("Connection to MongoDB closed.")
 }

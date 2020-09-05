@@ -8,6 +8,7 @@ const ID_KEY = "id"
 const ROLE_KEY = "role"
 const PF = "pf"
 const SECRET_KEY = "RUN#987%Ex@IdevEr"
+const RE_SECRET_KEY = "RUN#987%Ex@IdevErThink@2019"
 
 const UPLOAD_IMAGE = "/upload/image/event/"
 const UPLOAD_AVATAR = "/upload/image/profile/"
