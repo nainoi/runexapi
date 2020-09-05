@@ -4,10 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
 
+	redis "github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/logger"
 )
 
 //const db_host = "mongodb://localhost:27017"
@@ -18,6 +21,21 @@ const db_host = "mongodb://178.128.85.151:27017"
 // const db_host = "mongodb://mongodb:27017"
 const db_user = "idever"
 const db_pass = "idever@987"
+
+var (
+	RedisClient *redis.Client
+)
+
+// GetEnv accepts the ENV as key and a default string
+// If the lookup returns false then it uses the default string else it leverages the value set in ENV variable
+func GetEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+
+	logger.Logger.Info("Setting default values for ENV variable " + key)
+	return fallback
+}
 
 func GetDBCollection() (*mongo.Database, error) {
 
@@ -53,4 +71,29 @@ func connectDB(ctx context.Context) (*mongo.Database, error) {
 	}
 	db := client.Database(config.DB_NAME)
 	return db, nil
+}
+
+func ConnectRedisDB() *redis.Client {
+
+	redisHost := GetEnv("REDIS_HOST", "0.0.0.0")
+	redisPort := GetEnv("REDIS_PORT", "6379")
+	redisPassword := GetEnv("REDIS_PASSWORD", "secret")
+
+	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: redisPassword,
+		DB:       0,
+	})
+
+	pong, err := RedisClient.Ping(context.TODO()).Result()
+	logger.Logger.Infof("Reply from Redis %s", pong)
+	if err != nil {
+		//fmt.Errorf(err.Error())
+		logger.Logger.Fatalf("Failed connecting to redis db %s", err.Error())
+		os.Exit(1)
+	}
+	logger.Logger.Infof("Successfully connected to redis database")
+	return RedisClient
 }
