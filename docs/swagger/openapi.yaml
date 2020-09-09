@@ -1,0 +1,587 @@
+openapi: 3.0.2
+info:
+  title: API Title
+  version: 1.0.0
+servers:
+- url: https://virtserver.swaggerhub.com/IDEV7/runex/1.0.0
+  description: SwaggerHub API Auto Mocking
+- url: https://localhost:3006/api/v1
+paths: {}
+components:
+  schemas:
+    ticket_type:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: category id
+          format: hexadecimal
+        name:
+          type: string
+          description: category name
+        description:
+          type: string
+          description: category description
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    activity:
+      type: object
+      properties:
+        event_id:
+          type: string
+          description: event id is customer register
+          format: hexadecimal
+        activities:
+          $ref: '#/components/schemas/activity_activities'
+    workouts:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: id
+          format: hexadecimal
+        user_id:
+          type: string
+          description: user id customer
+          format: hexadecimal
+        activity_info:
+          type: array
+          description: my workout list
+          items:
+            $ref: '#/components/schemas/workouts_activity_info'
+    category:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: category id
+          format: hexadecimal
+        name:
+          type: string
+          description: category name
+        description:
+          type: string
+          description: category description
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    coupon:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: register id
+          format: hexadecimal
+        sale_id:
+          type: string
+          description: register id
+          format: hexadecimal
+        discount:
+          type: number
+          description: discount price
+        coupon_code:
+          type: string
+          description: coupon code item
+        description:
+          type: string
+          description: description detail coupon
+        active:
+          type: boolean
+          description: status for enable disable
+        start_date:
+          type: string
+          description: dated for start use
+          format: datetime
+        end_date:
+          type: string
+          format: expire dated
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    register_user:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: register id
+          format: hexadecimal
+        user_id:
+          type: string
+          description: register user id
+          format: hexadecimal
+        status:
+          type: string
+          description: register status
+        payment_type:
+          type: string
+          description: payment method
+        total_price:
+          type: number
+          description: total price
+        discount_price:
+          type: number
+          description: discount price
+        promo_code:
+          type: string
+          description: promo code
+        reg_date:
+          type: string
+          description: register dated
+          format: datetime
+        payment_date:
+          type: string
+          description: payment dated
+          format: datetime
+        register_number:
+          type: string
+          description: number is running user register
+        coupon:
+          $ref: '#/components/schemas/coupon'
+        ticket_options:
+          $ref: '#/components/schemas/register_user_ticket_options'
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    register:
+      type: object
+      properties:
+        event_id:
+          type: string
+          description: event id is key
+          format: hexadecimal
+        regs:
+          type: array
+          description: users register event
+          items:
+            $ref: '#/components/schemas/register_user'
+    product:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: hexadecimal
+        name:
+          type: string
+          description: product name
+        image:
+          type: array
+          description: product images
+          items:
+            $ref: '#/components/schemas/product_image'
+        detail:
+          type: string
+          description: product detail
+        status:
+          type: string
+          description: product status
+        reuse:
+          type: boolean
+          description: value for selected once or not
+        is_show:
+          type: boolean
+          description: value for show on selected ticket
+        sizes:
+          type: array
+          description: size of porduct
+          items:
+            $ref: '#/components/schemas/product_sizes'
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    ticket:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: hexadecimal
+        title:
+          type: string
+          description: ticket name
+        price:
+          type: number
+          description: ticket price
+        description:
+          type: string
+        currency:
+          type: string
+          description: currency
+        ticket_type:
+          type: string
+          description: ticket type are single, team etc.
+        team:
+          type: integer
+          description: Number of people
+        quantity:
+          type: integer
+          description: quantity register limit
+        distance:
+          type: number
+          description: running distance
+        products:
+          type: array
+          description: product in ticket
+          items:
+            $ref: '#/components/schemas/product'
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    event:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: hexadecimal
+        name:
+          type: string
+        description:
+          type: string
+        body:
+          type: string
+          description: editor build and draft content
+          format: json string
+        cover:
+          type: string
+          description: cover image
+        cover_thumb:
+          type: array
+          description: cover images multiples size
+          items: {}
+        category:
+          type: string
+        slug:
+          type: string
+          description: slug name
+        tickets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ticket'
+        owner_id:
+          type: string
+          description: event owner
+          format: hexadecimal
+        status:
+          type: string
+        location:
+          type: string
+          description: event location
+        receive_location:
+          type: string
+          description: location reciept product for real run
+        is_active:
+          type: boolean
+          description: disable or enable
+        is_free:
+          type: boolean
+          description: event is free!
+        start_reg:
+          type: string
+          description: day for start register event
+          format: datetime
+        end_reg:
+          type: string
+          description: day for end register event
+          format: datetime
+        start_event:
+          type: string
+          description: day for start event
+          format: datetime
+        end_event:
+          type: string
+          description: day for end event
+          format: datetime
+        inapp:
+          type: boolean
+          description: use app runex workout and send activity only
+        is_post:
+          type: boolean
+          description: have shipping
+        post_end_date:
+          type: string
+          description: end date selected shipping
+          format: datetime
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    user:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: hexadecimal
+        email:
+          type: string
+        provider:
+          type: array
+          items:
+            $ref: '#/components/schemas/user_provider'
+        fullname:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        firstname_th:
+          type: string
+        lastname_th:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        avatar:
+          type: string
+        role:
+          type: string
+        birthdate:
+          type: string
+        gender:
+          type: string
+        emergency_contact:
+          type: string
+        emergency_phone:
+          type: string
+        nationality:
+          type: string
+        passport:
+          type: string
+        citycen_id:
+          type: string
+        blood_type:
+          type: string
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+        address:
+          type: array
+          xml:
+            name: tag
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/address'
+        events:
+          type: array
+          description: my register event
+          items:
+            $ref: '#/components/schemas/user_events'
+      description: user collection is store user profile data
+    address:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: hexadecimal
+        address:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+        city:
+          type: string
+        zipcode:
+          type: string
+      xml:
+        name: address
+    activity_activities_activity_info:
+      properties:
+        _id:
+          type: string
+          description: activity list item id
+          format: hexadecimal
+        distance:
+          type: number
+          description: activity distance
+        img_url:
+          type: string
+          description: distance by onc
+        activity_date:
+          type: string
+          description: workout date
+          format: datetime
+        created_at:
+          type: string
+          format: datetime
+        updated_at:
+          type: string
+          format: datetime
+    activity_activities:
+      type: object
+      properties:
+        user_id:
+          type: string
+          description: user id customer
+          format: hexadecimal
+        total_distance:
+          type: number
+          description: total distance in event
+        activity_info:
+          type: array
+          description: activity list
+          items:
+            $ref: '#/components/schemas/activity_activities_activity_info'
+    workouts_activity_info:
+      properties:
+        _id:
+          type: string
+          description: workout list id
+          format: hexadecimal
+        activitytype:
+          type: string
+          description: workout type
+        calory:
+          type: number
+          description: calory value
+        caption:
+          type: string
+          description: workout caption
+        distance:
+          type: number
+          description: workout distance value
+        pace:
+          type: number
+          description: pace value
+        time:
+          type: number
+          description: workout time value
+        activity_date:
+          type: string
+          description: workout date
+          format: datetime
+        image_path:
+          type: string
+          description: image path url
+        gpx_data:
+          type: object
+          properties: {}
+          description: gpx data from workout tracking
+    register_user_ticket_options_user_option:
+      type: object
+      properties:
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        firstname_th:
+          type: string
+        lastname_th:
+          type: string
+        phone:
+          type: string
+        birthdate:
+          type: string
+        gender:
+          type: string
+        emergency_contact:
+          type: string
+        emergency_phone:
+          type: string
+        nationality:
+          type: string
+        passport:
+          type: string
+        citycen_id:
+          type: string
+        blood_type:
+          type: string
+        address:
+          type: array
+          items:
+            $ref: '#/components/schemas/address'
+      description: personal data and ticket
+    register_user_ticket_options_tickets:
+      properties:
+        ticket_id:
+          type: string
+          description: event id is key
+          format: hexadecimal
+        ticket_name:
+          type: string
+          description: event id is key
+        distance:
+          type: number
+          description: register distance
+        total_price:
+          type: number
+          description: total price
+        type:
+          type: string
+          description: type product
+        remark:
+          type: string
+          description: type product
+        product:
+          type: array
+          description: product selected
+          items:
+            $ref: '#/components/schemas/product'
+    register_user_ticket_options:
+      type: object
+      properties:
+        user_option:
+          $ref: '#/components/schemas/register_user_ticket_options_user_option'
+        total_price:
+          type: number
+          description: total price
+        register_number:
+          type: string
+          description: number is running user register
+        reciept_type:
+          type: string
+          description: type of reciept product
+        tickets:
+          type: array
+          description: user selected there ticket
+          items:
+            $ref: '#/components/schemas/register_user_ticket_options_tickets'
+      description: personal data and ticket
+    product_image:
+      properties:
+        path_url:
+          type: string
+          description: image url
+    product_sizes:
+      properties:
+        name:
+          type: string
+          description: size name
+        remark:
+          type: string
+          description: size remark
+    user_provider:
+      properties:
+        provider_name:
+          type: string
+        provider_id:
+          type: string
+    user_events:
+      properties:
+        event_id:
+          type: string
+          format: hexadecimal

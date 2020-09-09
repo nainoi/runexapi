@@ -70,7 +70,18 @@ func (api API) VerifyAuthToken(c *gin.Context) {
 	res.Response(http.StatusOK, "Token Valid. User Authorized", nil)
 }
 
-// RefreshAccessToken method creates a new access_token, when the user provides an unexpired and validrefresh_token
+// Paths Information
+
+// RefreshAccessToken godoc
+// @Summary Provides a JSON Web Token
+// @Description Authenticates a user and provides a JWT to refresh Authorize API calls
+// @ID Authentication
+// @Consume application/x-www-form-urlencoded
+// @Produce json
+// @Param refresh_token formData string true "RefreshToken"
+// @Success 200 {object} response.ResponseOAuth
+// @Failure 401 {object} response.Response
+// @Router /refreshAccessToken [post]
 func (api API) RefreshAccessToken(c *gin.Context) {
 
 	var tokenRequest oauth.RefreshTokenRequestBody
@@ -124,7 +135,13 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 			c.Abort()
 			return
 		}
-		res.Response(http.StatusOK, "success", gin.H{"access_token": newToken, "refresh_token": tokenRequest.RefreshToken})
+		var (
+			responseJWT = response.ResponseOAuth{
+				AccessToken: newToken,
+				RefreshToken: tokenRequest.RefreshToken,
+			}
+		)
+		res.Response(http.StatusOK, "success", responseJWT)
 		c.Abort()
 		return
 	}

@@ -1,0 +1,44 @@
+definitions:
+  response.Response:
+    properties:
+      code:
+        type: integer
+      data:
+        type: object
+      msg:
+        type: string
+    type: object
+  response.ResponseOAuth:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+info:
+  contact: {}
+  license: {}
+paths:
+  /refreshAccessToken:
+    post:
+      description: Authenticates a user and provides a JWT to refresh Authorize API calls
+      operationId: Authentication
+      parameters:
+      - description: RefreshToken
+        in: formData
+        name: refresh_token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseOAuth'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Provides a JSON Web Token
+swagger: "2.0"

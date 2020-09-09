@@ -1,0 +1,786 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "API Title",
+    "version": "1.0"
+  },
+  "servers": [{ "url": "https://api.server.test/v1" }],
+  "components": {
+    "schemas": {
+      "ticket_type": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "category id"
+          },
+          "name": {
+            "type": "string",
+            "description": "category name"
+          },
+          "description": {
+            "type": "string",
+            "description": "category description"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "activity": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "event id is customer register"
+          },
+          "activities": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "format": "hexadecimal",
+                "description": "user id customer"
+              },
+              "total_distance": {
+                "type": "number",
+                "description": "total distance in event"
+              },
+              "activity_info": {
+                "type": "array",
+                "description": "activity list",
+                "items": {
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "format": "hexadecimal",
+                      "description": "activity list item id"
+                    },
+                    "distance": {
+                      "type": "number",
+                      "description": "activity distance"
+                    },
+                    "img_url": {
+                      "type": "string",
+                      "description": "distance by onc"
+                    },
+                    "activity_date": {
+                      "type": "string",
+                      "format": "datetime",
+                      "description": "workout date"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "datetime"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "datetime"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "workouts": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "user id customer"
+          },
+          "activity_info": {
+            "type": "array",
+            "description": "my workout list",
+            "items": {
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "format": "hexadecimal",
+                  "description": "workout list id"
+                },
+                "activitytype": {
+                  "type": "string",
+                  "description": "workout type"
+                },
+                "calory": {
+                  "type": "number",
+                  "description": "calory value"
+                },
+                "caption": {
+                  "type": "string",
+                  "description": "workout caption"
+                },
+                "distance": {
+                  "type": "number",
+                  "description": "workout distance value"
+                },
+                "pace": {
+                  "type": "number",
+                  "description": "pace value"
+                },
+                "time": {
+                  "type": "number",
+                  "description": "workout time value"
+                },
+                "activity_date": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "workout date"
+                },
+                "image_path": {
+                  "type": "string",
+                  "description": "image path url"
+                },
+                "gpx_data": {
+                  "type": "object",
+                  "description": "gpx data from workout tracking",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        }
+      },
+      "category": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "category id"
+          },
+          "name": {
+            "type": "string",
+            "description": "category name"
+          },
+          "description": {
+            "type": "string",
+            "description": "category description"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "coupon": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "register id"
+          },
+          "sale_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "register id"
+          },
+          "discount": {
+            "type": "number",
+            "description": "discount price"
+          },
+          "coupon_code": {
+            "type": "string",
+            "description": "coupon code item"
+          },
+          "description": {
+            "type": "string",
+            "description": "description detail coupon"
+          },
+          "active": {
+            "type": "boolean",
+            "description": "status for enable disable"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "datetime",
+            "description": "dated for start use"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "expire dated"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "register_user": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "register id"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "register user id"
+          },
+          "status": {
+            "type": "string",
+            "description": "register status"
+          },
+          "payment_type": {
+            "type": "string",
+            "description": "payment method"
+          },
+          "total_price": {
+            "type": "number",
+            "description": "total price"
+          },
+          "discount_price": {
+            "type": "number",
+            "description": "discount price"
+          },
+          "promo_code": {
+            "type": "string",
+            "description": "promo code"
+          },
+          "reg_date": {
+            "type": "string",
+            "format": "datetime",
+            "description": "register dated"
+          },
+          "payment_date": {
+            "type": "string",
+            "format": "datetime",
+            "description": "payment dated"
+          },
+          "register_number": {
+            "type": "string",
+            "description": "number is running user register"
+          },
+          "coupon": {
+            "$ref": "#/components/schemas/coupon",
+            "description": "coupon object data"
+          },
+          "ticket_options": {
+            "type": "object",
+            "description": "personal data and ticket",
+            "properties": {
+              "user_option": {
+                "type": "object",
+                "description": "personal data and ticket",
+                "properties": {
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstname": {
+                    "type": "string"
+                  },
+                  "lastname": {
+                    "type": "string"
+                  },
+                  "firstname_th": {
+                    "type": "string"
+                  },
+                  "lastname_th": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "birthdate": {
+                    "type": "string"
+                  },
+                  "gender": {
+                    "type": "string"
+                  },
+                  "emergency_contact": {
+                    "type": "string"
+                  },
+                  "emergency_phone": {
+                    "type": "string"
+                  },
+                  "nationality": {
+                    "type": "string"
+                  },
+                  "passport": {
+                    "type": "string"
+                  },
+                  "citycen_id": {
+                    "type": "string"
+                  },
+                  "blood_type": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/address"
+                    }
+                  }
+                }
+              },
+              "total_price": {
+                "type": "number",
+                "description": "total price"
+              },
+              "register_number": {
+                "type": "string",
+                "description": "number is running user register"
+              },
+              "reciept_type": {
+                "type": "string",
+                "description": "type of reciept product"
+              },
+              "tickets": {
+                "type": "array",
+                "description": "user selected there ticket",
+                "items": {
+                  "properties": {
+                    "ticket_id": {
+                      "type": "string",
+                      "format": "hexadecimal",
+                      "description": "event id is key"
+                    },
+                    "ticket_name": {
+                      "type": "string",
+                      "description": "event id is key"
+                    },
+                    "distance": {
+                      "type": "number",
+                      "description": "register distance"
+                    },
+                    "total_price": {
+                      "type": "number",
+                      "description": "total price"
+                    },
+                    "type": {
+                      "type": "string",
+                      "description": "type product"
+                    },
+                    "remark": {
+                      "type": "string",
+                      "description": "type product"
+                    },
+                    "product": {
+                      "type": "array",
+                      "description": "product selected",
+                      "items": {
+                        "$ref": "#/components/schemas/product"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "register": {
+        "type": "object",
+        "properties": {
+          "event_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "event id is key"
+          },
+          "regs": {
+            "type": "array",
+            "description": "users register event",
+            "items": {
+              "$ref": "#/components/schemas/register_user"
+            }
+          }
+        }
+      },
+      "product": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal"
+          },
+          "name": {
+            "type": "string",
+            "description": "product name"
+          },
+          "image": {
+            "type": "array",
+            "description": "product images",
+            "items": {
+              "properties": {
+                "path_url": {
+                  "type": "string",
+                  "description": "image url"
+                }
+              }
+            }
+          },
+          "detail": {
+            "type": "string",
+            "description": "product detail"
+          },
+          "status": {
+            "type": "string",
+            "description": "product status"
+          },
+          "reuse": {
+            "type": "boolean",
+            "description": "value for selected once or not"
+          },
+          "is_show": {
+            "type": "boolean",
+            "description": "value for show on selected ticket"
+          },
+          "sizes": {
+            "type": "array",
+            "description": "size of porduct",
+            "items": {
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "size name"
+                },
+                "remark": {
+                  "type": "string",
+                  "description": "size remark"
+                }
+              }
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "ticket": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal"
+          },
+          "title": {
+            "type": "string",
+            "description": "ticket name"
+          },
+          "price": {
+            "type": "number",
+            "description": "ticket price"
+          },
+          "description": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "description": "currency"
+          },
+          "ticket_type": {
+            "type": "string",
+            "description": "ticket type are single, team etc."
+          },
+          "team": {
+            "type": "integer",
+            "description": "Number of people"
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "quantity register limit"
+          },
+          "distance": {
+            "type": "number",
+            "description": "running distance"
+          },
+          "products": {
+            "type": "array",
+            "description": "product in ticket",
+            "$ref": "#/components/schemas/product"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "event": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "format": "json string",
+            "description": "editor build and draft content"
+          },
+          "cover": {
+            "type": "string",
+            "description": "cover image"
+          },
+          "cover_thumb": {
+            "type": "array",
+            "description": "cover images multiples size",
+            "items": {}
+          },
+          "category": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "slug name"
+          },
+          "tickets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ticket"
+            }
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "hexadecimal",
+            "description": "event owner"
+          },
+          "status": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "description": "event location"
+          },
+          "receive_location": {
+            "type": "string",
+            "description": "location reciept product for real run"
+          },
+          "is_active": {
+            "type": "boolean",
+            "description": "disable or enable"
+          },
+          "is_free": {
+            "type": "boolean",
+            "description": "event is free!"
+          },
+          "start_reg": {
+            "type": "string",
+            "format": "datetime",
+            "description": "day for start register event"
+          },
+          "end_reg": {
+            "type": "string",
+            "format": "datetime",
+            "description": "day for end register event"
+          },
+          "start_event": {
+            "type": "string",
+            "format": "datetime",
+            "description": "day for start event"
+          },
+          "end_event": {
+            "type": "string",
+            "format": "datetime",
+            "description": "day for end event"
+          },
+          "inapp": {
+            "type": "boolean",
+            "description": "use app runex workout and send activity only"
+          },
+          "is_post": {
+            "type": "boolean",
+            "description": "have shipping"
+          },
+          "post_end_date": {
+            "type": "string",
+            "format": "datetime",
+            "description": "end date selected shipping"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      },
+      "user": {
+        "type": "object",
+        "description": "user collection is store user profile data",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal"
+          },
+          "email": {
+            "type": "string"
+          },
+          "provider": {
+            "type": "array",
+            "items": {
+              "properties": {
+                "provider_name": {
+                  "type": "string"
+                },
+                "provider_id": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "fullname": {
+            "type": "string"
+          },
+          "firstname": {
+            "type": "string"
+          },
+          "lastname": {
+            "type": "string"
+          },
+          "firstname_th": {
+            "type": "string"
+          },
+          "lastname_th": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "birthdate": {
+            "type": "string"
+          },
+          "gender": {
+            "type": "string"
+          },
+          "emergency_contact": {
+            "type": "string"
+          },
+          "emergency_phone": {
+            "type": "string"
+          },
+          "nationality": {
+            "type": "string"
+          },
+          "passport": {
+            "type": "string"
+          },
+          "citycen_id": {
+            "type": "string"
+          },
+          "blood_type": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "address": {
+            "type": "array",
+            "xml": {
+              "name": "tag",
+              "wrapped": true
+            },
+            "items": {
+              "$ref": "#/components/schemas/address"
+            }
+          },
+          "events": {
+            "type": "array",
+            "description": "my register event",
+            "items": {
+              "properties": {
+                "event_id": {
+                  "type": "string",
+                  "format": "hexadecimal"
+                }
+              }
+            }
+          }
+        }
+      },
+      "address": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "hexadecimal"
+          },
+          "address": {
+            "type": "string"
+          },
+          "province": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "zipcode": {
+            "type": "string"
+          }
+        },
+        "xml": {
+          "name": "address"
+        }
+      }
+    }
+  },
+  "paths": {}
+}

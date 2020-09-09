@@ -15,9 +15,11 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/swag/example/celler/controller"
 
 	//"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
+	"thinkdev.app/think/runex/runexapi/docs"
 	"thinkdev.app/think/runex/runexapi/logger"
 	routes "thinkdev.app/think/runex/runexapi/route"
 
@@ -89,6 +91,15 @@ func main() {
 	// 	logger.InitLogger(f)
 	// }
 
+	// Swagger 2.0 Meta Information
+	docs.SwaggerInfo.Title = "Pragmatic Reviews - Video API"
+	docs.SwaggerInfo.Description = "Pragmatic Reviews - Youtube Video API."
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.Host = "pragmatic-video-app.herokuapp.com"
+	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Schemes = []string{"https"}
+
+
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
@@ -118,16 +129,40 @@ func main() {
 	//routes.ProjectRoute(router, database)
 	routes.Route(router, database)
 	routes.Router(router, database)
-	router.GET("/swg/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//url := ginSwagger.URL("http://localhost:3006/swagger/api_v2.json") // The url pointing to API definition
+	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	
 	// use ginSwagger middleware to serve the API docs
 	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//router.Static("/upload", "./upload")
+	//ro := openapi3filter.NewRouter().WithSwaggerFromFile("./docs/swg/swagger.json")
+	// swagger, err := openapi3.NewSwaggerLoader().LoadSwaggerFromFile("swagger.json")
+
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Static("/upload", "./upload")
 	router.LoadHTMLGlob("templates/*")
 	//init the loc
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
+
+	c := controller.NewController()
+
+	v1 := router.Group("/api/v1")
+	{
+		accounts := v1.Group("/accounts")
+		{
+			accounts.GET(":id", c.ShowAccount)
+			accounts.GET("", c.ListAccounts)
+			accounts.POST("", c.AddAccount)
+			accounts.DELETE(":id", c.DeleteAccount)
+			accounts.PATCH(":id", c.UpdateAccount)
+			accounts.POST(":id/images", c.UploadAccountImage)
+		}
+    //...
+	}
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	router.Run(":3006")
 
