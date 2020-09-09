@@ -29,6 +29,8 @@ import (
 	handle_event "thinkdev.app/think/runex/runexapi/api/v1/event"
 	handle_runHistory "thinkdev.app/think/runex/runexapi/api/v1/runHistory"
 
+	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
+
 	//handle_importData "thinkdev.app/think/runex/runexapi/api/v1/importdata"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -110,6 +112,7 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 	BoardRoute(route, connectionDB, middleware)
 
 	ActivityV2Route(route, connectionDB, middleware)
+	WorkoutsRoute(route, connectionDB, middleware)
 	//ImportDataRoute(route, connectionDB, middleware)
 }
 
@@ -380,6 +383,22 @@ func ActivityV2Route(route *gin.Engine, connectionDB *mongo.Database, middleware
 			api.POST("/getHistoryDay", activityV2API.GetHistoryDayByEvent)
 			api.POST("/getHistoryMonth", activityV2API.GetHistoryMonthByEvent)
 			api.DELETE("/deleteActivity/:id/:activityID", activityV2API.DeleteActivityEvent)
+		}
+	}
+}
+
+func WorkoutsRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+	workoutsRepository := repository.WorkoutsRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	workoutsAPI := handle_workouts.WorkoutsAPI{
+		WorkoutsRepository: &workoutsRepository,
+	}
+	api := route.Group("/api/v1/workout")
+	{
+		api.Use(middleware.MiddlewareFunc())
+		{
+			api.POST("/add", workoutsAPI.AddWorkout)
 		}
 	}
 }
