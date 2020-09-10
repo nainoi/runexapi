@@ -70,6 +70,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			if err != nil {
 				log.Println(err)
 			}
+			a.RankNo = n + 1
 			a.UserInfo = user
 			activities = append(activities, a)
 		}
@@ -101,6 +102,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			if err != nil {
 				log.Println(err)
 			}
+			ranking.RankNo = index - 1
 			ranking.UserInfo = user
 			myActivities = append(myActivities, ranking)
 		}
@@ -113,6 +115,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			if err != nil {
 				log.Println(err)
 			}
+			ranking.RankNo = index
 			ranking.UserInfo = user
 			myActivities = append(myActivities, ranking)
 		}
@@ -124,6 +127,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		if err != nil {
 			log.Println(err)
 		}
+		ranking.RankNo = index + 1
 		ranking.UserInfo = user
 		myActivities = append(myActivities, ranking)
 		if (index + 1) < len(temps) {
@@ -135,6 +139,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			if err != nil {
 				log.Println(err)
 			}
+			ranking.RankNo = index + 2
 			ranking.UserInfo = user
 			myActivities = append(myActivities, ranking)
 		}
@@ -147,6 +152,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			if err != nil {
 				log.Println(err)
 			}
+			ranking.RankNo = index + 3
 			ranking.UserInfo = user
 			myActivities = append(myActivities, ranking)
 		}

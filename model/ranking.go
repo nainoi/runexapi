@@ -12,6 +12,7 @@ type Ranking struct {
 	EventUser     string             `json:"event_user" bson:"event_user"`
 	ActivityInfo  []ActivityInfo     `json:"activity_info" bson:"activity_info,omitempty"`
 	ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
+	RankNo        int              `json:"rank_no"`
 	UserInfo      UserEvent          `json:"user_info"`
 	// Distance     float32   `json:"distance" bson:"distance"`
 	// ImageURL     string    `json:"img_url" bson:"img_url"`
