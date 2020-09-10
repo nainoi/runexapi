@@ -18,3 +18,6 @@ docker network connect mongo-network runex-api
 docker run -d --network mongo-network --name mongodb -e MONGO_INITDB_ROOT_USERNAME=idever -e MONGO_INITDB_ROOT_PASSWORD=idever@987 -e TZ=Asia/Bangkok -p 27017:27017 -v /data/db:/data/db -v /data/mongo/config:/etc/mongo/mongodb.conf  --restart=always  mongo:4.2
 
 //อย่าลืมเปลี่ยน url ก่อน build
+
+// open api generate
+$HOME/go/bin/swag init

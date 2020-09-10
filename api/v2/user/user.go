@@ -9,14 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
-	"thinkdev.app/think/runex/runexapi/api/v2/tracer"
+	//"thinkdev.app/think/runex/runexapi/api/v2/tracer"
 	"thinkdev.app/think/runex/runexapi/logger"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model/v2"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
 
 	//stdopentracing "github.com/opentracing/opentracing-go"
-	tracelog "github.com/opentracing/opentracing-go/log"
+	//tracelog "github.com/opentracing/opentracing-go/log"
 )
 
 //API struct for user repository
@@ -73,13 +73,15 @@ func (api API) VerifyAuthToken(c *gin.Context) {
 // Paths Information
 
 // RefreshAccessToken godoc
-// @Summary Provides a JSON Web Token
+// @Summary Refresh a JSON Web Token
 // @Description Authenticates a user and provides a JWT to refresh Authorize API calls
 // @ID Authentication
+// @Tags user
 // @Consume application/x-www-form-urlencoded
 // @Produce json
 // @Param refresh_token formData string true "RefreshToken"
 // @Success 200 {object} response.ResponseOAuth
+// @Failure 400 {object} response.Response
 // @Failure 401 {object} response.Response
 // @Router /refreshAccessToken [post]
 func (api API) RefreshAccessToken(c *gin.Context) {
@@ -137,7 +139,7 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 		}
 		var (
 			responseJWT = response.ResponseOAuth{
-				AccessToken: newToken,
+				AccessToken:  newToken,
 				RefreshToken: tokenRequest.RefreshToken,
 			}
 		)
@@ -149,7 +151,18 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 	res.Response(http.StatusBadRequest, "Error Found ", nil)
 }
 
-//GetUser get user info
+// GetUser godoc
+// @Summary Get user info
+// @Description get user info API calls
+// @Security bearerAuth
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=model.User}
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /user [get]
 func (api API) GetUser(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
@@ -175,9 +188,21 @@ func (api API) GetUser(c *gin.Context) {
 	}
 }
 
-//AddUser with separate user
+// AddUser godoc
+// @Summary Add new user
+// @Description add new user API calls
+// @Consume application/x-www-form-urlencoded
+// @Accept  application/json
+// @Produce application/json
+// @Tags user
+// @Param payload body model.UserProviderRequest true "payload"
+// @Success 200 {object} response.ResponseOAuth
+// @Success 208 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /signup [post]
 func (api API) AddUser(c *gin.Context) {
-	var userProvider model.UserProvider
+	var userProvider model.UserProviderRequest
 	// span, err := tracer.CreateTracerAndSpan("login", c)
 	// if err != nil {
 	// 	logger.Logger.Errorf(err.Error())
@@ -253,112 +278,21 @@ func (api API) AddUser(c *gin.Context) {
 func (api API) UpdateUser(c *gin.Context) {
 }
 
-// GetUsers accepts a context and returns all the users in json format
-/*func GetUsers(c *gin.Context) {
-	var users []oauth.UserResponse
-	span, err := tracer.CreateTracerAndSpan("get_all_users", c)
-
-	if err != nil {
-		logger.Logger.Errorf(err.Error())
-	}
-
-	logger.Logger.Infof("Retrieving All Users")
-
-	error := db.Collection.Find(nil).All(&users)
-
-	if error != nil {
-		tracer.OnErrorLog(span, error)
-		message := "Users " + error.Error()
-		c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": message})
-		return
-	}
-
-	span.LogFields(
-		tracelog.String("event", "success"),
-		tracelog.Int("status", http.StatusOK),
-	)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": users})
-}*/
-
-// GetUser accepts context, User ID as param and returns user info
-/*func GetUser(c *gin.Context) {
-	var user oauth.UserResponse
-
-	span, err := tracer.CreateTracerAndSpan("get_user", c)
-
-	if err != nil {
-		logger.Logger.Errorf(err.Error())
-	}
-
-	userID := c.Param("id")
-
-	if bson.IsObjectIdHex(userID) {
-
-		error := db.Collection.FindId(bson.ObjectIdHex(userID)).One(&user)
-
-		if error != nil {
-			tracer.OnErrorLog(span, error)
-			message := "User " + error.Error()
-			c.JSON(http.StatusNotFound, gin.H{"status": http.StatusNotFound, "message": message})
-			return
-		}
-	} else {
-		span.LogFields(
-			tracelog.String("event", "error"),
-			tracelog.String("message", "Incorrect Format for UserID"),
-		)
-		message := "Incorrect Format for UserID"
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": message})
-		return
-	}
-
-	span.LogFields(
-		tracelog.String("event", "success"),
-		tracelog.Int("status", http.StatusOK),
-	)
-	c.JSON(http.StatusOK, gin.H{"status": http.StatusOK, "data": user})
-}*/
-
-// RegisterUser accepts context and inserts data to the db
-/*func RegisterUser(c *gin.Context) {
-
-	var user oauth.User
-
-	error := c.ShouldBindJSON(&user)
-
-	if error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": "Incorrect Field Name(s)/ Value(s)"})
-		return
-	}
-
-	error = user.Validate()
-
-	if error != nil {
-		message := "User " + error.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": message})
-		return
-	}
-
-	// Inserts ID for the user object
-	user.ID = bson.NewObjectId()
-
-	user.Password = auth.CalculatePassHash(user.Password, user.Salt)
-
-	error = db.Collection.Insert(&user)
-
-	if error != nil {
-		message := "User " + error.Error()
-		c.JSON(http.StatusBadRequest, gin.H{"status": http.StatusBadRequest, "message": message})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"status": http.StatusCreated, "message": "User created successfully!", "resourceId": user.ID})
-
-}*/
-
-// LoginUser Method
+// LoginUser godoc
+// @Summary user login
+// @Description login or add new user from open id API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.UserProviderRequest true "payload"
+// @Success 200 {object} response.ResponseOAuth
+// @Success 208 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /login [post]
 func (api API) LoginUser(c *gin.Context) {
-	var userProvider model.UserProvider
+	var userProvider model.UserProviderRequest
 	// span, err := tracer.CreateTracerAndSpan("login", c)
 	// if err != nil {
 	// 	logger.Logger.Errorf(err.Error())
@@ -367,7 +301,7 @@ func (api API) LoginUser(c *gin.Context) {
 	if err != nil {
 		fmt.Println(err.Error())
 		//tracer.OnErrorLog(span, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
 		//var acc model.UserAuth
 		return
 	}
@@ -430,8 +364,19 @@ func (api API) LoginUser(c *gin.Context) {
 }
 
 // UpdateUserProvider Method for update new provider id
+// @Summary Update User Provider
+// @Description Update User Provider info from login API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.ResponseOAuth
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /login [put]
 func (api API) UpdateUserProvider(c *gin.Context) {
-	var userProvider model.UserProvider
+	var userProvider model.UserProviderRequest
 	// span, err := tracer.CreateTracerAndSpan("login", c)
 	// if err != nil {
 	// 	logger.Logger.Errorf(err.Error())
@@ -476,23 +421,34 @@ func (api API) UpdateUserProvider(c *gin.Context) {
 }
 
 // LogoutUser Method
+// @Summary user logout
+// @Description user logout system API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Success 202 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /logout [post]
 func (api API) LogoutUser(c *gin.Context) {
 
-	span, err := tracer.CreateTracerAndSpan("logout", c)
+	//span, err := tracer.CreateTracerAndSpan("logout", c)
 
-	if err != nil {
-		logger.Logger.Errorf(err.Error())
-		//fmt.Println(err.Error())
-	}
+	// if err != nil {
+	// 	//logger.Logger.Errorf(err.Error())
+	// 	//fmt.Println(err.Error())
+	// }
 
 	token := c.GetHeader("Authorization")
 
 	if token == "" {
-		span.LogFields(
-			tracelog.String("event", "error"),
-			tracelog.String("message", "Authorization token was not provided"),
-		)
-		logger.Logger.Errorf("Authorization token was not provided")
+		// span.LogFields(
+		// 	tracelog.String("event", "error"),
+		// 	tracelog.String("message", "Authorization token was not provided"),
+		// )
+		// logger.Logger.Errorf("Authorization token was not provided")
 		c.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "message": "Authorization Token is required"})
 		c.Abort()
 		return
@@ -500,18 +456,18 @@ func (api API) LogoutUser(c *gin.Context) {
 
 	extractedToken := strings.Split(token, "Bearer ")
 
-	err = oauth.InvalidateToken(extractedToken[1])
+	err := oauth.InvalidateToken(extractedToken[1])
 	if err != nil {
-		tracer.OnErrorLog(span, err)
+		//tracer.OnErrorLog(span, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "message": err.Error()})
 		c.Abort()
 		return
 	}
 
-	span.LogFields(
-		tracelog.String("event", "success"),
-		tracelog.Int("status", http.StatusAccepted),
-	)
+	// span.LogFields(
+	// 	tracelog.String("event", "success"),
+	// 	tracelog.Int("status", http.StatusAccepted),
+	// )
 	c.JSON(http.StatusAccepted, gin.H{"status": http.StatusAccepted, "message": "Done"})
 
 }

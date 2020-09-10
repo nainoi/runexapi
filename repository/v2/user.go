@@ -10,17 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
-	"thinkdev.app/think/runex/runexapi/model/v2"
+	model2 "thinkdev.app/think/runex/runexapi/model/v2"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 //UserRepository interface user repository
 type UserRepository interface {
-	CheckEmail(u model.UserProvider) (model.User, bool, bool)
-	CheckProvider(provider model.UserProvider) bool
-	UpdateProvider(u model.User, p model.UserProvider) error
-	GetUserByProvider(u model.UserProvider) (model.User, error)
-	GetUser(id primitive.ObjectID) (model.User, error)
-	AddUser(user model.UserProvider) (model.User, error)
+	CheckEmail(u model2.UserProviderRequest) (model2.User, bool, bool)
+	CheckProvider(provider model2.UserProviderRequest) bool
+	UpdateProvider(u model2.User, p model2.UserProviderRequest) error
+	GetUserByProvider(u model2.UserProviderRequest) (model2.User, error)
+	GetUser(id primitive.ObjectID) (model2.User, error)
+	AddUser(user model2.UserProviderRequest) (model2.User, error)
 }
 
 //RepoDB db connection struct
@@ -33,8 +34,8 @@ const (
 )
 
 //CheckEmail Email in db
-func (db RepoDB) CheckEmail(u model.UserProvider) (model.User, bool, bool) {
-	var user model.User
+func (db RepoDB) CheckEmail(u model2.UserProviderRequest) (model2.User, bool, bool) {
+	var user model2.User
 	isMail := false
 	isProvider := false
 	filter := bson.D{
@@ -58,13 +59,13 @@ func (db RepoDB) CheckEmail(u model.UserProvider) (model.User, bool, bool) {
 	}
 	isProvider = true
 	isMail = true
-	
+
 	return user, isMail, isProvider
 }
 
 //CheckProvider check provider with email user
-func (db RepoDB) CheckProvider(provider model.UserProvider) bool {
-	var user model.User
+func (db RepoDB) CheckProvider(provider model2.UserProviderRequest) bool {
+	var user model2.User
 	filter := bson.D{primitive.E{Key: "provider", Value: provider.Provider}, primitive.E{Key: "provider_id", Value: provider.ProviderID}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
@@ -75,8 +76,8 @@ func (db RepoDB) CheckProvider(provider model.UserProvider) bool {
 }
 
 // GetUserByProvider api login by provider
-func (db RepoDB) GetUserByProvider(u model.UserProvider) (model.User, error) {
-	var user model.User
+func (db RepoDB) GetUserByProvider(u model2.UserProviderRequest) (model2.User, error) {
+	var user model2.User
 	filter := bson.D{primitive.E{Key: "provider", Value: u.Provider}, primitive.E{Key: "provider_id", Value: u.ProviderID}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
@@ -86,8 +87,8 @@ func (db RepoDB) GetUserByProvider(u model.UserProvider) (model.User, error) {
 }
 
 // GetUser with user id and return user info
-func (db RepoDB) GetUser(id primitive.ObjectID) (model.User, error) {
-	var user model.User
+func (db RepoDB) GetUser(id primitive.ObjectID) (model2.User, error) {
+	var user model2.User
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
@@ -97,9 +98,9 @@ func (db RepoDB) GetUser(id primitive.ObjectID) (model.User, error) {
 }
 
 // AddUser with provider api add user from social provider
-func (db RepoDB) AddUser(user model.UserProvider) (model.User, error) {
-	var u model.User
-	u = model.User{
+func (db RepoDB) AddUser(user model2.UserProviderRequest) (model2.User, error) {
+	var u model2.User
+	u = model2.User{
 		Email:     user.Email,
 		FullName:  user.FullName,
 		FirstName: user.FirstName,
@@ -129,8 +130,8 @@ func (db RepoDB) AddUser(user model.UserProvider) (model.User, error) {
 }
 
 // UpdateProvider api update account login without provider
-func (db RepoDB) UpdateProvider(u model.User, p model.UserProvider) error {
-	filter := bson.D{primitive.E{Key: "_id",Value: u.UserID}}
+func (db RepoDB) UpdateProvider(u model2.User, p model2.UserProviderRequest) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: u.UserID}}
 	var up = model.Provider{
 		ProviderID:   p.ProviderID,
 		ProviderName: p.Provider,

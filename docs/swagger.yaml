@@ -1,4 +1,104 @@
 definitions:
+  model.Address:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      created_at:
+        type: string
+      district:
+        type: string
+      id:
+        type: string
+      province:
+        type: string
+      updated_at:
+        type: string
+      zipcode:
+        type: string
+    required:
+    - address
+    - city
+    - district
+    - province
+    - zipcode
+    type: object
+  model.User:
+    properties:
+      address:
+        items:
+          $ref: '#/definitions/model.Address'
+        type: array
+      avatar:
+        type: string
+      birthdate:
+        type: string
+      blood_type:
+        type: string
+      citycen_id:
+        type: string
+      confirm:
+        type: boolean
+      created_at:
+        type: string
+      email:
+        type: string
+      emergency_contact:
+        type: string
+      emergency_phone:
+        type: string
+      firstname:
+        type: string
+      firstname_th:
+        type: string
+      fullname:
+        type: string
+      gender:
+        type: string
+      lastname:
+        type: string
+      lastname_th:
+        type: string
+      nationality:
+        type: string
+      passport:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  model.UserProviderRequest:
+    properties:
+      avatar:
+        type: string
+      birthdate:
+        type: string
+      email:
+        description: 'in: body'
+        type: string
+      firstname:
+        type: string
+      fullname:
+        type: string
+      gender:
+        type: string
+      lastname:
+        type: string
+      pf:
+        type: string
+      provider:
+        type: string
+      provider_id:
+        type: string
+    required:
+    - pf
+    - provider
+    - provider_id
+    type: object
   response.Response:
     properties:
       code:
@@ -19,6 +119,91 @@ info:
   contact: {}
   license: {}
 paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login or add new user from open id API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserProviderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseOAuth'
+        "208":
+          description: Already Reported
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: user login
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update User Provider info from login API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseOAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Update User Provider
+      tags:
+      - user
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: user logout system API calls
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: user logout
+      tags:
+      - user
   /refreshAccessToken:
     post:
       description: Authenticates a user and provides a JWT to refresh Authorize API calls
@@ -36,9 +221,83 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.ResponseOAuth'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/response.Response'
-      summary: Provides a JSON Web Token
+      summary: Refresh a JSON Web Token
+      tags:
+      - user
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: add new user API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserProviderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ResponseOAuth'
+        "208":
+          description: Already Reported
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Add new user
+      tags:
+      - user
+  /user:
+    get:
+      consumes:
+      - application/json
+      description: get user info API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get user info
+      tags:
+      - user
 swagger: "2.0"

@@ -103,3 +103,11 @@ type UserEvent struct {
 	Phone     string             `json:"phone" bson:"phone"`
 	Avatar    string             `json:"avatar" bson:"avatar"`
 }
+
+// Provider with provider open id
+// swagger:model
+type Provider struct {
+	// in: body
+	ProviderID   string `json:"provider_id" bson:"provider_id"`
+	ProviderName string `json:"provider_name" bson:"provider_name"`
+}

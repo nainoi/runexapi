@@ -15,7 +15,6 @@ import (
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	"github.com/swaggo/swag/example/celler/controller"
 
 	//"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
@@ -92,11 +91,11 @@ func main() {
 	// }
 
 	// Swagger 2.0 Meta Information
-	docs.SwaggerInfo.Title = "Pragmatic Reviews - Video API"
-	docs.SwaggerInfo.Description = "Pragmatic Reviews - Youtube Video API."
-	docs.SwaggerInfo.Version = "1.0"
-	docs.SwaggerInfo.Host = "pragmatic-video-app.herokuapp.com"
-	docs.SwaggerInfo.BasePath = "/api/v1"
+	docs.SwaggerInfo.Title = "RUNEX Aplication - Runex API"
+	docs.SwaggerInfo.Description = "RUNEX Aplication - Runex API"
+	docs.SwaggerInfo.Version = "2.0"
+	docs.SwaggerInfo.Host = "api.runex.co"
+	docs.SwaggerInfo.BasePath = "/api/v2"
 	docs.SwaggerInfo.Schemes = []string{"https"}
 
 
@@ -145,22 +144,6 @@ func main() {
 	router.LoadHTMLGlob("templates/*")
 	//init the loc
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
-
-	c := controller.NewController()
-
-	v1 := router.Group("/api/v1")
-	{
-		accounts := v1.Group("/accounts")
-		{
-			accounts.GET(":id", c.ShowAccount)
-			accounts.GET("", c.ListAccounts)
-			accounts.POST("", c.AddAccount)
-			accounts.DELETE(":id", c.DeleteAccount)
-			accounts.PATCH(":id", c.UpdateAccount)
-			accounts.POST(":id/images", c.UploadAccountImage)
-		}
-    //...
-	}
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
