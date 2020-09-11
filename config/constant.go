@@ -1,9 +1,5 @@
 package config
 
-const DB_HOST = "mongodb://mongodb:27017"
-const DB_NAME = "runex"
-const db_pass = "idever@987"
-const PORT_WEB_SERVICE = ":3006"
 const ID_KEY = "id"
 const ROLE_KEY = "role"
 const PF = "pf"

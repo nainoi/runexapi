@@ -9,12 +9,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+
 	//"thinkdev.app/think/runex/runexapi/api/v2/tracer"
 	"thinkdev.app/think/runex/runexapi/logger"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
-	"thinkdev.app/think/runex/runexapi/model/v2"
+	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
-
 	//stdopentracing "github.com/opentracing/opentracing-go"
 	//tracelog "github.com/opentracing/opentracing-go/log"
 )
@@ -274,8 +274,42 @@ func (api API) AddUser(c *gin.Context) {
 
 }
 
-//UpdateUser update user info
+// UpdateUser update user info
+// @Summary Update user info
+// @Description put user info to update user info API calls
+// @Security bearerAuth
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.User true "payload"
+// @Success 200 {object} response.Response{data=model.User}
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /user [put]
 func (api API) UpdateUser(c *gin.Context) {
+	var user model.User
+	err := c.ShouldBindJSON(&user)
+	var (
+		res = response.Gin{C: c}
+	)
+	userID, _ := oauth.GetValuesToken(c)
+	if err != nil {
+		fmt.Println(err.Error())
+		//tracer.OnErrorLog(span, err)
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		//var acc model.UserAuth
+		return
+	}
+	user, err = api.UserRepo.UpdateUser(user, userID)
+	if err != nil {
+		fmt.Println(err.Error())
+		//tracer.OnErrorLog(span, err)
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		//var acc model.UserAuth
+		return
+	}
+	res.Response(http.StatusOK, "update success", user)
 }
 
 // LoginUser godoc
@@ -287,7 +321,6 @@ func (api API) UpdateUser(c *gin.Context) {
 // @Produce application/json
 // @Param payload body model.UserProviderRequest true "payload"
 // @Success 200 {object} response.ResponseOAuth
-// @Success 208 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /login [post]
@@ -298,18 +331,19 @@ func (api API) LoginUser(c *gin.Context) {
 	// 	logger.Logger.Errorf(err.Error())
 	// }
 	err := c.ShouldBindJSON(&userProvider)
-	if err != nil {
-		fmt.Println(err.Error())
-		//tracer.OnErrorLog(span, err)
-		c.JSON(http.StatusBadRequest, gin.H{"msg": err.Error()})
-		//var acc model.UserAuth
-		return
-	}
 	var (
 		res = response.Gin{C: c}
 	)
-	u, isMail, isProvider := api.UserRepo.CheckEmail(userProvider)
-	if isMail && isProvider {
+	if err != nil {
+		fmt.Println(err.Error())
+		//tracer.OnErrorLog(span, err)
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		//var acc model.UserAuth
+		return
+	}
+
+	u, err := api.UserRepo.Signin(userProvider)
+	if err == nil {
 		//span, err := tracer.CreateTracerAndSpan("check_email", c)
 		// if err != nil {
 		// 	fmt.Println(err.Error())
@@ -334,35 +368,15 @@ func (api API) LoginUser(c *gin.Context) {
 		res.Response(http.StatusOK, "login success", gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 		return
 
-	} else if isMail {
-		res.Response(http.StatusAlreadyReported, "Email in use, Are you want to update account with new provider?", nil)
-		return
 	}
 
-	//span, err = tracer.CreateTracerAndSpan("add user", c)
-	u2, err := api.UserRepo.AddUser(userProvider)
-	if err != nil {
-		//tracer.OnErrorLog(span, err)
-		log.Println("error AddUserHandeler", err.Error())
-		res.Response(http.StatusInternalServerError, "add user error", nil)
-		return
-	}
-	accessToken, refreshToken, err := oauth.GenerateTokenPair(u2)
-	if err != nil || accessToken == "" || refreshToken == "" {
-		// Return if there is an error in creating the JWT return an internal server error
-		//tracer.OnErrorLog(span, err)
-		res.Response(http.StatusInternalServerError, "Could not generate token", nil)
-		return
-	}
-	// span.LogFields(
-	// 	tracelog.String("event", "success"),
-	// 	tracelog.String("message", "returned token"),
-	// 	tracelog.Int("status", http.StatusOK),
-	// )
-	res.Response(http.StatusOK, "login success", gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+	// Return if there is an error in creating the JWT return an internal server error
+	//tracer.OnErrorLog(span, err)
+	res.Response(http.StatusInternalServerError, "Could not generate token", nil)
 	return
 }
 
+/*
 // UpdateUserProvider Method for update new provider id
 // @Summary Update User Provider
 // @Description Update User Provider info from login API calls
@@ -419,6 +433,7 @@ func (api API) UpdateUserProvider(c *gin.Context) {
 	}
 	res.Response(http.StatusInternalServerError, "Could not update provider", nil)
 }
+*/
 
 // LogoutUser Method
 // @Summary user logout

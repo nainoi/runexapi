@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
@@ -79,7 +80,18 @@ func initJaeger(service string) (stdopentracing.Tracer, io.Closer) {
 func main() {
 	os.Setenv("TZ", "Asia/Bangkok")
 	// time.FixedZone("UTC+7", +7*60*60)
-	// gin.SetMode(gin.ReleaseMode)
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.AutomaticEnv()
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %s \n", err))
+	}
+
+	if !viper.GetBool("app.debug") {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	//create your file with desired read/write permissions
 	// f, err := os.OpenFile("log.info", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
@@ -97,7 +109,6 @@ func main() {
 	docs.SwaggerInfo.Host = "api.runex.co"
 	docs.SwaggerInfo.BasePath = "/api/v2"
 	docs.SwaggerInfo.Schemes = []string{"https"}
-
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -146,8 +157,7 @@ func main() {
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	router.Run(":3006")
+	router.Run(viper.GetString("app.port"))
 
 	// err2 := router.RunTLS(config.PORT_WEB_SERVICE, sslcert, sslkey)
 	// if err2 != nil {

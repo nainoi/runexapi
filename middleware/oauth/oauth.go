@@ -16,10 +16,11 @@ import (
 	config "thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/logger"
-	"thinkdev.app/think/runex/runexapi/model/v2"
+	"thinkdev.app/think/runex/runexapi/model"
 )
 
 var (
+	// ErrMissingField is use to error
 	ErrMissingField = "Error missing %v"
 	// AtJwtKey is used to create the Access token signature
 	AtJwtKey = []byte(config.SECRET_KEY)

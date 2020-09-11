@@ -7,23 +7,25 @@ import (
 	"os"
 
 	redis "github.com/go-redis/redis/v8"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"thinkdev.app/think/runex/runexapi/config"
+	//"thinkdev.app/think/runex/runexapi/config"
 	//"thinkdev.app/think/runex/runexapi/logger"
 )
 
-const db_host = "mongodb://localhost:27017"
+// const db_host = "mongodb://localhost:27017"
 
 // const db_host = "mongodb://farmme.in.th:27017"
 
 // const db_host = "mongodb://178.128.85.151:27017"
 
 // const db_host = "mongodb://mongodb:27017"
-const db_user = "idever"
-const db_pass = "idever@987"
+// const db_user = "idever"
+// const db_pass = "idever@987"
 
 var (
+	// RedisClient redis variable
 	RedisClient *redis.Client
 )
 
@@ -38,12 +40,16 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
+// GetDBCollection mongo db
 func GetDBCollection() (*mongo.Database, error) {
-
+	host := viper.GetString("mongodb.connection")
+	user := viper.GetString("mongodb.user")
+	pass := viper.GetString("mongodb.pass")
+	dbName := viper.GetString("mongodb.db")
 	clientOptions := options.Client().SetAuth(options.Credential{
-		AuthSource: "admin", Username: db_user,
-		Password: db_pass, PasswordSet: true,
-	}).ApplyURI(db_host)
+		AuthSource: "admin", Username: user,
+		Password: pass, PasswordSet: true,
+	}).ApplyURI(host)
 	//clientOptions := options.Client().ApplyURI(db_host)
 	//clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 	client, err := mongo.Connect(context.TODO(), clientOptions)
@@ -56,12 +62,16 @@ func GetDBCollection() (*mongo.Database, error) {
 		log.Print("can't connect database!!!")
 		return nil, err
 	}
-	db := client.Database("runex_v2")
+	db := client.Database(dbName)
 	return db, nil
 }
 
 func connectDB(ctx context.Context) (*mongo.Database, error) {
-	uri := fmt.Sprintf(db_host, db_user, db_pass, db_host, config.DB_NAME)
+	host := viper.GetString("mongodb.connection")
+	user := viper.GetString("mongodb.user")
+	pass := viper.GetString("mongodb.pass")
+	dbName := viper.GetString("mongodb.db")
+	uri := fmt.Sprintf(host, user, pass, host, dbName)
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, fmt.Errorf("couldn't connect to mongo: %v", err)
@@ -70,21 +80,22 @@ func connectDB(ctx context.Context) (*mongo.Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mongo client couldn't connect with background context: %v", err)
 	}
-	db := client.Database(config.DB_NAME)
+	db := client.Database(dbName)
 	return db, nil
 }
 
+// ConnectRedisDB connect to redis
 func ConnectRedisDB() *redis.Client {
 
-	redisHost := GetEnv("REDIS_HOST", "localhost")
-	redisPort := GetEnv("REDIS_PORT", "6379")
-	//redisPassword := GetEnv("REDIS_PASSWORD", "__@redis__P@ss")
+	redisHost := viper.GetString("redis.host")
+	redisPort := viper.GetString("redis.port")
+	redisPassword := viper.GetString("redis.pass")
 
 	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
 
 	RedisClient = redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
-		Password: "__@redis__P@ss",
+		Password: redisPassword,
 		DB:       0,
 	})
 

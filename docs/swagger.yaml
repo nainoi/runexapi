@@ -48,6 +48,10 @@ definitions:
         type: string
       emergency_phone:
         type: string
+      events:
+        items:
+          type: string
+        type: array
       firstname:
         type: string
       firstname_th:
@@ -63,6 +67,8 @@ definitions:
       nationality:
         type: string
       passport:
+        type: string
+      pf:
         type: string
       phone:
         type: string
@@ -138,10 +144,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.ResponseOAuth'
-        "208":
-          description: Already Reported
-          schema:
-            $ref: '#/definitions/response.Response'
         "400":
           description: Bad Request
           schema:
@@ -151,32 +153,6 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       summary: user login
-      tags:
-      - user
-    put:
-      consumes:
-      - application/json
-      description: Update User Provider info from login API calls
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.ResponseOAuth'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      summary: Update User Provider
       tags:
       - user
   /logout:
@@ -298,6 +274,39 @@ paths:
       security:
       - bearerAuth: []
       summary: Get user info
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: put user info to update user info API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Update user info
       tags:
       - user
 swagger: "2.0"
