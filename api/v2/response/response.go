@@ -9,6 +9,12 @@ type Gin struct {
 	C *gin.Context
 }
 
+//ResponseOAuth struct
+type ResponseOAuth struct {
+	RefreshToken string `json:"refresh_token"`
+	AccessToken  string `json:"access_token"`
+}
+
 //Response struct
 type Response struct {
 	Code int         `json:"code"`

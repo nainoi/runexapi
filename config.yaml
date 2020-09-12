@@ -1,0 +1,18 @@
+app:
+    env:  "development"
+    port: ":3006"
+    debug: true
+
+mongodb:
+    connection: "mongodb://128.199.163.81:27017"
+    db: "Runex"
+    user: "idever"
+    pass: "idever@987"
+redis:
+    host: "128.199.163.81"
+    port: "6379"
+    pass: "__@redis__P@ss"
+
+log:
+    level: "debug"
+    format: "json"

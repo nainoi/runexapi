@@ -13,11 +13,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
 	//"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
+	"thinkdev.app/think/runex/runexapi/docs"
 	"thinkdev.app/think/runex/runexapi/logger"
 	routes "thinkdev.app/think/runex/runexapi/route"
 
@@ -78,7 +80,18 @@ func initJaeger(service string) (stdopentracing.Tracer, io.Closer) {
 func main() {
 	os.Setenv("TZ", "Asia/Bangkok")
 	// time.FixedZone("UTC+7", +7*60*60)
-	// gin.SetMode(gin.ReleaseMode)
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	viper.AutomaticEnv()
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		panic(fmt.Errorf("fatal error config file: %s \n", err))
+	}
+
+	if !viper.GetBool("app.debug") {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	//create your file with desired read/write permissions
 	// f, err := os.OpenFile("log.info", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
@@ -88,6 +101,14 @@ func main() {
 	// } else {
 	// 	logger.InitLogger(f)
 	// }
+
+	// Swagger 2.0 Meta Information
+	docs.SwaggerInfo.Title = "RUNEX Aplication - Runex API"
+	docs.SwaggerInfo.Description = "RUNEX Aplication - Runex API"
+	docs.SwaggerInfo.Version = "2.0"
+	docs.SwaggerInfo.Host = "api.runex.co"
+	docs.SwaggerInfo.BasePath = "/api/v2"
+	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	router := gin.Default()
 	router.Use(cors.New(cors.Config{
@@ -118,10 +139,16 @@ func main() {
 	//routes.ProjectRoute(router, database)
 	routes.Route(router, database)
 	routes.Router(router, database)
-	router.GET("/swg/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//url := ginSwagger.URL("http://localhost:3006/swagger/api_v2.json") // The url pointing to API definition
+	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+
+	
 	// use ginSwagger middleware to serve the API docs
 	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//router.Static("/upload", "./upload")
+	//ro := openapi3filter.NewRouter().WithSwaggerFromFile("./docs/swg/swagger.json")
+	// swagger, err := openapi3.NewSwaggerLoader().LoadSwaggerFromFile("swagger.json")
+
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.Static("/upload", "./upload")
@@ -129,7 +156,8 @@ func main() {
 	//init the loc
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
 
-	router.Run(":3006")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	router.Run(viper.GetString("app.port"))
 
 	// err2 := router.RunTLS(config.PORT_WEB_SERVICE, sslcert, sslkey)
 	// if err2 != nil {

@@ -19,6 +19,8 @@ import (
 	// "thinkdev.app/think/runex/runexapi/repository"
 
 	handle_activity "thinkdev.app/think/runex/runexapi/api/v1/activity"
+	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+
 	handle_admin "thinkdev.app/think/runex/runexapi/api/v1/admin"
 
 	// handle_banner "thinkdev.app/think/runex/runexapi/api/v1/banner"
@@ -26,6 +28,8 @@ import (
 	handle_coupon "thinkdev.app/think/runex/runexapi/api/v1/coupon"
 	handle_event "thinkdev.app/think/runex/runexapi/api/v1/event"
 	handle_runHistory "thinkdev.app/think/runex/runexapi/api/v1/runHistory"
+
+	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 
 	//handle_importData "thinkdev.app/think/runex/runexapi/api/v1/importdata"
 	jwt "github.com/appleboy/gin-jwt/v2"
@@ -106,6 +110,9 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 	RunHistoryRoute(route, connectionDB, middleware)
 	AdminRoute(route, connectionDB, middleware)
 	BoardRoute(route, connectionDB, middleware)
+
+	ActivityV2Route(route, connectionDB, middleware)
+	WorkoutsRoute(route, connectionDB, middleware)
 	//ImportDataRoute(route, connectionDB, middleware)
 }
 
@@ -358,3 +365,40 @@ func AdminRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt
 // 		// }
 // 	}
 // }
+
+func ActivityV2Route(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+	activityV2Repository := repository.ActivityV2RepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	activityV2API := handle_activity_v2.ActivityV2API{
+		ActivityV2Repository: &activityV2Repository,
+	}
+	api := route.Group("/api/v2/activity")
+	{
+		api.Use(middleware.MiddlewareFunc())
+		{
+			api.POST("/add", activityV2API.AddActivity)
+			api.GET("/getByEvent/:event", activityV2API.GetActivityByEvent)
+			api.GET("/getByEvent2/:event", activityV2API.GetActivityByEvent2)
+			api.POST("/getHistoryDay", activityV2API.GetHistoryDayByEvent)
+			api.POST("/getHistoryMonth", activityV2API.GetHistoryMonthByEvent)
+			api.DELETE("/deleteActivity/:id/:activityID", activityV2API.DeleteActivityEvent)
+		}
+	}
+}
+
+func WorkoutsRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+	workoutsRepository := repository.WorkoutsRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	workoutsAPI := handle_workouts.WorkoutsAPI{
+		WorkoutsRepository: &workoutsRepository,
+	}
+	api := route.Group("/api/v1/workout")
+	{
+		api.Use(middleware.MiddlewareFunc())
+		{
+			api.POST("/add", workoutsAPI.AddWorkout)
+		}
+	}
+}

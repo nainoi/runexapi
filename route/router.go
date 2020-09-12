@@ -19,7 +19,6 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 	api := route.Group("/api/v2")
 	{
 		api.POST("/login", userAPI.LoginUser)
-		api.PUT("/login", userAPI.UpdateUserProvider)
 		api.POST("/signup", userAPI.AddUser)
 		api.POST("/refreshAccessToken", userAPI.RefreshAccessToken)
 		api.POST("/verifyToken", userAPI.VerifyAuthToken)
