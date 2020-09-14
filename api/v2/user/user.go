@@ -130,7 +130,7 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 			return
 		}
 
-		newToken, err := oauth.GenerateAccessToken(u)
+		newToken, newRefreshToken, err := oauth.GenerateTokenPair(u)
 		if err != nil {
 			logger.Logger.Errorf(err.Error())
 			res.Response(http.StatusBadRequest, "Cannot Generate New Access Token", nil)
@@ -140,7 +140,7 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 		var (
 			responseJWT = response.ResponseOAuth{
 				AccessToken:  newToken,
-				RefreshToken: tokenRequest.RefreshToken,
+				RefreshToken: newRefreshToken,
 			}
 		)
 		res.Response(http.StatusOK, "success", responseJWT)
