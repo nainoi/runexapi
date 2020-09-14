@@ -19,5 +19,13 @@ docker run -d --network mongo-network --name mongodb -e MONGO_INITDB_ROOT_USERNA
 
 //อย่าลืมเปลี่ยน url ก่อน build
 
+
+## Deployment
+### UAT
+You should be can access server 128.199.163.81 with root user.
+```
+sh docker-deploy-uat.sh
+```
+
 // open api generate
 $HOME/go/bin/swag init
