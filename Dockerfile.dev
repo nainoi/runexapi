@@ -23,6 +23,10 @@ RUN go mod download
 
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
+
+# download swaggo and generate docs
+RUN go get -u github.com/swaggo/swag/cmd/swag && swag init
+
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 ######## Start a new stage from scratch #######
@@ -38,6 +42,9 @@ COPY --from=builder /go/src/runex/main .
 COPY --from=builder /go/src/runex/runex.co.crt .
 COPY --from=builder /go/src/runex/runex.co.key .
 COPY --from=0 /go/src/runex/templates ./templates
+
+# Copy config file
+COPY config.yaml ./config.yaml
 
 # Declare volumes to mount
 # VOLUME $PWD/runex:/go/src/runex/upload

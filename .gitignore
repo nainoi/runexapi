@@ -5,6 +5,7 @@
 *.so
 *.dylib
 *.vscode
+*.tar
 
 # Test binary, built with `go test -c`
 *.test

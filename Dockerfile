@@ -39,6 +39,9 @@ COPY --from=builder /go/src/runex/runex.co.crt .
 COPY --from=builder /go/src/runex/runex.co.key .
 COPY --from=0 /go/src/runex/templates ./templates
 
+# Copy config file
+COPY config-prd.yaml ./config.yaml
+
 # Declare volumes to mount
 # VOLUME $PWD/runex:/go/src/runex/upload
 # VOLUME $PWD/runex:/go/src/runex/template

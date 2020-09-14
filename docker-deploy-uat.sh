@@ -1,5 +1,5 @@
 #!/bin/bash
-docker image build -t registry.thinkdev.app/think/runex/runexapi:dev -f Dockerfile.dev .
+# docker image build -t registry.thinkdev.app/think/runex/runexapi:dev -f Dockerfile.dev .
 
 # docker push registry.thinkdev.app/think/runex/runexapi:dev;
 # scp docker-run-uat.sh root@128.199.163.81:/root \
