@@ -133,6 +133,67 @@
                 }
             }
         },
+        "/searchPreOrder": {
+            "get": {
+                "description": "Search pre order detail API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "preorder"
+                ],
+                "summary": "Search pre order detail",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.FindPreOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.PreOrder"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/signup": {
             "post": {
                 "description": "add new user API calls",
@@ -259,6 +320,17 @@
                     "user"
                 ],
                 "summary": "Update user info",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -333,6 +405,43 @@
                     "type": "string"
                 },
                 "zipcode": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.FindPreOrderRequest": {
+            "type": "object",
+            "properties": {
+                "keyword": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.PreOrder": {
+            "type": "object",
+            "properties": {
+                "EBib": {
+                    "type": "string"
+                },
+                "FirstName": {
+                    "type": "string"
+                },
+                "ID": {
+                    "type": "string"
+                },
+                "LastName": {
+                    "type": "string"
+                },
+                "Shipping_Address": {
+                    "type": "string"
+                },
+                "Shirt_Size": {
+                    "type": "string"
+                },
+                "Shirt_Type": {
+                    "type": "string"
+                },
+                "Tel_No": {
                     "type": "string"
                 }
             }

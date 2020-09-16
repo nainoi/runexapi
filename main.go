@@ -35,15 +35,6 @@ import (
 	//"thinkdev.app/think/runex/runexapi/middleware"
 )
 
-// type key string
-
-// const (
-// 	hostKey     = key("hostKey")
-// 	usernameKey = key("usernameKey")
-// 	passwordKey = key("passwordKey")
-// 	databaseKey = key("databaseKey")
-// )
-
 var sslkey string = "runex.co.key"
 var sslcert string = "runex.co.crt"
 
@@ -136,18 +127,8 @@ func main() {
 		c.String(http.StatusNotFound, "Not Found")
 	})
 
-	//routes.ProjectRoute(router, database)
 	routes.Route(router, database)
 	routes.Router(router, database)
-	//url := ginSwagger.URL("http://localhost:3006/swagger/api_v2.json") // The url pointing to API definition
-	//router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
-
-	
-	// use ginSwagger middleware to serve the API docs
-	//r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	//router.Static("/upload", "./upload")
-	//ro := openapi3filter.NewRouter().WithSwaggerFromFile("./docs/swg/swagger.json")
-	// swagger, err := openapi3.NewSwaggerLoader().LoadSwaggerFromFile("swagger.json")
 
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())

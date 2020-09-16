@@ -750,6 +750,30 @@
                 }
               }
             }
+          },
+          "syncers":{
+            "type": "array",
+            "description": "access key syncer provider sync activity",
+            "items":{
+              "properties": {
+                "syncer": {
+                  "type": "string",
+                  "description": "sync name"
+                },
+                "sync_access_key":{
+                  "type": "string",
+                  "description": "key access"
+                },
+                "sync_refresh_key":{
+                  "type": "string",
+                  "description": "key refresh"
+                },
+                "sync_id":{
+                  "type": "string",
+                  "description": "sync user id"
+                }
+              }
+            }
           }
         }
       },

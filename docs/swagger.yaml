@@ -24,6 +24,30 @@ definitions:
     - province
     - zipcode
     type: object
+  model.FindPreOrderRequest:
+    properties:
+      keyword:
+        type: string
+    type: object
+  model.PreOrder:
+    properties:
+      EBib:
+        type: string
+      FirstName:
+        type: string
+      ID:
+        type: string
+      LastName:
+        type: string
+      Shipping_Address:
+        type: string
+      Shirt_Size:
+        type: string
+      Shirt_Type:
+        type: string
+      Tel_No:
+        type: string
+    type: object
   model.User:
     properties:
       address:
@@ -208,6 +232,43 @@ paths:
       summary: Refresh a JSON Web Token
       tags:
       - user
+  /searchPreOrder:
+    get:
+      consumes:
+      - application/json
+      description: Search pre order detail API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.FindPreOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.PreOrder'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Search pre order detail
+      tags:
+      - preorder
   /signup:
     post:
       consumes:
@@ -280,6 +341,13 @@ paths:
       consumes:
       - application/json
       description: put user info to update user info API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
       produces:
       - application/json
       responses:
