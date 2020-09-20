@@ -4,19 +4,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
+	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
-	"thinkdev.app/think/runex/runexapi/repository/v2"
 	repo "thinkdev.app/think/runex/runexapi/repository"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 )
 
 //Router initialization
 func Router(route *gin.Engine, connectionDB *mongo.Database) {
-	
+
 	api := route.Group("/api/v2")
 	{
 		userGroup(*api, connectionDB)
 		preOrderGroup(*api, connectionDB)
+		syncGroup(*api, connectionDB)
 	}
 }
 
@@ -40,12 +42,27 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 }
 
 func preOrderGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	preRepo := repo.PreorderRepositoryMongo {
+	preRepo := repo.PreorderRepositoryMongo{
 		ConnectionDB: connectionDB,
 	}
 
-	preAPI := preorder.API {
+	preAPI := preorder.API{
 		PreRepo: preRepo,
 	}
 	g.POST("/searchPreOrder", preAPI.SearchPreOrder)
+}
+
+func syncGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	repoStrava := repo.RepoDB{
+		ConnectionDB: connectionDB,
+	}
+
+	stravaAPI := strava.API{
+		Repo: repoStrava,
+	}
+	group := g.Group("/strava")
+	{
+		group.POST("/activity", stravaAPI.AddStravaActivity)
+	}
+
 }

@@ -16,3 +16,7 @@ redis:
 log:
     level: "debug"
     format: "json"
+
+swagger:
+    base_api: "https://runex-api.thinkdev.app"
+    base_path: "/api/v2"

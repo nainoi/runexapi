@@ -134,7 +134,7 @@
             }
         },
         "/searchPreOrder": {
-            "get": {
+            "post": {
                 "description": "Search pre order detail API calls",
                 "consumes": [
                     "application/json"
@@ -227,6 +227,105 @@
                     },
                     "208": {
                         "description": "Already Reported",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/sync/strava": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get activities from strava API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "get activities from strava",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.StravaActivity"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "add new activity from strava API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sync"
+                ],
+                "summary": "Add new activity from strava",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.StravaAddRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -409,10 +508,49 @@
                 }
             }
         },
+        "model.Athlete": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "resource_state": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.FindPreOrderRequest": {
             "type": "object",
             "properties": {
                 "keyword": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Map": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "polyline": {
+                    "type": "string"
+                },
+                "resource_state": {
+                    "type": "integer"
+                },
+                "summary_polyline": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Photos": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "primary": {
                     "type": "string"
                 }
             }
@@ -443,6 +581,360 @@
                 },
                 "Tel_No": {
                     "type": "string"
+                }
+            }
+        },
+        "model.SimilarActivities": {
+            "type": "object",
+            "properties": {
+                "average_speed": {
+                    "type": "integer"
+                },
+                "effort_count": {
+                    "type": "integer"
+                },
+                "frequency_milestone": {
+                    "type": "string"
+                },
+                "max_average_speed": {
+                    "type": "integer"
+                },
+                "mid_average_speed": {
+                    "type": "integer"
+                },
+                "min_average_speed": {
+                    "type": "integer"
+                },
+                "pr_rank": {
+                    "type": "string"
+                },
+                "resource_state": {
+                    "type": "integer"
+                },
+                "trend": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.Trend"
+                }
+            }
+        },
+        "model.SplitsMetric": {
+            "type": "object",
+            "properties": {
+                "average_grade_adjusted_speed": {
+                    "type": "integer"
+                },
+                "average_speed": {
+                    "type": "integer"
+                },
+                "distance": {
+                    "type": "integer"
+                },
+                "elapsed_time": {
+                    "type": "integer"
+                },
+                "elevation_difference": {
+                    "type": "integer"
+                },
+                "moving_time": {
+                    "type": "integer"
+                },
+                "pace_zone": {
+                    "type": "integer"
+                },
+                "split": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.SplitsStandard": {
+            "type": "object",
+            "properties": {
+                "average_grade_adjusted_speed": {
+                    "type": "integer"
+                },
+                "average_speed": {
+                    "type": "integer"
+                },
+                "distance": {
+                    "type": "integer"
+                },
+                "elapsed_time": {
+                    "type": "integer"
+                },
+                "elevation_difference": {
+                    "type": "integer"
+                },
+                "moving_time": {
+                    "type": "integer"
+                },
+                "pace_zone": {
+                    "type": "integer"
+                },
+                "split": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.StravaActivity": {
+            "type": "object",
+            "properties": {
+                "achievement_count": {
+                    "type": "integer"
+                },
+                "athlete": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.Athlete"
+                },
+                "athlete_count": {
+                    "type": "integer"
+                },
+                "available_zones": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "average_speed": {
+                    "type": "integer"
+                },
+                "best_efforts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "calories": {
+                    "type": "integer"
+                },
+                "comment_count": {
+                    "type": "integer"
+                },
+                "commute": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "device_name": {
+                    "type": "string"
+                },
+                "display_hide_heartrate_option": {
+                    "type": "boolean"
+                },
+                "distance": {
+                    "type": "integer"
+                },
+                "elapsed_time": {
+                    "type": "integer"
+                },
+                "elev_high": {
+                    "type": "integer"
+                },
+                "elev_low": {
+                    "type": "integer"
+                },
+                "embed_token": {
+                    "type": "string"
+                },
+                "end_latlng": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "external_id": {
+                    "type": "string"
+                },
+                "flagged": {
+                    "type": "boolean"
+                },
+                "from_accepted_tag": {
+                    "type": "boolean"
+                },
+                "gear_id": {
+                    "type": "string"
+                },
+                "has_heartrate": {
+                    "type": "boolean"
+                },
+                "has_kudoed": {
+                    "type": "boolean"
+                },
+                "heartrate_opt_out": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_sync": {
+                    "type": "boolean"
+                },
+                "kudos_count": {
+                    "type": "integer"
+                },
+                "laps": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "location_city": {
+                    "type": "string"
+                },
+                "location_country": {
+                    "type": "string"
+                },
+                "location_state": {
+                    "type": "string"
+                },
+                "manual": {
+                    "type": "boolean"
+                },
+                "map": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.Map"
+                },
+                "max_speed": {
+                    "type": "integer"
+                },
+                "moving_time": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "perceived_exertion": {
+                    "type": "string"
+                },
+                "photo_count": {
+                    "type": "integer"
+                },
+                "photos": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.Photos"
+                },
+                "pr_count": {
+                    "type": "integer"
+                },
+                "prefer_perceived_exertion": {
+                    "type": "boolean"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "resource_state": {
+                    "type": "integer"
+                },
+                "segment_efforts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "similar_activities": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.SimilarActivities"
+                },
+                "splits_metric": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SplitsMetric"
+                    }
+                },
+                "splits_standard": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.SplitsStandard"
+                    }
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "start_date_local": {
+                    "type": "string"
+                },
+                "start_latitude": {
+                    "type": "number"
+                },
+                "start_latlng": {
+                    "type": "array",
+                    "items": {
+                        "type": "number"
+                    }
+                },
+                "start_longitude": {
+                    "type": "number"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "total_elevation_gain": {
+                    "type": "integer"
+                },
+                "total_photo_count": {
+                    "type": "integer"
+                },
+                "trainer": {
+                    "type": "boolean"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "upload_id": {
+                    "type": "integer"
+                },
+                "upload_id_str": {
+                    "type": "string"
+                },
+                "utc_offset": {
+                    "type": "integer"
+                },
+                "visibility": {
+                    "type": "string"
+                },
+                "workout_type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.StravaAddRequest": {
+            "type": "object",
+            "properties": {
+                "strava_activity": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.StravaActivity"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Trend": {
+            "type": "object",
+            "properties": {
+                "current_activity_index": {
+                    "type": "string"
+                },
+                "direction": {
+                    "type": "integer"
+                },
+                "max_speed": {
+                    "type": "integer"
+                },
+                "mid_speed": {
+                    "type": "integer"
+                },
+                "min_speed": {
+                    "type": "integer"
+                },
+                "speeds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

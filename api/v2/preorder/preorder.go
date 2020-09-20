@@ -24,7 +24,7 @@ type API struct {
 // @Success 200 {object} response.Response{data=[]model.PreOrder}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /searchPreOrder [get]
+// @Router /searchPreOrder [post]
 func (api API) SearchPreOrder(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}

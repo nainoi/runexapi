@@ -97,8 +97,8 @@ func main() {
 	docs.SwaggerInfo.Title = "RUNEX Aplication - Runex API"
 	docs.SwaggerInfo.Description = "RUNEX Aplication - Runex API"
 	docs.SwaggerInfo.Version = "2.0"
-	docs.SwaggerInfo.Host = "api.runex.co"
-	docs.SwaggerInfo.BasePath = "/api/v2"
+	docs.SwaggerInfo.Host = viper.GetString("swagger.base_api")
+	docs.SwaggerInfo.BasePath = viper.GetString("swagger.base_path")
 	docs.SwaggerInfo.Schemes = []string{"https"}
 
 	router := gin.Default()

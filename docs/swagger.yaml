@@ -24,9 +24,34 @@ definitions:
     - province
     - zipcode
     type: object
+  model.Athlete:
+    properties:
+      id:
+        type: integer
+      resource_state:
+        type: integer
+    type: object
   model.FindPreOrderRequest:
     properties:
       keyword:
+        type: string
+    type: object
+  model.Map:
+    properties:
+      id:
+        type: string
+      polyline:
+        type: string
+      resource_state:
+        type: integer
+      summary_polyline:
+        type: string
+    type: object
+  model.Photos:
+    properties:
+      count:
+        type: integer
+      primary:
         type: string
     type: object
   model.PreOrder:
@@ -47,6 +72,242 @@ definitions:
         type: string
       Tel_No:
         type: string
+    type: object
+  model.SimilarActivities:
+    properties:
+      average_speed:
+        type: integer
+      effort_count:
+        type: integer
+      frequency_milestone:
+        type: string
+      max_average_speed:
+        type: integer
+      mid_average_speed:
+        type: integer
+      min_average_speed:
+        type: integer
+      pr_rank:
+        type: string
+      resource_state:
+        type: integer
+      trend:
+        $ref: '#/definitions/model.Trend'
+        type: object
+    type: object
+  model.SplitsMetric:
+    properties:
+      average_grade_adjusted_speed:
+        type: integer
+      average_speed:
+        type: integer
+      distance:
+        type: integer
+      elapsed_time:
+        type: integer
+      elevation_difference:
+        type: integer
+      moving_time:
+        type: integer
+      pace_zone:
+        type: integer
+      split:
+        type: integer
+    type: object
+  model.SplitsStandard:
+    properties:
+      average_grade_adjusted_speed:
+        type: integer
+      average_speed:
+        type: integer
+      distance:
+        type: integer
+      elapsed_time:
+        type: integer
+      elevation_difference:
+        type: integer
+      moving_time:
+        type: integer
+      pace_zone:
+        type: integer
+      split:
+        type: integer
+    type: object
+  model.StravaActivity:
+    properties:
+      achievement_count:
+        type: integer
+      athlete:
+        $ref: '#/definitions/model.Athlete'
+        type: object
+      athlete_count:
+        type: integer
+      available_zones:
+        items:
+          type: string
+        type: array
+      average_speed:
+        type: integer
+      best_efforts:
+        items:
+          type: string
+        type: array
+      calories:
+        type: integer
+      comment_count:
+        type: integer
+      commute:
+        type: boolean
+      created_at:
+        type: string
+      description:
+        type: string
+      device_name:
+        type: string
+      display_hide_heartrate_option:
+        type: boolean
+      distance:
+        type: integer
+      elapsed_time:
+        type: integer
+      elev_high:
+        type: integer
+      elev_low:
+        type: integer
+      embed_token:
+        type: string
+      end_latlng:
+        items:
+          type: number
+        type: array
+      external_id:
+        type: string
+      flagged:
+        type: boolean
+      from_accepted_tag:
+        type: boolean
+      gear_id:
+        type: string
+      has_heartrate:
+        type: boolean
+      has_kudoed:
+        type: boolean
+      heartrate_opt_out:
+        type: boolean
+      id:
+        type: integer
+      is_sync:
+        type: boolean
+      kudos_count:
+        type: integer
+      laps:
+        items:
+          type: string
+        type: array
+      location_city:
+        type: string
+      location_country:
+        type: string
+      location_state:
+        type: string
+      manual:
+        type: boolean
+      map:
+        $ref: '#/definitions/model.Map'
+        type: object
+      max_speed:
+        type: integer
+      moving_time:
+        type: integer
+      name:
+        type: string
+      perceived_exertion:
+        type: string
+      photo_count:
+        type: integer
+      photos:
+        $ref: '#/definitions/model.Photos'
+        type: object
+      pr_count:
+        type: integer
+      prefer_perceived_exertion:
+        type: boolean
+      private:
+        type: boolean
+      resource_state:
+        type: integer
+      segment_efforts:
+        items:
+          type: string
+        type: array
+      similar_activities:
+        $ref: '#/definitions/model.SimilarActivities'
+        type: object
+      splits_metric:
+        items:
+          $ref: '#/definitions/model.SplitsMetric'
+        type: array
+      splits_standard:
+        items:
+          $ref: '#/definitions/model.SplitsStandard'
+        type: array
+      start_date:
+        type: string
+      start_date_local:
+        type: string
+      start_latitude:
+        type: number
+      start_latlng:
+        items:
+          type: number
+        type: array
+      start_longitude:
+        type: number
+      timezone:
+        type: string
+      total_elevation_gain:
+        type: integer
+      total_photo_count:
+        type: integer
+      trainer:
+        type: boolean
+      type:
+        type: string
+      upload_id:
+        type: integer
+      upload_id_str:
+        type: string
+      utc_offset:
+        type: integer
+      visibility:
+        type: string
+      workout_type:
+        type: integer
+    type: object
+  model.StravaAddRequest:
+    properties:
+      strava_activity:
+        $ref: '#/definitions/model.StravaActivity'
+        type: object
+      user_id:
+        type: string
+    type: object
+  model.Trend:
+    properties:
+      current_activity_index:
+        type: string
+      direction:
+        type: integer
+      max_speed:
+        type: integer
+      mid_speed:
+        type: integer
+      min_speed:
+        type: integer
+      speeds:
+        items:
+          type: string
+        type: array
     type: object
   model.User:
     properties:
@@ -233,7 +494,7 @@ paths:
       tags:
       - user
   /searchPreOrder:
-    get:
+    post:
       consumes:
       - application/json
       description: Search pre order detail API calls
@@ -303,6 +564,67 @@ paths:
       summary: Add new user
       tags:
       - user
+  /sync/strava:
+    get:
+      consumes:
+      - application/json
+      description: get activities from strava API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.StravaActivity'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: get activities from strava
+      tags:
+      - sync
+    post:
+      consumes:
+      - application/json
+      description: add new activity from strava API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.StravaAddRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Add new activity from strava
+      tags:
+      - sync
   /user:
     get:
       consumes:
