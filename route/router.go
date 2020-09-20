@@ -63,6 +63,7 @@ func syncGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	group := g.Group("/strava")
 	{
 		group.POST("/activity", stravaAPI.AddStravaActivity)
+		group.GET("/activities", stravaAPI.GetStravaActivities)
 	}
 
 }

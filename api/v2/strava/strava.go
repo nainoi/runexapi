@@ -27,7 +27,7 @@ type API struct {
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /sync/strava [post]
+// @Router /strava/activity [post]
 func (api API) AddStravaActivity(c *gin.Context) {
 	var activity model.StravaAddRequest
 	// span, err := tracer.CreateTracerAndSpan("login", c)
@@ -67,7 +67,7 @@ func (api API) AddStravaActivity(c *gin.Context) {
 // @Success 200 {object} response.Response{data=[]model.StravaActivity}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /sync/strava [get]
+// @Router /strava/activities [get]
 func (api API) GetStravaActivities(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
