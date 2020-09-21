@@ -23,6 +23,7 @@ type UserRepository interface {
 	GetUser(id primitive.ObjectID) (model.User, error)
 	AddUser(user model.UserProviderRequest) (model.User, error)
 	UpdateUser(u model.User, userID string) ( model.User, error)
+	UpdateUserStrava(u model.UserStravaSyncRequest, userID string) ( model.User, error)
 }
 
 //RepoDB db connection struct
@@ -158,6 +159,29 @@ func (db RepoDB) UpdateUser(u model.User, userID string) ( model.User, error) {
 		return u,result.Err()
 	}
 	return u,result.Err()
+}
+
+// UpdateUserStrava api update account profile sync strava
+func (db RepoDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID string) ( model.User, error){
+	filter := bson.D{primitive.E{Key: "_id", Value: userID}, 
+	primitive.E{Key: "provider_id", Value: u.ProviderID}, 
+	primitive.E{Key: "provider", Value: u.Provider}}
+	//isUpsert := true
+	//clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
+	update := bson.M{"$set": bson.M{
+		"strava_id": u.StravaID,
+		"strava_avatar": u.StravaAvatar,
+		"strava_firstname": u.StravaFirstname,
+		"strava_lastname": u.StravaLastname,
+		"updated_at": time.Now(),
+	  },}
+	_, err := db.ConnectionDB.Collection(userConlection).UpdateOne(context.TODO(), filter, update)
+	var user model.User
+	if err == nil {
+		db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+		return user,err
+	}
+	return user, err
 }
 
 // UpdateProvider api update account login without provider

@@ -35,6 +35,10 @@ type User struct {
 	BloodType        string               `json:"blood_type" bson:"blood_type"`
 	PF               string               `json:"pf" bson:"-"`
 	Events           []primitive.ObjectID `json:"events" bson:"events"`
+	StravaID         string               `json:"strava_id" bson:"strava_id"`
+	StravaAvatar     string               `json:"strava_avatar" bson:"strava_avatar"`
+	StravaFirstname  string               `json:"strava_firstname" bson:"strava_firstname"`
+	StravaLastname   string               `json:"strava_latname" bson:"strava_latname"`
 }
 
 // UserMail object for register from email password
@@ -128,4 +132,17 @@ type UserProviderRequest struct {
 	PF         string    `json:"pf" bson:"pf" binding:"required"`
 	BirthDate  time.Time `json:"birthdate" bson:"birthdate"`
 	Gender     string    `json:"gender" bson:"gender"`
+}
+
+// UserStravaSyncRequest object for register from provider
+// swagger:model
+type UserStravaSyncRequest struct {
+	// in: body
+	Email           string             `json:"email" binding:"exists,email"`
+	Provider        string             `json:"provider" bson:"provider" binding:"required"`
+	ProviderID      string             `json:"provider_id" bson:"provider_id" binding:"required"`
+	StravaID        string             `json:"strava_id" bson:"strava_id" binding:"required"`
+	StravaAvatar    string             `json:"strava_avatar"`
+	StravaFirstname string             `json:"strava_firstname"`
+	StravaLastname  string             `json:"strava_latname"`
 }

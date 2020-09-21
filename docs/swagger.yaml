@@ -289,6 +289,8 @@ definitions:
       strava_activity:
         $ref: '#/definitions/model.StravaActivity'
         type: object
+      strava_id:
+        type: string
       user_id:
         type: string
     type: object
@@ -359,6 +361,14 @@ definitions:
         type: string
       role:
         type: string
+      strava_avatar:
+        type: string
+      strava_firstname:
+        type: string
+      strava_id:
+        type: string
+      strava_latname:
+        type: string
       updated_at:
         type: string
     type: object
@@ -389,6 +399,28 @@ definitions:
     - pf
     - provider
     - provider_id
+    type: object
+  model.UserStravaSyncRequest:
+    properties:
+      email:
+        description: 'in: body'
+        type: string
+      provider:
+        type: string
+      provider_id:
+        type: string
+      strava_avatar:
+        type: string
+      strava_firstname:
+        type: string
+      strava_id:
+        type: string
+      strava_latname:
+        type: string
+    required:
+    - provider
+    - provider_id
+    - strava_id
     type: object
   response.Response:
     properties:
@@ -564,7 +596,7 @@ paths:
       summary: Add new user
       tags:
       - user
-  /sync/strava:
+  /strava/activities:
     get:
       consumes:
       - application/json
@@ -596,6 +628,7 @@ paths:
       summary: get activities from strava
       tags:
       - sync
+  /strava/activity:
     post:
       consumes:
       - application/json
@@ -625,6 +658,47 @@ paths:
       summary: Add new activity from strava
       tags:
       - sync
+  /syncStrava:
+    put:
+      consumes:
+      - application/json
+      description: Update User sync user with strava API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.UserStravaSyncRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Update User sync user with strava
+      tags:
+      - user
   /user:
     get:
       consumes:

@@ -144,11 +144,13 @@ type Trend struct {
 // StravaAddRequest struct for request add strava activity
 type StravaAddRequest struct {
 	UserID         primitive.ObjectID `json:"user_id"`
+	StravaID       string             `json:"strava_id"`
 	StravaActivity StravaActivity     `json:"strava_activity"`
 }
 
 // StravaData struct for request add strava activity
 type StravaData struct {
 	UserID     primitive.ObjectID `json:"user_id" bson:"user_id"`
+	StravaID   string             `json:"strava_id" bson:"strava_id"`
 	Activities []StravaActivity   `json:"activities" bson:"activities"`
 }

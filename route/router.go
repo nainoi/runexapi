@@ -38,6 +38,7 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.GET("/user", userAPI.GetUser)
 		g.PUT("/user", userAPI.UpdateUser)
 		g.POST("/logout", userAPI.LogoutUser)
+		g.PUT("/syncStrava", userAPI.UpdateUserStrava)
 	}
 }
 

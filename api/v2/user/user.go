@@ -376,6 +376,59 @@ func (api API) LoginUser(c *gin.Context) {
 	return
 }
 
+// UpdateUserStrava Method for update new provider id
+// @Summary Update User sync user with strava
+// @Description Update User sync user with strava API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags user
+// @Security bearerAuth
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.UserStravaSyncRequest true "payload"
+// @Success 200 {object} response.Response{data=model.User}
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /syncStrava [put]
+func (api API) UpdateUserStrava(c *gin.Context) {
+	var userStrava model.UserStravaSyncRequest
+	// span, err := tracer.CreateTracerAndSpan("login", c)
+	// if err != nil {
+	// 	logger.Logger.Errorf(err.Error())
+	// }
+	userID, _ := oauth.GetValuesToken(c)
+	var (
+		res = response.Gin{C: c}
+	)
+	if userID != "" {
+		err := c.ShouldBindJSON(&userStrava)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			//tracer.OnErrorLog(span, err)
+			res.Response(http.StatusBadRequest, err.Error(), nil)
+			c.Abort()
+			return
+		}
+
+		u, err := api.UserRepo.UpdateUserStrava(userStrava, userID)
+		if err != nil {
+			res.Response(http.StatusInternalServerError, "Could not update user sync with strava", nil)
+			c.Abort()
+			return
+		}
+
+		res.Response(http.StatusOK, "sync strava success", u)
+		c.Abort()
+		return
+	}
+
+	res.Response(http.StatusUnauthorized, "Unauthorized", nil)
+	c.Abort()
+	return
+
+}
+
 /*
 // UpdateUserProvider Method for update new provider id
 // @Summary Update User Provider

@@ -266,7 +266,7 @@ var doc = `{
                 }
             }
         },
-        "/sync/strava": {
+        "/strava/activities": {
             "get": {
                 "security": [
                     {
@@ -319,7 +319,9 @@ var doc = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/strava/activity": {
             "post": {
                 "description": "add new activity from strava API calls",
                 "consumes": [
@@ -352,6 +354,75 @@ var doc = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/syncStrava": {
+            "put": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "Update User sync user with strava API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update User sync user with strava",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UserStravaSyncRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.User"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -927,6 +998,9 @@ var doc = `{
                     "type": "object",
                     "$ref": "#/definitions/model.StravaActivity"
                 },
+                "strava_id": {
+                    "type": "string"
+                },
                 "user_id": {
                     "type": "string"
                 }
@@ -1033,6 +1107,18 @@ var doc = `{
                 "role": {
                     "type": "string"
                 },
+                "strava_avatar": {
+                    "type": "string"
+                },
+                "strava_firstname": {
+                    "type": "string"
+                },
+                "strava_id": {
+                    "type": "string"
+                },
+                "strava_latname": {
+                    "type": "string"
+                },
                 "updated_at": {
                     "type": "string"
                 }
@@ -1075,6 +1161,38 @@ var doc = `{
                     "type": "string"
                 },
                 "provider_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserStravaSyncRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "provider_id",
+                "strava_id"
+            ],
+            "properties": {
+                "email": {
+                    "description": "in: body",
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "string"
+                },
+                "strava_avatar": {
+                    "type": "string"
+                },
+                "strava_firstname": {
+                    "type": "string"
+                },
+                "strava_id": {
+                    "type": "string"
+                },
+                "strava_latname": {
                     "type": "string"
                 }
             }

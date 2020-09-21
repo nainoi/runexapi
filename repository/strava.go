@@ -28,7 +28,10 @@ const (
 //AddActivity repository for add activity from strava
 func (repo RepoDB) AddActivity(stravaReq model.StravaAddRequest) error {
 	var stravaData model.StravaData
-	filter := bson.D{primitive.E{Key: "user_id", Value: stravaReq.UserID}}
+	filter := bson.D{
+		primitive.E{Key: "user_id", Value: stravaReq.UserID},
+		primitive.E{Key: "strava_id", Value: stravaReq.StravaID},
+	}
 	stravaReq.StravaActivity.CreatedAt = time.Now()
 	stravaReq.StravaActivity.IsSync = false
 	err := repo.ConnectionDB.Collection(stravaConlection).FindOne(context.TODO(), filter).Decode(&stravaData)
