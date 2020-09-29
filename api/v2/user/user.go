@@ -172,6 +172,7 @@ func (api API) GetUser(c *gin.Context) {
 		p, err := primitive.ObjectIDFromHex(userID)
 		if err != nil {
 			message := err.Error()
+			log.Println("error GetUserByIDHandler", message)
 			res.Response(http.StatusBadRequest, message, nil)
 			c.Abort()
 			return

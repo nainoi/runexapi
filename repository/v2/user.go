@@ -22,8 +22,8 @@ type UserRepository interface {
 	GetUserByProvider(u model.UserProviderRequest) (model.User, error)
 	GetUser(id primitive.ObjectID) (model.User, error)
 	AddUser(user model.UserProviderRequest) (model.User, error)
-	UpdateUser(u model.User, userID string) ( model.User, error)
-	UpdateUserStrava(u model.UserStravaSyncRequest, userID string) ( model.User, error)
+	UpdateUser(u model.User, userID string) (model.User, error)
+	UpdateUserStrava(u model.UserStravaSyncRequest, userID string) (model.User, error)
 }
 
 //RepoDB db connection struct
@@ -133,6 +133,7 @@ func (db RepoDB) AddUser(user model.UserProviderRequest) (model.User, error) {
 	}
 	u.Address = []model.Address{}
 	u.Events = []primitive.ObjectID{}
+	u.FirebaseTokens = []model.FirebaseToken{}
 	result, err := db.ConnectionDB.Collection(userConlection).InsertOne(context.TODO(), u)
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		u.UserID = oid
@@ -143,7 +144,7 @@ func (db RepoDB) AddUser(user model.UserProviderRequest) (model.User, error) {
 }
 
 // UpdateUser api update account profile
-func (db RepoDB) UpdateUser(u model.User, userID string) ( model.User, error) {
+func (db RepoDB) UpdateUser(u model.User, userID string) (model.User, error) {
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return u, err
@@ -156,30 +157,83 @@ func (db RepoDB) UpdateUser(u model.User, userID string) ( model.User, error) {
 	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
 	if result.Err() == nil {
 		u.UserID = id
-		return u,result.Err()
+		return u, result.Err()
 	}
-	return u,result.Err()
+	return u, result.Err()
+}
+
+// FirebaseRegister api register firebase token
+func (db RepoDB) FirebaseRegister(u model.RegisterTokenRequest, userID string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	var user model.User
+	err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		return err
+	}
+	check := false
+	for _, s := range user.FirebaseTokens {
+		if s.Token == u.FirebaseToken {
+			check = true
+		}
+	}
+	if check {
+		return nil
+	}
+	var token = model.FirebaseToken{
+		Token: u.FirebaseToken,
+		UUID:  u.UUID,
+	}
+	user.FirebaseTokens = append(user.FirebaseTokens, token)
+	user.UpdatedAt = time.Now()
+	isUpsert := true
+	clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
+	update := bson.M{"$set": user}
+	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
+	return result.Err()
+}
+
+// FirebaseRemove api remove firebase token
+func (db RepoDB) FirebaseRemove(u model.RegisterTokenRequest, userID string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	filter := bson.D{
+		primitive.E{Key: "_id", Value: id},
+		primitive.E{Key: "firebase_tokens.token", Value: u.FirebaseToken},
+		primitive.E{Key: "firebase_tokens.uuid", Value: u.UUID},
+	}
+	update := bson.M{"$pull": bson.M{"firebase_tokens.token": u.FirebaseToken}}
+	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update)
+	if result.Err() != nil {
+		return err
+	}
+	return result.Err()
 }
 
 // UpdateUserStrava api update account profile sync strava
-func (db RepoDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID string) ( model.User, error){
-	filter := bson.D{primitive.E{Key: "_id", Value: userID}, 
-	primitive.E{Key: "provider_id", Value: u.ProviderID}, 
-	primitive.E{Key: "provider", Value: u.Provider}}
+func (db RepoDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID string) (model.User, error) {
+	filter := bson.D{primitive.E{Key: "_id", Value: userID},
+		primitive.E{Key: "provider_id", Value: u.ProviderID},
+		primitive.E{Key: "provider", Value: u.Provider}}
 	//isUpsert := true
 	//clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
 	update := bson.M{"$set": bson.M{
-		"strava_id": u.StravaID,
-		"strava_avatar": u.StravaAvatar,
+		"strava_id":        u.StravaID,
+		"strava_avatar":    u.StravaAvatar,
 		"strava_firstname": u.StravaFirstname,
-		"strava_lastname": u.StravaLastname,
-		"updated_at": time.Now(),
-	  },}
+		"strava_lastname":  u.StravaLastname,
+		"updated_at":       time.Now(),
+	}}
 	_, err := db.ConnectionDB.Collection(userConlection).UpdateOne(context.TODO(), filter, update)
 	var user model.User
 	if err == nil {
 		db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
-		return user,err
+		return user, err
 	}
 	return user, err
 }

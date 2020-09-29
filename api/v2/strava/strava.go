@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/firebase"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/repository"
@@ -53,6 +54,8 @@ func (api API) AddStravaActivity(c *gin.Context) {
 		return
 	}
 	res.Response(http.StatusOK, "Add strava activity success", nil)
+	fcm := firebase.InitializeAppWithServiceAccount()
+	firebase.SendToToken(fcm, "", "")
 	return
 }
 

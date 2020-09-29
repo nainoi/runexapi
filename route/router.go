@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
@@ -19,6 +20,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		userGroup(*api, connectionDB)
 		preOrderGroup(*api, connectionDB)
 		syncGroup(*api, connectionDB)
+		notiGroup(*api, connectionDB)
 	}
 }
 
@@ -66,5 +68,17 @@ func syncGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.POST("/activity", stravaAPI.AddStravaActivity)
 		group.GET("/activities", stravaAPI.GetStravaActivities)
 	}
+
+}
+
+func notiGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	// repoStrava := repo.RepoDB{
+	// 	ConnectionDB: connectionDB,
+	// }
+
+	// stravaAPI := strava.API{
+	// 	Repo: repoStrava,
+	// }
+	g.POST("/notificationOne", notification.SendOneNotification)
 
 }

@@ -39,6 +39,7 @@ type User struct {
 	StravaAvatar     string               `json:"strava_avatar" bson:"strava_avatar"`
 	StravaFirstname  string               `json:"strava_firstname" bson:"strava_firstname"`
 	StravaLastname   string               `json:"strava_latname" bson:"strava_latname"`
+	FirebaseTokens   []FirebaseToken      `json:"firebase_tokens" bson:"firebase_tokens"`
 }
 
 // UserMail object for register from email password
@@ -138,11 +139,17 @@ type UserProviderRequest struct {
 // swagger:model
 type UserStravaSyncRequest struct {
 	// in: body
-	Email           string             `json:"email" binding:"exists,email"`
-	Provider        string             `json:"provider" bson:"provider" binding:"required"`
-	ProviderID      string             `json:"provider_id" bson:"provider_id" binding:"required"`
-	StravaID        string             `json:"strava_id" bson:"strava_id" binding:"required"`
-	StravaAvatar    string             `json:"strava_avatar"`
-	StravaFirstname string             `json:"strava_firstname"`
-	StravaLastname  string             `json:"strava_latname"`
+	Email           string `json:"email" binding:"exists,email"`
+	Provider        string `json:"provider" bson:"provider" binding:"required"`
+	ProviderID      string `json:"provider_id" bson:"provider_id" binding:"required"`
+	StravaID        string `json:"strava_id" bson:"strava_id" binding:"required"`
+	StravaAvatar    string `json:"strava_avatar"`
+	StravaFirstname string `json:"strava_firstname"`
+	StravaLastname  string `json:"strava_latname"`
+}
+
+// FirebaseToken model
+type FirebaseToken struct {
+	Token string `json:"token" bson:"token"`
+	UUID  string `json:"uuid" bson:"uuid"`
 }
