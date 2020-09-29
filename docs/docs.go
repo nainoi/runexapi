@@ -111,6 +111,52 @@ var doc = `{
                 }
             }
         },
+        "/notificationOne": {
+            "post": {
+                "description": "send notification one token one time",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "notification"
+                ],
+                "summary": "send notification one token one time",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.NotificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/refreshAccessToken": {
             "post": {
                 "description": "Authenticates a user and provides a JWT to refresh Authorize API calls",
@@ -560,9 +606,110 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/workout/add": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save workout API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Add workout",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddWorkoutForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "model.AddWorkoutForm": {
+            "type": "object",
+            "properties": {
+                "activity_type": {
+                    "type": "string"
+                },
+                "calory": {
+                    "type": "number"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "is_sync": {
+                    "type": "boolean"
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Location"
+                    }
+                },
+                "net_elevation_gain": {
+                    "type": "number"
+                },
+                "pace": {
+                    "type": "number"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "time_string": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "workout_date": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Address": {
             "type": "object",
             "required": [
@@ -618,6 +765,43 @@ var doc = `{
                 }
             }
         },
+        "model.FirebaseToken": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                },
+                "uuid": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Location": {
+            "type": "object",
+            "properties": {
+                "altitude": {
+                    "type": "number"
+                },
+                "elevation_gain": {
+                    "type": "number"
+                },
+                "harth_rate": {
+                    "type": "number"
+                },
+                "latitude": {
+                    "type": "number"
+                },
+                "longitude": {
+                    "type": "number"
+                },
+                "temp": {
+                    "type": "number"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Map": {
             "type": "object",
             "properties": {
@@ -631,6 +815,20 @@ var doc = `{
                     "type": "integer"
                 },
                 "summary_polyline": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.NotificationRequest": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "token": {
                     "type": "string"
                 }
             }
@@ -1072,6 +1270,12 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "firebase_tokens": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.FirebaseToken"
                     }
                 },
                 "firstname": {

@@ -315,7 +315,7 @@ func InvalidateToken(tokenString string) error {
 	val, err := status.Result()
 
 	if val == "OK" {
-		logger.Logger.Infof("User Logged Out")
+		//logger.Logger.Infof("User Logged Out")
 		return nil
 	}
 

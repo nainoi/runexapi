@@ -1,4 +1,37 @@
 definitions:
+  model.AddWorkoutForm:
+    properties:
+      activity_type:
+        type: string
+      calory:
+        type: number
+      caption:
+        type: string
+      distance:
+        type: number
+      duration:
+        type: integer
+      end_date:
+        type: string
+      is_sync:
+        type: boolean
+      locations:
+        items:
+          $ref: '#/definitions/model.Location'
+        type: array
+      net_elevation_gain:
+        type: number
+      pace:
+        type: number
+      start_date:
+        type: string
+      time_string:
+        type: string
+      user_id:
+        type: string
+      workout_date:
+        type: string
+    type: object
   model.Address:
     properties:
       address:
@@ -36,6 +69,30 @@ definitions:
       keyword:
         type: string
     type: object
+  model.FirebaseToken:
+    properties:
+      token:
+        type: string
+      uuid:
+        type: string
+    type: object
+  model.Location:
+    properties:
+      altitude:
+        type: number
+      elevation_gain:
+        type: number
+      harth_rate:
+        type: number
+      latitude:
+        type: number
+      longitude:
+        type: number
+      temp:
+        type: number
+      timestamp:
+        type: string
+    type: object
   model.Map:
     properties:
       id:
@@ -45,6 +102,15 @@ definitions:
       resource_state:
         type: integer
       summary_polyline:
+        type: string
+    type: object
+  model.NotificationRequest:
+    properties:
+      body:
+        type: string
+      title:
+        type: string
+      token:
         type: string
     type: object
   model.Photos:
@@ -339,6 +405,10 @@ definitions:
         items:
           type: string
         type: array
+      firebase_tokens:
+        items:
+          $ref: '#/definitions/model.FirebaseToken'
+        type: array
       firstname:
         type: string
       firstname_th:
@@ -497,6 +567,36 @@ paths:
       summary: user logout
       tags:
       - user
+  /notificationOne:
+    post:
+      consumes:
+      - application/json
+      description: send notification one token one time
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.NotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: send notification one token one time
+      tags:
+      - notification
   /refreshAccessToken:
     post:
       description: Authenticates a user and provides a JWT to refresh Authorize API calls
@@ -773,4 +873,36 @@ paths:
       summary: Update user info
       tags:
       - user
+  /workout/add:
+    post:
+      consumes:
+      - application/json
+      description: save workout API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddWorkoutForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Add workout
+      tags:
+      - workouts
 swagger: "2.0"

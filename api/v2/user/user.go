@@ -172,7 +172,6 @@ func (api API) GetUser(c *gin.Context) {
 		p, err := primitive.ObjectIDFromHex(userID)
 		if err != nil {
 			message := err.Error()
-			log.Println("error GetUserByIDHandler", message)
 			res.Response(http.StatusBadRequest, message, nil)
 			c.Abort()
 			return
@@ -509,16 +508,18 @@ func (api API) LogoutUser(c *gin.Context) {
 	// 	//logger.Logger.Errorf(err.Error())
 	// 	//fmt.Println(err.Error())
 	// }
+	var (
+		res = response.Gin{C: c}
+	)
 
 	token := c.GetHeader("Authorization")
-
 	if token == "" {
 		// span.LogFields(
 		// 	tracelog.String("event", "error"),
 		// 	tracelog.String("message", "Authorization token was not provided"),
 		// )
 		// logger.Logger.Errorf("Authorization token was not provided")
-		c.JSON(http.StatusUnauthorized, gin.H{"status": http.StatusUnauthorized, "message": "Authorization Token is required"})
+		res.Response(http.StatusUnauthorized, "Authorization Token is required", nil)
 		c.Abort()
 		return
 	}
@@ -528,7 +529,7 @@ func (api API) LogoutUser(c *gin.Context) {
 	err := oauth.InvalidateToken(extractedToken[1])
 	if err != nil {
 		//tracer.OnErrorLog(span, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"status": http.StatusInternalServerError, "message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
 		c.Abort()
 		return
 	}
@@ -537,6 +538,7 @@ func (api API) LogoutUser(c *gin.Context) {
 	// 	tracelog.String("event", "success"),
 	// 	tracelog.Int("status", http.StatusAccepted),
 	// )
-	c.JSON(http.StatusAccepted, gin.H{"status": http.StatusAccepted, "message": "Done"})
+	res.Response(http.StatusAccepted, "Done", nil)
+	return
 
 }

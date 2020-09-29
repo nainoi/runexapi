@@ -20,7 +20,7 @@ require (
 	github.com/go-openapi/swag v0.19.9 // indirect
 	github.com/go-redis/redis/v8 v8.0.0-beta.5
 	github.com/go-stack/stack v1.8.0 // indirect
-	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/golang/protobuf v1.4.2
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/google/uuid v1.1.1

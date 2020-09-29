@@ -114,7 +114,7 @@
                   "format": "hexadecimal",
                   "description": "workout list id"
                 },
-                "activitytype": {
+                "activity_type": {
                   "type": "string",
                   "description": "workout type"
                 },
@@ -134,23 +134,80 @@
                   "type": "number",
                   "description": "pace value"
                 },
-                "time": {
+                "duration": {
                   "type": "number",
                   "description": "workout time value"
                 },
-                "activity_date": {
+                "time_string": {
+                  "type": "string",
+                  "description": "workout time string value"
+                },
+                "start_date": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "workout start date"
+                },
+                "end_date": {
+                  "type": "string",
+                  "format": "datetime",
+                  "description": "workout end date"
+                },
+                "workout_date": {
                   "type": "string",
                   "format": "datetime",
                   "description": "workout date"
                 },
-                "image_path": {
-                  "type": "string",
-                  "description": "image path url"
+                "net_elevation_gain": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "net elevation gain value"
                 },
-                "gpx_data": {
-                  "type": "object",
+                "is_sync": {
+                  "type": "boolean",
+                  "description": "workout sync send activity"
+                },
+                "locations": {
+                  "type": "array",
                   "description": "gpx data from workout tracking",
-                  "properties": {}
+                  "items": {
+                    "properties": {
+                      "timestamp": {
+                        "type": "number",
+                        "format": "timestamp",
+                        "description": "time location"
+                      },
+                      "altitude": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "altitude value"
+                      },
+                      "latitude": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "latitude value"
+                      },
+                      "longitude": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "longitude value"
+                      },
+                      "temp": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "temp value"
+                      },
+                      "harth_rate": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "harth rate value"
+                      },
+                      "elevation_gain": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "elevation gain value"
+                      }
+                    }
+                  }
                 }
               }
             }
