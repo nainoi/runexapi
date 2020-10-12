@@ -24,19 +24,25 @@ type UserRepository interface {
 	AddUser(user model.UserProviderRequest) (model.User, error)
 	UpdateUser(u model.User, userID string) (model.User, error)
 	UpdateUserStrava(u model.UserStravaSyncRequest, userID string) (model.User, error)
+	GetUserWithProvider(provider string, providerID string) (model.User, error)
+
+	//fcm
+	FirebaseRegister(token string, userID string)
+	FirebaseRemove(u model.RegisterTokenRequest, userID string)
 }
 
-//RepoDB db connection struct
-type RepoDB struct {
+//RepoUserDB db connection struct
+type RepoUserDB struct {
 	ConnectionDB *mongo.Database
 }
 
 const (
 	userConlection = "user"
+	fcmConlection  = "fcm"
 )
 
 // Signin repository for login api call
-func (db RepoDB) Signin(u model.UserProviderRequest) (model.User, error) {
+func (db RepoUserDB) Signin(u model.UserProviderRequest) (model.User, error) {
 	var user model.User
 	filter := bson.D{
 		primitive.E{Key: "email", Value: u.Email},
@@ -52,7 +58,7 @@ func (db RepoDB) Signin(u model.UserProviderRequest) (model.User, error) {
 }
 
 //CheckEmail Email in db
-func (db RepoDB) CheckEmail(u model.UserProviderRequest) (model.User, bool, bool) {
+func (db RepoUserDB) CheckEmail(u model.UserProviderRequest) (model.User, bool, bool) {
 	var user model.User
 	isMail := false
 	isProvider := false
@@ -82,7 +88,7 @@ func (db RepoDB) CheckEmail(u model.UserProviderRequest) (model.User, bool, bool
 }
 
 //CheckProvider check provider with email user
-func (db RepoDB) CheckProvider(provider model.UserProviderRequest) bool {
+func (db RepoUserDB) CheckProvider(provider model.UserProviderRequest) bool {
 	var user model.User
 	filter := bson.D{primitive.E{Key: "provider", Value: provider.Provider}, primitive.E{Key: "provider_id", Value: provider.ProviderID}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
@@ -94,7 +100,7 @@ func (db RepoDB) CheckProvider(provider model.UserProviderRequest) bool {
 }
 
 // GetUserByProvider api login by provider
-func (db RepoDB) GetUserByProvider(u model.UserProviderRequest) (model.User, error) {
+func (db RepoUserDB) GetUserByProvider(u model.UserProviderRequest) (model.User, error) {
 	var user model.User
 	filter := bson.D{primitive.E{Key: "provider", Value: u.Provider}, primitive.E{Key: "provider_id", Value: u.ProviderID}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
@@ -105,7 +111,7 @@ func (db RepoDB) GetUserByProvider(u model.UserProviderRequest) (model.User, err
 }
 
 // GetUser with user id and return user info
-func (db RepoDB) GetUser(id primitive.ObjectID) (model.User, error) {
+func (db RepoUserDB) GetUser(id primitive.ObjectID) (model.User, error) {
 	var user model.User
 	filter := bson.D{primitive.E{Key: "_id", Value: id}}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
@@ -115,16 +121,29 @@ func (db RepoDB) GetUser(id primitive.ObjectID) (model.User, error) {
 	return user, err
 }
 
+// GetUserWithProvider with user id and return user info
+func (db RepoUserDB) GetUserWithProvider(provider string, providerID string) (model.User, error) {
+	var user model.User
+	filter := bson.D{primitive.E{Key: "provider", Value: provider}, primitive.E{Key: "provider_id", Value: providerID}}
+	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		log.Println(err)
+	}
+	return user, err
+}
+
 // AddUser with provider api add user from social provider
-func (db RepoDB) AddUser(user model.UserProviderRequest) (model.User, error) {
+func (db RepoUserDB) AddUser(user model.UserProviderRequest) (model.User, error) {
 	var u model.User
 	u = model.User{
-		Email:     user.Email,
-		FullName:  user.FullName,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		PF:        user.PF,
-		Avatar:    user.Avatar,
+		Email:      user.Email,
+		FullName:   user.FullName,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Provider:   user.Provider,
+		ProviderID: user.ProviderID,
+		PF:         user.PF,
+		Avatar:     user.Avatar,
 	}
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
@@ -133,7 +152,6 @@ func (db RepoDB) AddUser(user model.UserProviderRequest) (model.User, error) {
 	}
 	u.Address = []model.Address{}
 	u.Events = []primitive.ObjectID{}
-	u.FirebaseTokens = []model.FirebaseToken{}
 	result, err := db.ConnectionDB.Collection(userConlection).InsertOne(context.TODO(), u)
 	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
 		u.UserID = oid
@@ -144,7 +162,7 @@ func (db RepoDB) AddUser(user model.UserProviderRequest) (model.User, error) {
 }
 
 // UpdateUser api update account profile
-func (db RepoDB) UpdateUser(u model.User, userID string) (model.User, error) {
+func (db RepoUserDB) UpdateUser(u model.User, userID string) (model.User, error) {
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return u, err
@@ -162,61 +180,82 @@ func (db RepoDB) UpdateUser(u model.User, userID string) (model.User, error) {
 	return u, result.Err()
 }
 
-// FirebaseRegister api register firebase token
-func (db RepoDB) FirebaseRegister(u model.RegisterTokenRequest, userID string) error {
+// FirebaseCreate repo initial
+func (db RepoUserDB) FirebaseCreate(userID string) error {
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err
 	}
-	filter := bson.D{primitive.E{Key: "_id", Value: id}}
-	var user model.User
-	err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	filter := bson.D{primitive.E{Key: "user_id", Value: id}}
+	fcm := model.FirebaseUser{
+		UserID:         id,
+		FirebaseTokens: []string{},
+	}
+	count, err := db.ConnectionDB.Collection(fcmConlection).CountDocuments(context.TODO(), filter)
+	if err != nil {
+		_, err = db.ConnectionDB.Collection(fcmConlection).InsertOne(context.TODO(), fcm)
+		return err
+	}
+	if count == 0 {
+		_, err = db.ConnectionDB.Collection(fcmConlection).InsertOne(context.TODO(), fcm)
+		return err
+	}
+	return err
+}
+
+// FirebaseRegister repo register firebase token
+func (db RepoUserDB) FirebaseRegister(token string, userID string) error {
+	id, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	filter := bson.D{primitive.E{Key: "user_id", Value: id}}
+	var fcm model.FirebaseUser
+	count, err := db.ConnectionDB.Collection(fcmConlection).CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		fcm := model.FirebaseUser{
+			UserID:         id,
+			FirebaseTokens: []string{ token },
+		}
+		_, err = db.ConnectionDB.Collection(fcmConlection).InsertOne(context.TODO(), fcm)
+		return err
+		
+	}
+	err = db.ConnectionDB.Collection(fcmConlection).FindOne(context.TODO(), filter).Decode(&fcm)
 	if err != nil {
 		return err
 	}
 	check := false
-	for _, s := range user.FirebaseTokens {
-		if s.Token == u.FirebaseToken {
+	for _, s := range fcm.FirebaseTokens {
+		if token == s {
 			check = true
 		}
 	}
 	if check {
 		return nil
 	}
-	var token = model.FirebaseToken{
-		Token: u.FirebaseToken,
-		UUID:  u.UUID,
-	}
-	user.FirebaseTokens = append(user.FirebaseTokens, token)
-	user.UpdatedAt = time.Now()
+	fcm.FirebaseTokens = append(fcm.FirebaseTokens, token)
 	isUpsert := true
 	clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
-	update := bson.M{"$set": user}
-	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
+	update := bson.M{"$set": fcm}
+	result := db.ConnectionDB.Collection(fcmConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
 	return result.Err()
 }
 
 // FirebaseRemove api remove firebase token
-func (db RepoDB) FirebaseRemove(u model.RegisterTokenRequest, userID string) error {
+func (db RepoUserDB) FirebaseRemove(u model.RegisterTokenRequest, userID string) error {
 	id, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		return err
 	}
-	filter := bson.D{
-		primitive.E{Key: "_id", Value: id},
-		primitive.E{Key: "firebase_tokens.token", Value: u.FirebaseToken},
-		primitive.E{Key: "firebase_tokens.uuid", Value: u.UUID},
-	}
-	update := bson.M{"$pull": bson.M{"firebase_tokens.token": u.FirebaseToken}}
-	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update)
-	if result.Err() != nil {
-		return err
-	}
-	return result.Err()
+	filter := bson.M{"user_id":id}
+	update := bson.M{"$pull": bson.M{"firebase_tokens": u.FirebaseToken }}
+	_, err = db.ConnectionDB.Collection(fcmConlection).UpdateOne(context.TODO(), filter, update)
+	return err
 }
 
 // UpdateUserStrava api update account profile sync strava
-func (db RepoDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID string) (model.User, error) {
+func (db RepoUserDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID string) (model.User, error) {
 	filter := bson.D{primitive.E{Key: "_id", Value: userID},
 		primitive.E{Key: "provider_id", Value: u.ProviderID},
 		primitive.E{Key: "provider", Value: u.Provider}}

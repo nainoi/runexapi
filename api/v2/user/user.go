@@ -21,7 +21,7 @@ import (
 
 //API struct for user repository
 type API struct {
-	UserRepo repository.UserRepository
+	UserRepo repository.RepoUserDB
 }
 
 // VerifyAuthToken checks to see if the JWT was present in blacklist table and validates it's authenticity
@@ -90,6 +90,8 @@ func (api API) RefreshAccessToken(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
 	)
+
+	log.Println(tokenRequest)
 
 	err := c.ShouldBindJSON(&tokenRequest)
 	if err != nil {
@@ -426,7 +428,6 @@ func (api API) UpdateUserStrava(c *gin.Context) {
 	res.Response(http.StatusUnauthorized, "Unauthorized", nil)
 	c.Abort()
 	return
-
 }
 
 /*
@@ -513,6 +514,9 @@ func (api API) LogoutUser(c *gin.Context) {
 	)
 
 	token := c.GetHeader("Authorization")
+	userID, _ := oauth.GetValuesToken(c)
+	var firebaseToken model.RegisterTokenRequest
+	err := c.BindJSON(&firebaseToken)
 	if token == "" {
 		// span.LogFields(
 		// 	tracelog.String("event", "error"),
@@ -526,7 +530,7 @@ func (api API) LogoutUser(c *gin.Context) {
 
 	extractedToken := strings.Split(token, "Bearer ")
 
-	err := oauth.InvalidateToken(extractedToken[1])
+	err = oauth.InvalidateToken(extractedToken[1])
 	if err != nil {
 		//tracer.OnErrorLog(span, err)
 		res.Response(http.StatusInternalServerError, err.Error(), nil)
@@ -538,7 +542,66 @@ func (api API) LogoutUser(c *gin.Context) {
 	// 	tracelog.String("event", "success"),
 	// 	tracelog.Int("status", http.StatusAccepted),
 	// )
+	if firebaseToken.FirebaseToken != "" {
+		api.UserRepo.FirebaseRemove(firebaseToken, userID)
+	}
+
 	res.Response(http.StatusAccepted, "Done", nil)
 	return
 
+}
+
+// RegFirebase godoc
+// @Summary user firebase register
+// @Description user firebase register API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegisterTokenRequest
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /registerFirebase [post]
+func (api API) RegFirebase(c *gin.Context) {
+	var firebaseRequest model.RegisterTokenRequest
+	// span, err := tracer.CreateTracerAndSpan("login", c)
+	// if err != nil {
+	// 	logger.Logger.Errorf(err.Error())
+	// }
+	err := c.ShouldBindJSON(&firebaseRequest)
+	var (
+		res = response.Gin{C: c}
+	)
+	if err != nil {
+		fmt.Println(err.Error())
+		//tracer.OnErrorLog(span, err)
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		//var acc model.UserAuth
+		return
+	}
+
+	userID, _ := oauth.GetValuesToken(c)
+
+	err = api.UserRepo.FirebaseRegister(firebaseRequest.FirebaseToken, userID)
+	if err == nil {
+		//span, err := tracer.CreateTracerAndSpan("check_email", c)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// }
+		// for _, s := range u.Provider {
+		// 	if s.ProviderID == userProvider.ProviderID && s.ProviderName == userProvider.Provider {
+
+		// 	}
+		// }
+		res.Response(http.StatusOK, "firebase register success", nil)
+		c.Abort()
+		return
+
+	}
+
+	// Return if there is an error in creating the JWT return an internal server error
+	//tracer.OnErrorLog(span, err)
+	res.Response(http.StatusInternalServerError, "Could not register firebase", nil)
+	return
 }

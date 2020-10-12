@@ -18,6 +18,7 @@ type ActivityRepository interface {
 	GetHistoryDayByEvent(event_user string, year int, month int) (model.HistoryDayInfo, error)
 	HistoryMonthByEvent(event_user string, year int) ([]model.HistoryMonthInfo, error)
 	DeleteActivity(event_user string, activity_id string) error
+	GetActivityAllEvent(eventID string) ([]model.ActivityAllInfo, error)
 }
 
 type ActivityRepositoryMongo struct {
@@ -98,11 +99,16 @@ func (activityMongo ActivityRepositoryMongo) GetActivityByEvent(event_user strin
 	return activityInfo, err
 }
 
-func (activityMongo ActivityRepositoryMongo) GetActivityByEvent2(event_user string) (model.Activity, error) {
+// GetActivityByEvent2 repo reg event detail
+func (activityMongo ActivityRepositoryMongo) GetActivityByEvent2(eventUser string) (model.Activity, error) {
 	var activity model.Activity
 	//var activityInfo []model.ActivityInfo
-	filter := bson.D{{"event_user", event_user}}
-	err := activityMongo.ConnectionDB.Collection(activityCollection).FindOne(context.TODO(), filter).Decode(&activity)
+	filter := bson.D{primitive.E{Key: "event_user",Value: eventUser}}
+	count, err := activityMongo.ConnectionDB.Collection(activityCollection).CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		return model.Activity{}, err
+	}
+	err = activityMongo.ConnectionDB.Collection(activityCollection).FindOne(context.TODO(), filter).Decode(&activity)
 
 	if err != nil {
 		log.Println(err)
@@ -113,7 +119,8 @@ func (activityMongo ActivityRepositoryMongo) GetActivityByEvent2(event_user stri
 	return activity, err
 }
 
-func (activityMongo ActivityRepositoryMongo) GetHistoryDayByEvent(event_user string, year int, month int) (model.HistoryDayInfo, error) {
+// GetHistoryDayByEvent repo reg history event detail
+func (activityMongo ActivityRepositoryMongo) GetHistoryDayByEvent(eventUser string, year int, month int) (model.HistoryDayInfo, error) {
 	var activity model.Activity
 	var activityInfo []model.ActivityInfo
 	var historyDayInfo model.HistoryDayInfo
@@ -121,7 +128,7 @@ func (activityMongo ActivityRepositoryMongo) GetHistoryDayByEvent(event_user str
 	//t2 := "2019-10-31T00:00:00.000Z"
 	//filterDate := bson.D{{"$gte", t1}, {"$lt", t2}}
 	//{"activity_info.distance", bson.D{{"$gt", 15}}}
-	filter := bson.D{{"event_user", event_user}}
+	filter := bson.D{primitive.E{Key:"event_user",Value: eventUser}}
 	err := activityMongo.ConnectionDB.Collection(activityCollection).FindOne(context.TODO(), filter).Decode(&activity)
 
 	if err != nil {
@@ -214,6 +221,7 @@ func (activityMongo ActivityRepositoryMongo) HistoryMonthByEvent(event_user stri
 	return historyMonthInfo, err
 }
 
+//DeleteActivity delete activity
 func (activityMongo ActivityRepositoryMongo) DeleteActivity(event_user string, activity_id string) error {
 	objectID, _ := primitive.ObjectIDFromHex(activity_id)
 	log.Printf("[info] event_user %s", event_user)
@@ -270,4 +278,40 @@ func (activityMongo ActivityRepositoryMongo) DeleteActivity(event_user string, a
 	//activityInfo = activity.ActivityInfo
 
 	return err
+}
+
+//GetActivityAllEvent for eventer
+func (activityMongo ActivityRepositoryMongo) GetActivityAllEvent(eventID string) ([]model.ActivityAllInfo, error) {
+	var allInfos []model.ActivityAllInfo
+	//var activityInfo []model.ActivityInfo
+	objectID , _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{ Key:"event_id", Value: objectID}}
+	curr, err := activityMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter)
+	if err != nil {
+		log.Println(err)
+		return allInfos, err
+	}
+	for curr.Next(context.TODO()) {
+		var a model.Activity
+		// decode the document
+		if err := curr.Decode(&a); err != nil {
+			log.Fatal(err)
+		}
+		//fmt.Printf("post: %+v\n", p)
+		var user model.User
+		filterUser := bson.D{primitive.E{ Key:"_id", Value: a.UserID}}
+		err := activityMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
+
+		if err != nil {
+			log.Println(err)
+		}
+		var info = model.ActivityAllInfo{
+			UserInfo: user,
+			Activity: a,
+		}
+		allInfos = append(allInfos, info)
+	}
+	//activityInfo = activity.ActivityInfo
+
+	return allInfos, err
 }

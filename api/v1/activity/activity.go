@@ -358,3 +358,21 @@ func (api ActivityAPI) DeleteActivityEvent(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 
 }
+
+//GetActivityAllInfo activity
+func (api ActivityAPI) GetActivityAllInfo(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+	)
+	eventID := c.Param("event_id")
+	if eventID == "" {
+		appG.Response(http.StatusBadRequest, http.StatusBadRequest, nil)
+		return
+	}
+	datas, err := api.ActivityRepository.GetActivityAllEvent(eventID)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, http.StatusInternalServerError, nil)
+		return
+	}
+	appG.Response(http.StatusOK, e.SUCCESS, datas)
+}

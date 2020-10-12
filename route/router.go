@@ -3,6 +3,8 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
+	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
@@ -21,15 +23,17 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		preOrderGroup(*api, connectionDB)
 		syncGroup(*api, connectionDB)
 		notiGroup(*api, connectionDB)
+		workoutGroup(*api, connectionDB)
+		activityGroup(*api, connectionDB)
 	}
 }
 
 func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	userRepo := repository.RepoDB{
+	userRepoDB := repository.RepoUserDB{
 		ConnectionDB: connectionDB,
 	}
 	userAPI := user.API{
-		UserRepo: userRepo,
+		UserRepo: userRepoDB,
 	}
 	g.POST("/login", userAPI.LoginUser)
 	g.POST("/signup", userAPI.AddUser)
@@ -41,6 +45,7 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.PUT("/user", userAPI.UpdateUser)
 		g.POST("/logout", userAPI.LogoutUser)
 		g.PUT("/syncStrava", userAPI.UpdateUserStrava)
+		g.POST("/registerFirebase", userAPI.RegFirebase)
 	}
 }
 
@@ -56,7 +61,7 @@ func preOrderGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 }
 
 func syncGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	repoStrava := repo.RepoDB{
+	repoStrava := repo.RepoStravaDB{
 		ConnectionDB: connectionDB,
 	}
 
@@ -69,6 +74,44 @@ func syncGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.GET("/activities", stravaAPI.GetStravaActivities)
 	}
 
+}
+
+func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	workoutsRepository := repo.WorkoutsRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	workoutsAPI := handle_workouts.WorkoutsAPI{
+		WorkoutsRepository: &workoutsRepository,
+	}
+	g.Use(oauth.AuthMiddleware())
+	{
+		g.POST("/workout", workoutsAPI.AddWorkout)
+		g.GET("/workouts", workoutsAPI.GetWorkouts)
+	}
+
+}
+
+func activityGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	activityV2Repository := repo.ActivityV2RepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	activityV2API := handle_activity_v2.ActivityV2API{
+		ActivityV2Repository: &activityV2Repository,
+	}
+	group := g.Group("/activity")
+	{
+		group.Use(oauth.AuthMiddleware())
+		{
+			group.POST("/add", activityV2API.AddActivity)
+			group.GET("/getByEvent/:event", activityV2API.GetActivityByEvent)
+			group.GET("/getByEvent2/:event", activityV2API.GetActivityByEvent2)
+			group.POST("/getHistoryDay", activityV2API.GetHistoryDayByEvent)
+			group.POST("/getHistoryMonth", activityV2API.GetHistoryMonthByEvent)
+			group.DELETE("/deleteActivity/:id/:activityID", activityV2API.DeleteActivityEvent)
+			group.POST("/activityWorkout", activityV2API.AddFromWorkout)
+			group.POST("/activitiesWorkout", activityV2API.AddMultipleFromWorkout)
+		}
+	}
 }
 
 func notiGroup(g gin.RouterGroup, connectionDB *mongo.Database) {

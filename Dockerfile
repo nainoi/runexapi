@@ -42,6 +42,7 @@ COPY --from=builder /go/src/runex/main .
 COPY --from=builder /go/src/runex/runex.co.crt .
 COPY --from=builder /go/src/runex/runex.co.key .
 COPY --from=0 /go/src/runex/templates ./templates
+COPY --from=builder /go/src/runex/runex-f341b-firebase-adminsdk-o6pr0-0757998bf7.json .
 
 # Copy config file
 COPY config-prd.yaml ./config.yaml

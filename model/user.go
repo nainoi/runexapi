@@ -39,7 +39,6 @@ type User struct {
 	StravaAvatar     string               `json:"strava_avatar" bson:"strava_avatar"`
 	StravaFirstname  string               `json:"strava_firstname" bson:"strava_firstname"`
 	StravaLastname   string               `json:"strava_latname" bson:"strava_latname"`
-	FirebaseTokens   []FirebaseToken      `json:"firebase_tokens" bson:"firebase_tokens"`
 }
 
 // UserMail object for register from email password
@@ -148,8 +147,8 @@ type UserStravaSyncRequest struct {
 	StravaLastname  string `json:"strava_latname"`
 }
 
-// FirebaseToken model
-type FirebaseToken struct {
-	Token string `json:"token" bson:"token"`
-	UUID  string `json:"uuid" bson:"uuid"`
+// FirebaseUser model
+type FirebaseUser struct {
+	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
+	FirebaseTokens []string           `json:"firebase_tokens" bson:"firebase_tokens"`
 }

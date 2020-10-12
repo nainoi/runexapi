@@ -39,7 +39,10 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusBadRequest, e.ERROR, BoardResponse{
+			AllRank: []model.Ranking{},
+			MyRank:  []model.Ranking{},
+		})
 		return
 	}
 

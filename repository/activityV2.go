@@ -18,6 +18,7 @@ type ActivityV2Repository interface {
 	GetHistoryDayByEvent(event_id string, user_id string, year int, month int) (model.HistoryDayInfo, error)
 	HistoryMonthByEvent(event_id string, user_id string, year int) ([]model.HistoryMonthInfo, error)
 	DeleteActivity(event_id string, user_id string, activity_id string) error
+	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
 }
 
 type ActivityV2RepositoryMongo struct {
@@ -273,5 +274,16 @@ func (activityMongo ActivityV2RepositoryMongo) DeleteActivity(event_id string, u
 	}
 	//activityInfo = activity.ActivityInfo
 
+	return err
+}
+
+// UpdateWorkout repository for insert workouts
+func (activityMongo ActivityV2RepositoryMongo) UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error {
+	filter := bson.D{primitive.E{Key:"user_id", Value: userID}, primitive.E{ Key:"activity_info._id",Value: workout.ID}}
+	update := bson.M{"$set": bson.M{"activity_info.$": workout}}
+	_, err := activityMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
+	if err == nil {
+		log.Println("update workout success")
+	}
 	return err
 }
