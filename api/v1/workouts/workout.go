@@ -70,6 +70,7 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 
 	workInfo := model.WorkoutActivityInfo{
 		ActivityType:     form.ActivityType,
+		App:              form.App,
 		Calory:           form.Calory,
 		Caption:          form.Caption,
 		Distance:         form.Distance,

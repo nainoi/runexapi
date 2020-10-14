@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
@@ -21,6 +22,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		preOrderGroup(*api, connectionDB)
 		syncGroup(*api, connectionDB)
 		notiGroup(*api, connectionDB)
+		migrationGroup(*api, connectionDB)
 	}
 }
 
@@ -81,4 +83,15 @@ func notiGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	// }
 	g.POST("/notificationOne", notification.SendOneNotification)
 
+}
+
+func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	migrationRepo := repo.MigrationRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+
+	migrationAPI := migration.MigrationAPI{
+		MigrationRepository: migrationRepo,
+	}
+	g.POST("/migrateWorkout/:newCollection", migrationAPI.MigrateWorkout)
 }
