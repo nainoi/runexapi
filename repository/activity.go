@@ -272,7 +272,7 @@ func (activityMongo ActivityRepositoryMongo) DeleteActivity(event_user string, a
 	log.Printf("[info] res %s", res)
 	res2, err2 := activityMongo.ConnectionDB.Collection(activityCollection).UpdateOne(context.TODO(), filterUpdate, updated)
 	if err2 != nil {
-		log.Fatal(res2)
+		log.Println(res2)
 		return err2
 	}
 	//activityInfo = activity.ActivityInfo
@@ -295,7 +295,7 @@ func (activityMongo ActivityRepositoryMongo) GetActivityAllEvent(eventID string)
 		var a model.Activity
 		// decode the document
 		if err := curr.Decode(&a); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		//fmt.Printf("post: %+v\n", p)
 		var user model.User

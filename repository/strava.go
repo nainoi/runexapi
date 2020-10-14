@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/firebase"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
 )
@@ -67,6 +69,19 @@ func (repo RepoStravaDB) AddActivity(stravaReq model.StravaAddRequest) error {
 	if res.Err() != nil {
 		update := bson.M{"$push": bson.M{"activities": stravaReq.StravaActivity}}
 		_, err = repo.ConnectionDB.Collection(stravaConlection).UpdateOne(context.TODO(), filter, update)
+		if err == nil {
+			token, err := userRepo.GetFirebaseToken(user.UserID)
+			if err == nil {
+				if len(token.FirebaseTokens) > 0 {
+					fcm := firebase.InitializeServiceAccountID()
+					client, err := fcm.Messaging(context.Background())
+					if err == nil {
+						body := fmt.Sprintf("run %f km.", stravaReq.StravaActivity.Distance)
+						go firebase.SendMulticastAndHandleErrors(context.Background(), client, token.FirebaseTokens, "RUNEX sync Strava", body)
+					}
+				}
+			}
+		}
 	}
 
 	return err

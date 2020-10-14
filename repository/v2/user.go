@@ -29,6 +29,8 @@ type UserRepository interface {
 	//fcm
 	FirebaseRegister(token string, userID string)
 	FirebaseRemove(u model.RegisterTokenRequest, userID string)
+	GetFirebaseTokenAll() ([]model.FirebaseUser, error)
+	GetFirebaseToken() (model.FirebaseUser, error)
 }
 
 //RepoUserDB db connection struct
@@ -240,6 +242,34 @@ func (db RepoUserDB) FirebaseRegister(token string, userID string) error {
 	update := bson.M{"$set": fcm}
 	result := db.ConnectionDB.Collection(fcmConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
 	return result.Err()
+}
+
+// GetFirebaseToken repo register firebase token
+func (db RepoUserDB) GetFirebaseToken(userID primitive.ObjectID) (model.FirebaseUser, error) {
+	filter := bson.D{primitive.E{Key: "user_id", Value: userID}}
+	var fcm model.FirebaseUser
+	err := db.ConnectionDB.Collection(fcmConlection).FindOne(context.TODO(), filter).Decode(&fcm)
+	return fcm, err
+}
+
+// GetFirebaseTokenAll repo register firebase token
+func (db RepoUserDB) GetFirebaseTokenAll() ([]model.FirebaseUser, error) {
+	filter := bson.D{}
+	var fcms []model.FirebaseUser
+	cur, err := db.ConnectionDB.Collection(fcmConlection).Find(context.TODO(), filter)
+	if err != nil {
+		return []model.FirebaseUser{}, err
+	}
+	for cur.Next(context.TODO()) {
+		var a model.FirebaseUser
+		// decode the document
+		if err := cur.Decode(&a); err != nil {
+			log.Println(err)
+		}
+
+		fcms = append(fcms, a)
+	}
+	return fcms, err
 }
 
 // FirebaseRemove api remove firebase token
