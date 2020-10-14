@@ -607,7 +607,7 @@ var doc = `{
                 }
             }
         },
-        "/workout/add": {
+        "/workout": {
             "post": {
                 "security": [
                     {
@@ -657,6 +657,58 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/workouts": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "list workouts API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Get workouts list",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Workouts"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -664,6 +716,9 @@ var doc = `{
             "type": "object",
             "properties": {
                 "activity_type": {
+                    "type": "string"
+                },
+                "app": {
                     "type": "string"
                 },
                 "calory": {
@@ -1397,6 +1452,82 @@ var doc = `{
                     "type": "string"
                 },
                 "strava_latname": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.WorkoutActivityInfo": {
+            "type": "object",
+            "properties": {
+                "activity_type": {
+                    "type": "string"
+                },
+                "app": {
+                    "type": "string"
+                },
+                "calory": {
+                    "type": "number"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_sync": {
+                    "type": "boolean"
+                },
+                "locations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Location"
+                    }
+                },
+                "net_elevation_gain": {
+                    "type": "number"
+                },
+                "pace": {
+                    "type": "number"
+                },
+                "ref_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "time_string": {
+                    "type": "string"
+                },
+                "workout_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Workouts": {
+            "type": "object",
+            "properties": {
+                "activity_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkoutActivityInfo"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "total_distance": {
+                    "type": "number"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

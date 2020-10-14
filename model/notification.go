@@ -9,6 +9,5 @@ type NotificationRequest struct {
 
 // RegisterTokenRequest model for register firebase token
 type RegisterTokenRequest struct {
-	FirebaseToken string `json:"firebase_token"`
-	UUID          string `json:"uuid"`
+	FirebaseToken string `form:"firebase_token" json:"firebase_token"`
 }

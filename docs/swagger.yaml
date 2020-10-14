@@ -3,6 +3,8 @@ definitions:
     properties:
       activity_type:
         type: string
+      app:
+        type: string
       calory:
         type: number
       caption:
@@ -492,6 +494,56 @@ definitions:
     - provider_id
     - strava_id
     type: object
+  model.WorkoutActivityInfo:
+    properties:
+      activity_type:
+        type: string
+      app:
+        type: string
+      calory:
+        type: number
+      caption:
+        type: string
+      distance:
+        type: number
+      duration:
+        type: integer
+      end_date:
+        type: string
+      id:
+        type: string
+      is_sync:
+        type: boolean
+      locations:
+        items:
+          $ref: '#/definitions/model.Location'
+        type: array
+      net_elevation_gain:
+        type: number
+      pace:
+        type: number
+      ref_id:
+        type: string
+      start_date:
+        type: string
+      time_string:
+        type: string
+      workout_date:
+        type: string
+    type: object
+  model.Workouts:
+    properties:
+      activity_info:
+        items:
+          $ref: '#/definitions/model.WorkoutActivityInfo'
+        type: array
+      id:
+        type: string
+      total_distance:
+        type: number
+      user_id:
+        type: string
+    type: object
   response.Response:
     properties:
       code:
@@ -873,7 +925,7 @@ paths:
       summary: Update user info
       tags:
       - user
-  /workout/add:
+  /workout:
     post:
       consumes:
       - application/json
@@ -903,6 +955,36 @@ paths:
       security:
       - bearerAuth: []
       summary: Add workout
+      tags:
+      - workouts
+  /workouts:
+    get:
+      consumes:
+      - application/json
+      description: list workouts API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Workouts'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get workouts list
       tags:
       - workouts
 swagger: "2.0"

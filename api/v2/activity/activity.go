@@ -17,6 +17,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nfnt/resize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
 	"thinkdev.app/think/runex/runexapi/pkg/e"
@@ -24,14 +26,172 @@ import (
 	"thinkdev.app/think/runex/runexapi/utils"
 )
 
+//ActivityV2API ref struct
 type ActivityV2API struct {
 	ActivityV2Repository repository.ActivityV2Repository
 }
 
+//ActivityEvent ref struct
 type ActivityEvent struct {
 	EventID string `json:"event_id" bson:"event_id" binding:"required"`
 }
 
+// AddFromWorkout api godoc
+// @Summary Add activity from workout
+// @Description save  Add activity from workout API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AddActivityFormWorkout true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activityWorkout [post]
+func (api ActivityV2API) AddFromWorkout(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var form model.AddActivityFormWorkout
+	if err := c.ShouldBind(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	userID, _ := oauth.GetValuesToken(c)
+	activityInfo := model.ActivityInfo{
+		Caption:      form.WorkoutActivityInfo.Caption,
+		Distance:     form.WorkoutActivityInfo.Distance,
+		ImageURL:     "",
+		APP:          form.WorkoutActivityInfo.APP,
+		ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	userObjectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+	eventObjectID, err := primitive.ObjectIDFromHex(form.EventID)
+	activityModel := model.AddActivityV2{
+		UserID:       userObjectID,
+		EventID:      eventObjectID,
+		ActivityInfo: activityInfo,
+	}
+
+	err2 := api.ActivityV2Repository.AddActivity(activityModel)
+	if err2 != nil {
+		log.Println("error AddActivity", err2.Error())
+		res.Response(http.StatusInternalServerError, err2.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	form.WorkoutActivityInfo.IsSync = true
+	err = api.ActivityV2Repository.UpdateWorkout(form.WorkoutActivityInfo, userObjectID)
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	res.Response(http.StatusOK, "success", nil)
+}
+
+// AddMultipleFromWorkout api godoc
+// @Summary Add activity from workout
+// @Description save  Add activity from workout API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AddMultiActivityFormWorkout true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activitiesWorkout [post]
+func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var form model.AddMultiActivityFormWorkout
+	if err := c.ShouldBind(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	userID, _ := oauth.GetValuesToken(c)
+	userObjectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	for index, each := range form.EventID {
+		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
+		eventID := each
+
+		eventObjectID, err := primitive.ObjectIDFromHex(eventID)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		activityInfo := model.ActivityInfo{
+			Caption:      form.WorkoutActivityInfo.Caption,
+			Distance:     form.WorkoutActivityInfo.Distance,
+			ImageURL:     "",
+			APP:          form.WorkoutActivityInfo.APP,
+			ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+		}
+
+		activityModel := model.AddActivityV2{
+			UserID:       userObjectID,
+			EventID:      eventObjectID,
+			ActivityInfo: activityInfo,
+		}
+
+		err2 := api.ActivityV2Repository.AddActivity(activityModel)
+		if err2 != nil {
+			log.Println("error AddActivity", err2.Error())
+			res.Response(http.StatusInternalServerError, err2.Error(), nil)
+			c.Abort()
+			return
+		}
+
+	}
+	form.WorkoutActivityInfo.IsSync = true
+	err = api.ActivityV2Repository.UpdateWorkout(form.WorkoutActivityInfo, userObjectID)
+
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	res.Response(http.StatusOK, "success", nil)
+}
+
+// AddActivity api godoc
+// @Summary Add activity
+// @Description save  Add activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AddActivityForm true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity [post]
 func (api ActivityV2API) AddActivity(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}

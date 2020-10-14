@@ -18,7 +18,7 @@ func SendToToken(app *firebase.App, token string, msg string) {
 	ctx := context.Background()
 	client, err := app.Messaging(ctx)
 	if err != nil {
-		log.Fatalf("error getting Messaging client: %v\n", err)
+		log.Println(err)
 	}
 
 	// See documentation on defining a message payload.
@@ -33,7 +33,7 @@ func SendToToken(app *firebase.App, token string, msg string) {
 	// registration token.
 	response, err := client.Send(ctx, message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// Response is a message ID string.
 	fmt.Println("Successfully sent message:", response)
@@ -57,7 +57,7 @@ func sendToTopic(ctx context.Context, client *messaging.Client) {
 	// Send a message to the devices subscribed to the provided topic.
 	response, err := client.Send(ctx, message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// Response is a message ID string.
 	fmt.Println("Successfully sent message:", response)
@@ -83,7 +83,7 @@ func sendToCondition(ctx context.Context, client *messaging.Client) {
 	// specified by the provided condition.
 	response, err := client.Send(ctx, message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// Response is a message ID string.
 	fmt.Println("Successfully sent message:", response)
@@ -115,7 +115,7 @@ func sendAll(ctx context.Context, client *messaging.Client) {
 
 	br, err := client.SendAll(context.Background(), messages)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 
 	// See the BatchResponse reference documentation
@@ -144,7 +144,7 @@ func sendMulticast(ctx context.Context, client *messaging.Client) {
 
 	br, err := client.SendMulticast(context.Background(), message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 
 	// See the BatchResponse reference documentation
@@ -184,7 +184,7 @@ func SendMulticastAndHandleErrors(ctx context.Context, client *messaging.Client,
 
 	br, err := client.SendMulticast(context.Background(), message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 
 	if br.FailureCount > 0 {
@@ -214,7 +214,7 @@ func sendDryRun(ctx context.Context, client *messaging.Client) {
 	// Send a message in the dry run mode.
 	response, err := client.SendDryRun(ctx, message)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// Response is a message ID string.
 	fmt.Println("Dry run successful:", response)
@@ -325,7 +325,7 @@ func subscribeToTopic(ctx context.Context, client *messaging.Client) {
 	// topic.
 	response, err := client.SubscribeToTopic(ctx, registrationTokens, topic)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// See the TopicManagementResponse reference documentation
 	// for the contents of response.
@@ -348,7 +348,7 @@ func unsubscribeFromTopic(ctx context.Context, client *messaging.Client) {
 	// the topic.
 	response, err := client.UnsubscribeFromTopic(ctx, registrationTokens, topic)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	// See the TopicManagementResponse reference documentation
 	// for the contents of response.

@@ -29,8 +29,6 @@ import (
 	handle_event "thinkdev.app/think/runex/runexapi/api/v1/event"
 	handle_runHistory "thinkdev.app/think/runex/runexapi/api/v1/runHistory"
 
-	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
-
 	//handle_importData "thinkdev.app/think/runex/runexapi/api/v1/importdata"
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -111,8 +109,8 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 	AdminRoute(route, connectionDB, middleware)
 	BoardRoute(route, connectionDB, middleware)
 
-	ActivityV2Route(route, connectionDB, middleware)
-	WorkoutsRoute(route, connectionDB, middleware)
+	//ActivityV2Route(route, connectionDB, middleware)
+	//WorkoutsRoute(route, connectionDB, middleware)
 	//ImportDataRoute(route, connectionDB, middleware)
 }
 
@@ -177,6 +175,7 @@ func ActivityRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *
 			api.POST("/getHistoryDay", activityAPI.GetHistoryDayByEvent)
 			api.POST("/getHistoryMonth", activityAPI.GetHistoryMonthByEvent)
 			api.DELETE("/deleteActivity/:id/:activityID", activityAPI.DeleteActivityEvent)
+			api.GET("/getAllEventActivity/:event_id", activityAPI.GetActivityAllInfo)
 		}
 	}
 }
@@ -387,18 +386,18 @@ func ActivityV2Route(route *gin.Engine, connectionDB *mongo.Database, middleware
 	}
 }
 
-func WorkoutsRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
-	workoutsRepository := repository.WorkoutsRepositoryMongo{
-		ConnectionDB: connectionDB,
-	}
-	workoutsAPI := handle_workouts.WorkoutsAPI{
-		WorkoutsRepository: &workoutsRepository,
-	}
-	api := route.Group("/api/v1/workout")
-	{
-		api.Use(middleware.MiddlewareFunc())
-		{
-			api.POST("/add", workoutsAPI.AddWorkout)
-		}
-	}
-}
+// func WorkoutsRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+// 	workoutsRepository := repository.WorkoutsRepositoryMongo{
+// 		ConnectionDB: connectionDB,
+// 	}
+// 	workoutsAPI := handle_workouts.WorkoutsAPI{
+// 		WorkoutsRepository: &workoutsRepository,
+// 	}
+// 	api := route.Group("/api/v1/workout")
+// 	{
+// 		api.Use(middleware.MiddlewareFunc())
+// 		{
+// 			api.POST("/add", workoutsAPI.AddWorkout)
+// 		}
+// 	}
+// }

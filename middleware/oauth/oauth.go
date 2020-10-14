@@ -3,7 +3,6 @@ package oauth
 import (
 	"context"
 	"fmt"
-	"log"
 
 	//"log"
 	"net/http"
@@ -51,8 +50,6 @@ func GetValuesToken(c *gin.Context) (string, string) {
 	clientToken := c.GetHeader("Authorization")
 	extractedToken := strings.Split(clientToken, "Bearer ")
 	// Verify if the format of the token is correct
-	log.Println(clientToken)
-	log.Println(extractedToken)
 	if len(extractedToken) == 2 {
 		clientToken = strings.TrimSpace(extractedToken[1])
 	} else {

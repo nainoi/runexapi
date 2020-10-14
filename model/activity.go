@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+//AddActivityForm model request
 type AddActivityForm struct {
 	Caption      string  `form:"caption" json:"caption"`
 	Distance     float64 `form:"distance" json:"distance" bson:"distance" binding:"required"`
@@ -15,6 +16,19 @@ type AddActivityForm struct {
 	ImageURL     string  `form:"image_url" json:"image_url" bson:"image_url"`
 }
 
+//AddActivityFormWorkout model request
+type AddActivityFormWorkout struct {
+	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
+	EventID             string              `form:"event_id" json:"event_id" binding:"required"`
+}
+
+//AddMultiActivityFormWorkout model request
+type AddMultiActivityFormWorkout struct {
+	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
+	EventID             []string            `form:"event_id" json:"event_id" binding:"required"`
+}
+
+//AddMultiActivityForm model request
 type AddMultiActivityForm struct {
 	Caption      string   `form:"caption" json:"caption"`
 	Distance     float64  `form:"distance" json:"distance" bson:"distance" binding:"required"`
@@ -78,6 +92,7 @@ type ActivityInfo struct {
 	Distance     float64            `json:"distance" bson:"distance"`
 	ImageURL     string             `json:"img_url" bson:"img_url"`
 	Caption      string             `form:"caption" json:"caption"`
+	APP          string             `form:"app" json:"app"`
 	ActivityDate time.Time          `json:"activity_date" bson:"activity_date"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
@@ -115,4 +130,9 @@ type DeleteActivityForm struct {
 	EventID    string `form:"event_id" json:"event_id" bson:"event_id"  binding:"required"`
 	UserID     string `form:"user_id" json:"user_id" bson:"user_id"`
 	ActivityID string `form:"activity_id" json:"activity_id" bson:"activity_id"`
+}
+
+type ActivityAllInfo struct {
+	UserInfo User     `json:"user_info"`
+	Activity Activity `json:"activity"`
 }

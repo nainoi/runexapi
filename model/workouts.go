@@ -3,7 +3,6 @@ package model
 import (
 	"time"
 
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,13 +11,15 @@ type Workouts struct {
 	ID                  primitive.ObjectID    `json:"id" bson:"_id,omitempty"`
 	UserID              primitive.ObjectID    `json:"user_id" bson:"user_id"`
 	WorkoutActivityInfo []WorkoutActivityInfo `json:"activity_info" bson:"activity_info,omitempty"`
+	TotalDistance       float64               `json:"total_distance"`
 }
 
 // WorkoutActivityInfo struct model
 type WorkoutActivityInfo struct {
 	ID               primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	ActivityType     string             `json:"activity_type" json:"activity_type"`
-	App              string             `json:"app" json:"app"`
+	APP              string             `json:"app" bson:"app"`
+	RefID            string             `json:"ref_id" bson:"ref_id"`
 	Calory           float64            `json:"calory" bson:"calory"`
 	Caption          string             `json:"caption" json:"caption"`
 	Distance         float64            `json:"distance" bson:"distance"`
@@ -42,29 +43,29 @@ type AddWorkout struct {
 // AddWorkoutForm struct model for request
 type AddWorkoutForm struct {
 	UserID           string     `form:"user_id" json:"user_id" bson:"user_id"`
-	ActivityType     string     `form:"activity_type" json:"activity_type" bson:"activity_type"`
-	App              string     `form:"app" json:"app" bson:"app"`
-	Calory           float64    `form:"calory" json:"calory" bson:"calory"`
-	Caption          string     `form:"caption" json:"caption" bson:"caption"`
-	Distance         float64    `form:"distance" json:"distance" bson:"distance"`
-	Pace             float64    `form:"pace" json:"pace" bson:"pace"`
-	Duration         int64      `form:"duration" json:"duration" bson:"duration"`
-	TimeString       string     `form:"time_string" json:"time_string" bson:"time_string"`
-	StartDate        string     `form:"start_date" json:"start_date" bson:"start_date"`
-	EndDate          string     `form:"end_date" json:"end_date" bson:"end_date"`
-	WorkoutDate      string     `form:"workout_date" json:"workout_date" bson:"workout_date"`
-	NetElevationGain float64    `form:"net_elevation_gain" json:"net_elevation_gain" bson:"net_elevation_gain"`
-	IsSync           bool       `form:"is_sync" json:"is_sync" bson:"is_sync"`
-	Locations        []Location `form:"locations" json:"locations" bson:"locations"`
+	ActivityType     string     `json:"activity_type" json:"activity_type"`
+	Calory           float64    `json:"calory" bson:"calory"`
+	APP              string     `json:"app" bson:"app"`
+	Caption          string     `json:"caption" json:"caption"`
+	Distance         float64    `json:"distance" bson:"distance"`
+	Pace             float64    `json:"pace" bson:"pace"`
+	Duration         int64      `json:"duration" bson:"duration"`
+	TimeString       string     `json:"time_string" json:"time_string"`
+	StartDate        string     `json:"start_date" bson:"start_date"`
+	EndDate          string     `json:"end_date" bson:"end_date"`
+	WorkoutDate      string     `json:"workout_date" bson:"workout_date"`
+	NetElevationGain float64    `json:"net_elevation_gain" bson:"net_elevation_gain"`
+	IsSync           bool       `json:"is_sync" bson:"is_sync"`
+	Locations        []Location `json:"locations" bson:"locations"`
 }
 
 // Location struct model
 type Location struct {
-	Timestamp     timestamp.Timestamp `form:"timestamp" json:"timestamp" bson:"timestamp"`
-	Altitude      float64             `form:"altitude" json:"altitude" bson:"altitude"`
-	Latitude      float64             `form:"latitude" json:"latitude" bson:"latitude"`
-	Longitude     float64             `form:"longitude" json:"longitude" bson:"longitude"`
-	Temp          float64             `form:"temp" json:"temp" bson:"temp"`
-	HarthRate     float64             `form:"harth_rate" json:"harth_rate" bson:"harth_rate"`
-	ElevationGain float64             `form:"elevation_gain" json:"elevation_gain" bson:"elevation_gain"`
+	Timestamp     time.Time `form:"timestamp" json:"timestamp" bson:"timestamp"`
+	Altitude      float64   `form:"altitude" json:"altitude" bson:"altitude"`
+	Latitude      float64   `form:"latitude" json:"latitude" bson:"latitude"`
+	Longitude     float64   `form:"longitude" json:"longitude" bson:"longitude"`
+	Temp          float64   `form:"temp" json:"temp" bson:"temp"`
+	HarthRate     float64   `form:"harth_rate" json:"harth_rate" bson:"harth_rate"`
+	ElevationGain float64   `form:"elevation_gain" json:"elevation_gain" bson:"elevation_gain"`
 }

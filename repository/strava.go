@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 )
 
 // StravaRepository interface
@@ -16,8 +17,8 @@ type StravaRepository interface {
 	GetActivities(userID string) ([]model.StravaActivity, error)
 }
 
-//RepoDB db connection struct
-type RepoDB struct {
+//RepoStravaDB db connection struct
+type RepoStravaDB struct {
 	ConnectionDB *mongo.Database
 }
 
@@ -26,29 +27,53 @@ const (
 )
 
 //AddActivity repository for add activity from strava
-func (repo RepoDB) AddActivity(stravaReq model.StravaAddRequest) error {
+func (repo RepoStravaDB) AddActivity(stravaReq model.StravaAddRequest) error {
 	var stravaData model.StravaData
+
+	userRepo := repository.RepoUserDB{
+		ConnectionDB: repo.ConnectionDB,
+	}
+	user, err := userRepo.GetUserWithProvider(stravaReq.Provider, stravaReq.ProviderID)
+	if err != nil {
+		return err
+	}
+	if user.StravaID == "" {
+		user.StravaID = stravaReq.StravaID
+		userRepo.UpdateUser(user, user.UserID.Hex())
+	}
+
 	filter := bson.D{
-		primitive.E{Key: "user_id", Value: stravaReq.UserID},
+		primitive.E{Key: "user_id", Value: user.UserID},
 		primitive.E{Key: "strava_id", Value: stravaReq.StravaID},
 	}
+
 	stravaReq.StravaActivity.CreatedAt = time.Now()
 	stravaReq.StravaActivity.IsSync = false
-	err := repo.ConnectionDB.Collection(stravaConlection).FindOne(context.TODO(), filter).Decode(&stravaData)
+	err = repo.ConnectionDB.Collection(stravaConlection).FindOne(context.TODO(), filter).Decode(&stravaData)
 	if err != nil {
-		stravaData.UserID = stravaReq.UserID
+		stravaData.UserID = user.UserID
+		stravaData.StravaID = stravaReq.StravaID
 		stravaData.Activities = []model.StravaActivity{stravaReq.StravaActivity}
 
 		_, err := repo.ConnectionDB.Collection(stravaConlection).InsertOne(context.TODO(), stravaData)
 		return err
 	}
-	update := bson.M{"$push": bson.M{"activities": stravaReq.StravaActivity}}
-	_, err = repo.ConnectionDB.Collection(stravaConlection).UpdateOne(context.TODO(), filter, update)
+	filter = bson.D{
+		primitive.E{Key: "user_id", Value: stravaReq.ProviderID},
+		primitive.E{Key: "strava_id", Value: stravaReq.StravaID},
+		primitive.E{Key: "activities.$.id", Value: stravaReq.StravaActivity.ID},
+	}
+	res := repo.ConnectionDB.Collection(stravaConlection).FindOne(context.TODO(), filter)
+	if res.Err() != nil {
+		update := bson.M{"$push": bson.M{"activities": stravaReq.StravaActivity}}
+		_, err = repo.ConnectionDB.Collection(stravaConlection).UpdateOne(context.TODO(), filter, update)
+	}
+
 	return err
 }
 
 //GetActivities repository for get user activities from strava
-func (repo RepoDB) GetActivities(userID string) ([]model.StravaActivity, error) {
+func (repo RepoStravaDB) GetActivities(userID string) ([]model.StravaActivity, error) {
 	var data model.StravaData
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {

@@ -12,7 +12,9 @@ import (
 
 // WorkoutsRepository struct interface
 type WorkoutsRepository interface {
-	AddWorkout(workout model.AddWorkout) error
+	AddWorkout(workout model.AddWorkout) (model.WorkoutActivityInfo, error)
+	GetWorkouts(userID primitive.ObjectID) (bool, model.Workouts, error)
+	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
 }
 
 // WorkoutsRepositoryMongo struct mongo db
@@ -25,25 +27,24 @@ const (
 )
 
 // AddWorkout repository for insert workouts
-func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout) error {
+func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout) (model.WorkoutActivityInfo, error) {
 
 	filter := bson.M{"user_id": workout.UserID}
+	dataInfo := workout.WorkoutActivityInfo
 	count, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
 	//log.Printf("[info] count %s", count)
 	if err != nil {
 		log.Println(err)
-		return err
+		return dataInfo, err
 	}
 	if count > 0 {
-
-		dataInfo := workout.WorkoutActivityInfo
 		dataInfo.ID = primitive.NewObjectID()
 		update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
 		_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
 			//log.Fatal(res)
 			//log.Printf("[info] err %s", res)
-			return err
+			return dataInfo, err
 		}
 
 	} else {
@@ -60,9 +61,44 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 		_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).InsertOne(context.TODO(), workoutsModel)
 		if err != nil {
 			//log.Fatal(res)
-			return err
+			return dataInfo, err
 		}
 	}
 
-	return nil
+	return dataInfo, nil
+}
+
+// GetWorkouts repository for get workouts data
+func (workoutsMongo WorkoutsRepositoryMongo) GetWorkouts(userID primitive.ObjectID) (bool, model.Workouts, error) {
+	var workout model.Workouts
+	filter := bson.M{"user_id": userID}
+	count, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
+	//log.Printf("[info] count %s", count)
+	if err != nil {
+		log.Println(err)
+		return true, workout, err
+	}
+	if count == 0 {
+		workout.UserID = userID
+		workout.TotalDistance = 0
+		workout.WorkoutActivityInfo = []model.WorkoutActivityInfo{}
+		return false, workout, nil
+	}
+	err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workout)
+	if err == nil {
+		var total = 0.0
+		for _, each := range workout.WorkoutActivityInfo {
+			total += each.Distance
+		}
+		workout.TotalDistance = total
+	}
+	return false, workout, err
+}
+
+// UpdateWorkout repository for insert workouts
+func (workoutsMongo WorkoutsRepositoryMongo) UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error {
+	filter := bson.M{"user_id": userID, "activty_info._id": workout.ID}
+	update := bson.M{"$set": bson.M{"activity_info.is_syn": true}}
+	_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
+	return err
 }
