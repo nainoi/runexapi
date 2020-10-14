@@ -38,12 +38,22 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 		return dataInfo, err
 	}
 	if count > 0 {
+		var workoutsModel model.Workouts
+		err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workoutsModel)
+		var totalDistance = workoutsModel.TotalDistance + workout.WorkoutActivityInfo.Distance
+		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
+		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
+		if err != nil {
+			log.Printf("[info] err %s", err)
+			log.Fatal(err)
+			return dataInfo, err
+		}
 		dataInfo.ID = primitive.NewObjectID()
 		update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
-		_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
+		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
-			//log.Fatal(res)
-			//log.Printf("[info] err %s", res)
+			log.Fatal(err)
+			log.Printf("[info] err %s", err)
 			return dataInfo, err
 		}
 
@@ -56,6 +66,7 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 		workoutsModel := model.Workouts{
 			UserID:              workout.UserID,
 			WorkoutActivityInfo: arrActivityInfo,
+			TotalDistance:       dataInfo.Distance,
 		}
 		//log.Println(workoutsModel)
 		_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).InsertOne(context.TODO(), workoutsModel)

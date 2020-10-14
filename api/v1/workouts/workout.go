@@ -14,7 +14,6 @@ import (
 	"thinkdev.app/think/runex/runexapi/pkg/app"
 	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository"
-	"thinkdev.app/think/runex/runexapi/utils"
 )
 
 // WorkoutsAPI struct repo
@@ -46,7 +45,7 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	time1, err := time.Parse(time.RFC3339, form.WorkoutDate)
 	if err != nil {
 		fmt.Println(err)

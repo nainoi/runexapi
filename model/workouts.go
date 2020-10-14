@@ -11,7 +11,7 @@ type Workouts struct {
 	ID                  primitive.ObjectID    `json:"id" bson:"_id,omitempty"`
 	UserID              primitive.ObjectID    `json:"user_id" bson:"user_id"`
 	WorkoutActivityInfo []WorkoutActivityInfo `json:"activity_info" bson:"activity_info,omitempty"`
-	TotalDistance       float64               `json:"total_distance"`
+	TotalDistance       float64               `json:"total_distance" bson:"total_distance"`
 }
 
 // WorkoutActivityInfo struct model
