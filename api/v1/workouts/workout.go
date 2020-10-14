@@ -72,6 +72,7 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 
 	workInfo := model.WorkoutActivityInfo{
 		ActivityType:     form.ActivityType,
+		APP:              form.APP,
 		Calory:           form.Calory,
 		Caption:          form.Caption,
 		Distance:         form.Distance,
@@ -84,7 +85,6 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 		NetElevationGain: form.NetElevationGain,
 		IsSync:           form.IsSync,
 		Locations:        form.Locations,
-		
 	}
 
 	workoutModel := model.AddWorkout{
@@ -126,7 +126,7 @@ func (api WorkoutsAPI) GetWorkouts(c *gin.Context) {
 		res.Response(http.StatusNoContent, "status no content", workout)
 		c.Abort()
 		return
-	}else if err != nil {
+	} else if err != nil {
 		log.Println("error get work", err.Error())
 		res.Response(http.StatusInternalServerError, "get workout fail", workout)
 		c.Abort()
