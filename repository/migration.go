@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -54,7 +55,11 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 		for _, item2 := range item.RunHistoryInfo {
 
 			//duration_time := int(item2.Time)
-			durTime := time.Duration(item2.Time) * time.Minute
+			integer, fraction := math.Modf(float64(item2.Time))
+			var modTimeMin int = int(integer * 60)
+			var modTimeSec int = int(fraction * 100)
+			var duration = modTimeMin + modTimeSec
+			durTime := time.Duration(modTimeMin+modTimeSec) * time.Second
 			modTime := time.Now().Round(0).Add(-(durTime))
 			since := time.Since(modTime)
 			durStr := fmtDuration(since)
@@ -65,7 +70,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 				Caption:          item2.Caption,
 				Distance:         item2.Distance,
 				Pace:             float64(item2.Pace),
-				Duration:         int64(item2.Time),
+				Duration:         int64(duration),
 				TimeString:       durStr,
 				StartDate:        item2.ActivityDate,
 				EndDate:          item2.ActivityDate,
