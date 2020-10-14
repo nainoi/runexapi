@@ -80,6 +80,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 		workoutsModel := model.Workouts{
 			UserID:              item.UserID,
 			WorkoutActivityInfo: arrActivityInfo,
+			TotalDistance:       item.ToTalDistance,
 		}
 
 		_, err := migrationMongo.ConnectionDB.Collection(newCollection).InsertOne(context.TODO(), workoutsModel)
@@ -88,6 +89,52 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 			return err
 		}
 
+	}
+	var workout []model.Workouts
+	options.SetLimit(0)
+	cur, err = migrationMongo.ConnectionDB.Collection("workouts").Find(context.TODO(), bson.D{{}}, options)
+	for cur.Next(context.TODO()) {
+		var u model.Workouts
+		// decode the document
+		if err := cur.Decode(&u); err != nil {
+			log.Println(err)
+			log.Fatal(err)
+		}
+		//fmt.Printf("post: %+v\n", p)
+		workout = append(workout, u)
+	}
+	for _, item3 := range workout {
+		filter := bson.D{{"user_id", item3.UserID}}
+		count, err2 := migrationMongo.ConnectionDB.Collection(newCollection).CountDocuments(context.TODO(), filter)
+		if err2 != nil {
+			log.Println(err2)
+			return err2
+		}
+		if count > 0 {
+			var workoutsModel model.Workouts
+			err := migrationMongo.ConnectionDB.Collection(newCollection).FindOne(context.TODO(), filter).Decode(&workoutsModel)
+			var totalDistance = workoutsModel.TotalDistance
+			for _, item4 := range item3.WorkoutActivityInfo {
+				totalDistance = totalDistance + item4.Distance
+				update := bson.M{"$push": bson.M{"activity_info": item4}}
+				_, err = migrationMongo.ConnectionDB.Collection(newCollection).UpdateOne(context.TODO(), filter, update)
+			}
+			updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
+			_, err = migrationMongo.ConnectionDB.Collection(newCollection).UpdateOne(context.TODO(), filter, updateDistance)
+			if err != nil {
+				log.Printf("[info] err %s", err)
+				log.Fatal(err)
+				return err
+			}
+		} else {
+			var workoutsModel model.Workouts
+			workoutsModel = item3
+			_, err := migrationMongo.ConnectionDB.Collection(newCollection).InsertOne(context.TODO(), workoutsModel)
+			if err != nil {
+				//log.Fatal(res)
+				return err
+			}
+		}
 	}
 
 	return nil
