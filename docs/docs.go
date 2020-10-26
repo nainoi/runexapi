@@ -19,12 +19,164 @@ var doc = `{
         "description": "{{.Description}}",
         "title": "{{.Title}}",
         "contact": {},
-        "license": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/activitiesWorkout": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save  Add activity from workout API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Add activity from workout",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddMultiActivityFormWorkout"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/activity": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save  Add activity API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Add activity",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddActivityForm"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/activityWorkout": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save  Add activity from workout API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "activity"
+                ],
+                "summary": "Add activity from workout",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddActivityFormWorkout"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "login or add new user from open id API calls",
@@ -192,6 +344,52 @@ var doc = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/registerFirebase": {
+            "post": {
+                "description": "user firebase register API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user firebase register",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RegisterTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -640,7 +838,19 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.WorkoutActivityInfo"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -712,6 +922,64 @@ var doc = `{
         }
     },
     "definitions": {
+        "model.AddActivityForm": {
+            "type": "object",
+            "required": [
+                "distance",
+                "event_id"
+            ],
+            "properties": {
+                "activity_date": {
+                    "type": "string"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.AddActivityFormWorkout": {
+            "type": "object",
+            "required": [
+                "event_id"
+            ],
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "workout_info": {
+                    "$ref": "#/definitions/model.WorkoutActivityInfo"
+                }
+            }
+        },
+        "model.AddMultiActivityFormWorkout": {
+            "type": "object",
+            "required": [
+                "event_id"
+            ],
+            "properties": {
+                "event_id": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "workout_info": {
+                    "$ref": "#/definitions/model.WorkoutActivityInfo"
+                }
+            }
+        },
         "model.AddWorkoutForm": {
             "type": "object",
             "properties": {
@@ -820,14 +1088,78 @@ var doc = `{
                 }
             }
         },
-        "model.FirebaseToken": {
+        "model.Lab": {
             "type": "object",
             "properties": {
-                "token": {
+                "activity": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "resource_state": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "athlete": {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "integer"
+                        },
+                        "resource_state": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "average_speed": {
+                    "type": "number"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "elapsed_time": {
+                    "type": "integer"
+                },
+                "end_index": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "lap_index": {
+                    "type": "integer"
+                },
+                "max_speed": {
+                    "type": "number"
+                },
+                "moving_time": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 },
-                "uuid": {
+                "pace_zone": {
+                    "type": "integer"
+                },
+                "resource_state": {
+                    "type": "integer"
+                },
+                "split": {
+                    "type": "integer"
+                },
+                "start_date": {
                     "type": "string"
+                },
+                "start_date_local": {
+                    "type": "string"
+                },
+                "start_index": {
+                    "type": "integer"
+                },
+                "total_elevation_gain": {
+                    "type": "number"
                 }
             }
         },
@@ -928,11 +1260,19 @@ var doc = `{
                 }
             }
         },
+        "model.RegisterTokenRequest": {
+            "type": "object",
+            "properties": {
+                "firebase_token": {
+                    "type": "string"
+                }
+            }
+        },
         "model.SimilarActivities": {
             "type": "object",
             "properties": {
                 "average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "effort_count": {
                     "type": "integer"
@@ -941,13 +1281,13 @@ var doc = `{
                     "type": "string"
                 },
                 "max_average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "mid_average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "min_average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "pr_rank": {
                     "type": "string"
@@ -956,7 +1296,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "trend": {
-                    "type": "object",
                     "$ref": "#/definitions/model.Trend"
                 }
             }
@@ -965,19 +1304,19 @@ var doc = `{
             "type": "object",
             "properties": {
                 "average_grade_adjusted_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "distance": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "elapsed_time": {
                     "type": "integer"
                 },
                 "elevation_difference": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "moving_time": {
                     "type": "integer"
@@ -994,19 +1333,19 @@ var doc = `{
             "type": "object",
             "properties": {
                 "average_grade_adjusted_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "distance": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "elapsed_time": {
                     "type": "integer"
                 },
                 "elevation_difference": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "moving_time": {
                     "type": "integer"
@@ -1026,7 +1365,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "athlete": {
-                    "type": "object",
                     "$ref": "#/definitions/model.Athlete"
                 },
                 "athlete_count": {
@@ -1039,7 +1377,7 @@ var doc = `{
                     }
                 },
                 "average_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "best_efforts": {
                     "type": "array",
@@ -1069,16 +1407,16 @@ var doc = `{
                     "type": "boolean"
                 },
                 "distance": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "elapsed_time": {
                     "type": "integer"
                 },
                 "elev_high": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "elev_low": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "embed_token": {
                     "type": "string"
@@ -1122,7 +1460,7 @@ var doc = `{
                 "laps": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.Lab"
                     }
                 },
                 "location_city": {
@@ -1138,11 +1476,10 @@ var doc = `{
                     "type": "boolean"
                 },
                 "map": {
-                    "type": "object",
                     "$ref": "#/definitions/model.Map"
                 },
                 "max_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "moving_time": {
                     "type": "integer"
@@ -1157,7 +1494,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "photos": {
-                    "type": "object",
                     "$ref": "#/definitions/model.Photos"
                 },
                 "pr_count": {
@@ -1179,7 +1515,6 @@ var doc = `{
                     }
                 },
                 "similar_activities": {
-                    "type": "object",
                     "$ref": "#/definitions/model.SimilarActivities"
                 },
                 "splits_metric": {
@@ -1216,7 +1551,7 @@ var doc = `{
                     "type": "string"
                 },
                 "total_elevation_gain": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "total_photo_count": {
                     "type": "integer"
@@ -1247,14 +1582,16 @@ var doc = `{
         "model.StravaAddRequest": {
             "type": "object",
             "properties": {
+                "provider": {
+                    "type": "string"
+                },
+                "provider_id": {
+                    "type": "string"
+                },
                 "strava_activity": {
-                    "type": "object",
                     "$ref": "#/definitions/model.StravaActivity"
                 },
                 "strava_id": {
-                    "type": "string"
-                },
-                "user_id": {
                     "type": "string"
                 }
             }
@@ -1263,24 +1600,24 @@ var doc = `{
             "type": "object",
             "properties": {
                 "current_activity_index": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "direction": {
                     "type": "integer"
                 },
                 "max_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "mid_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "min_speed": {
-                    "type": "integer"
+                    "type": "number"
                 },
                 "speeds": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "number"
                     }
                 }
             }
@@ -1325,12 +1662,6 @@ var doc = `{
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
-                },
-                "firebase_tokens": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.FirebaseToken"
                     }
                 },
                 "firstname": {

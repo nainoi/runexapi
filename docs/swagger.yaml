@@ -1,4 +1,42 @@
 definitions:
+  model.AddActivityForm:
+    properties:
+      activity_date:
+        type: string
+      caption:
+        type: string
+      distance:
+        type: number
+      event_id:
+        type: string
+      image_url:
+        type: string
+      user_id:
+        type: string
+    required:
+    - distance
+    - event_id
+    type: object
+  model.AddActivityFormWorkout:
+    properties:
+      event_id:
+        type: string
+      workout_info:
+        $ref: '#/definitions/model.WorkoutActivityInfo'
+    required:
+    - event_id
+    type: object
+  model.AddMultiActivityFormWorkout:
+    properties:
+      event_id:
+        items:
+          type: string
+        type: array
+      workout_info:
+        $ref: '#/definitions/model.WorkoutActivityInfo'
+    required:
+    - event_id
+    type: object
   model.AddWorkoutForm:
     properties:
       activity_type:
@@ -71,12 +109,54 @@ definitions:
       keyword:
         type: string
     type: object
-  model.FirebaseToken:
+  model.Lab:
     properties:
-      token:
+      activity:
+        properties:
+          id:
+            type: integer
+          resource_state:
+            type: integer
+        type: object
+      athlete:
+        properties:
+          id:
+            type: integer
+          resource_state:
+            type: integer
+        type: object
+      average_speed:
+        type: number
+      distance:
+        type: number
+      elapsed_time:
+        type: integer
+      end_index:
+        type: integer
+      id:
+        type: integer
+      lap_index:
+        type: integer
+      max_speed:
+        type: number
+      moving_time:
+        type: integer
+      name:
         type: string
-      uuid:
+      pace_zone:
+        type: integer
+      resource_state:
+        type: integer
+      split:
+        type: integer
+      start_date:
         type: string
+      start_date_local:
+        type: string
+      start_index:
+        type: integer
+      total_elevation_gain:
+        type: number
     type: object
   model.Location:
     properties:
@@ -141,40 +221,44 @@ definitions:
       Tel_No:
         type: string
     type: object
+  model.RegisterTokenRequest:
+    properties:
+      firebase_token:
+        type: string
+    type: object
   model.SimilarActivities:
     properties:
       average_speed:
-        type: integer
+        type: number
       effort_count:
         type: integer
       frequency_milestone:
         type: string
       max_average_speed:
-        type: integer
+        type: number
       mid_average_speed:
-        type: integer
+        type: number
       min_average_speed:
-        type: integer
+        type: number
       pr_rank:
         type: string
       resource_state:
         type: integer
       trend:
         $ref: '#/definitions/model.Trend'
-        type: object
     type: object
   model.SplitsMetric:
     properties:
       average_grade_adjusted_speed:
-        type: integer
+        type: number
       average_speed:
-        type: integer
+        type: number
       distance:
-        type: integer
+        type: number
       elapsed_time:
         type: integer
       elevation_difference:
-        type: integer
+        type: number
       moving_time:
         type: integer
       pace_zone:
@@ -185,15 +269,15 @@ definitions:
   model.SplitsStandard:
     properties:
       average_grade_adjusted_speed:
-        type: integer
+        type: number
       average_speed:
-        type: integer
+        type: number
       distance:
-        type: integer
+        type: number
       elapsed_time:
         type: integer
       elevation_difference:
-        type: integer
+        type: number
       moving_time:
         type: integer
       pace_zone:
@@ -207,7 +291,6 @@ definitions:
         type: integer
       athlete:
         $ref: '#/definitions/model.Athlete'
-        type: object
       athlete_count:
         type: integer
       available_zones:
@@ -215,7 +298,7 @@ definitions:
           type: string
         type: array
       average_speed:
-        type: integer
+        type: number
       best_efforts:
         items:
           type: string
@@ -235,13 +318,13 @@ definitions:
       display_hide_heartrate_option:
         type: boolean
       distance:
-        type: integer
+        type: number
       elapsed_time:
         type: integer
       elev_high:
-        type: integer
+        type: number
       elev_low:
-        type: integer
+        type: number
       embed_token:
         type: string
       end_latlng:
@@ -270,7 +353,7 @@ definitions:
         type: integer
       laps:
         items:
-          type: string
+          $ref: '#/definitions/model.Lab'
         type: array
       location_city:
         type: string
@@ -282,9 +365,8 @@ definitions:
         type: boolean
       map:
         $ref: '#/definitions/model.Map'
-        type: object
       max_speed:
-        type: integer
+        type: number
       moving_time:
         type: integer
       name:
@@ -295,7 +377,6 @@ definitions:
         type: integer
       photos:
         $ref: '#/definitions/model.Photos'
-        type: object
       pr_count:
         type: integer
       prefer_perceived_exertion:
@@ -310,7 +391,6 @@ definitions:
         type: array
       similar_activities:
         $ref: '#/definitions/model.SimilarActivities'
-        type: object
       splits_metric:
         items:
           $ref: '#/definitions/model.SplitsMetric'
@@ -334,7 +414,7 @@ definitions:
       timezone:
         type: string
       total_elevation_gain:
-        type: integer
+        type: number
       total_photo_count:
         type: integer
       trainer:
@@ -354,29 +434,30 @@ definitions:
     type: object
   model.StravaAddRequest:
     properties:
+      provider:
+        type: string
+      provider_id:
+        type: string
       strava_activity:
         $ref: '#/definitions/model.StravaActivity'
-        type: object
       strava_id:
-        type: string
-      user_id:
         type: string
     type: object
   model.Trend:
     properties:
       current_activity_index:
-        type: string
+        type: integer
       direction:
         type: integer
       max_speed:
-        type: integer
+        type: number
       mid_speed:
-        type: integer
+        type: number
       min_speed:
-        type: integer
+        type: number
       speeds:
         items:
-          type: string
+          type: number
         type: array
     type: object
   model.User:
@@ -406,10 +487,6 @@ definitions:
       events:
         items:
           type: string
-        type: array
-      firebase_tokens:
-        items:
-          $ref: '#/definitions/model.FirebaseToken'
         type: array
       firstname:
         type: string
@@ -562,8 +639,103 @@ definitions:
     type: object
 info:
   contact: {}
-  license: {}
 paths:
+  /activitiesWorkout:
+    post:
+      consumes:
+      - application/json
+      description: save  Add activity from workout API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddMultiActivityFormWorkout'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Add activity from workout
+      tags:
+      - activity
+  /activity:
+    post:
+      consumes:
+      - application/json
+      description: save  Add activity API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddActivityForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Add activity
+      tags:
+      - activity
+  /activityWorkout:
+    post:
+      consumes:
+      - application/json
+      description: save  Add activity from workout API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddActivityFormWorkout'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Add activity from workout
+      tags:
+      - activity
   /login:
     post:
       consumes:
@@ -675,6 +847,36 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       summary: Refresh a JSON Web Token
+      tags:
+      - user
+  /registerFirebase:
+    post:
+      consumes:
+      - application/json
+      description: user firebase register API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: user firebase register
       tags:
       - user
   /searchPreOrder:
@@ -943,7 +1145,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.WorkoutActivityInfo'
+              type: object
         "400":
           description: Bad Request
           schema:

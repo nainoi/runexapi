@@ -558,7 +558,7 @@ func (api API) LogoutUser(c *gin.Context) {
 // @Tags user
 // @Accept  application/json
 // @Produce application/json
-// @Param payload body model.RegisterTokenRequest
+// @Param payload body model.RegisterTokenRequest true "payload"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
