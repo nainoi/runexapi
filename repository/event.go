@@ -36,6 +36,8 @@ type EventRepository interface {
 	GetUserEvent(userID string) (model.UserEvent, error)
 	GetEventByUser(userID string) ([]model.Event, error)
 	SearchEvent(term string) ([]model.Event, error)
+	ValidateBySlug(slug string) (bool, error)
+	GetEventBySlug(slug string) (model.Event, error)
 }
 type EventRepositoryMongo struct {
 	ConnectionDB *mongo.Database
@@ -463,4 +465,31 @@ func (eventMongo EventRepositoryMongo) SearchEvent(term string) ([]model.Event, 
 	}
 
 	return events, err
+}
+
+func (eventMongo EventRepositoryMongo) ValidateBySlug(slugText string) (bool, error) {
+
+	filter := bson.D{{"slug", slugText}}
+	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
+	log.Printf("[info] count %s", count)
+	if err != nil {
+		log.Println(err)
+	}
+	if count > 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (eventMongo EventRepositoryMongo) GetEventBySlug(slug string) (model.Event, error) {
+	var event model.Event
+	filter := bson.D{{"slug", slug}}
+	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+	log.Printf("[info Event] cur %s", err2)
+	if err2 != nil {
+		log.Fatal(err2)
+	}
+
+	return event, err2
 }

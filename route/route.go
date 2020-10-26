@@ -127,6 +127,7 @@ func EventRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt
 	{
 		api.GET("/findByStatus/:status", eventAPI.GetByStatus)
 		api.GET("/eventInfo/:id", eventAPI.GetByID)
+		api.GET("/eventDetail/:slug", eventAPI.GetBySlug)
 		api.GET("/all", eventAPI.GetAll)
 		api.GET("/active", eventAPI.GetAllActive)
 
@@ -146,6 +147,7 @@ func EventRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt
 			api.POST("/:id/addTicket", eventAPI.AddTicket)
 			api.POST("/:id/editTicket", eventAPI.EditTicket)
 			api.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
+			api.PUT("/validateSlug", eventAPI.ValidateSlug)
 		}
 	}
 	api2 := route.Group("/api/v1")
