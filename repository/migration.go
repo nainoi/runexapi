@@ -26,7 +26,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 	var history []model.RunHistory
 
 	options := options.Find()
-	options.SetLimit(2)
+	//options.SetLimit(2)
 	cur, err := migrationMongo.ConnectionDB.Collection("run_history").Find(context.TODO(), bson.D{{}}, options)
 
 	if err != nil {
@@ -46,7 +46,6 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 
 	for _, item := range history {
 		var arrActivityInfo []model.WorkoutActivityInfo
-		var locationArr []model.Location
 		// workoutsModel := model.Workouts{
 		// 	UserID:              item.UserID,
 		// 	WorkoutActivityInfo: arrActivityInfo,
@@ -65,6 +64,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 			durStr := fmtDuration(since)
 
 			dataInfo := model.WorkoutActivityInfo{
+				APP:              "RUNEX",
 				ActivityType:     item2.ActivityType,
 				Calory:           float64(item2.Calory),
 				Caption:          item2.Caption,
@@ -77,7 +77,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 				WorkoutDate:      item2.ActivityDate,
 				NetElevationGain: 0.0,
 				IsSync:           false,
-				Locations:        locationArr,
+				Locations:        []model.Location{},
 			}
 			dataInfo.ID = primitive.NewObjectID()
 			arrActivityInfo = append(arrActivityInfo, dataInfo)
@@ -95,7 +95,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 		}
 
 	}
-	var workout []model.Workouts
+	/*var workout []model.Workouts
 	options.SetLimit(0)
 	cur, err = migrationMongo.ConnectionDB.Collection("workouts").Find(context.TODO(), bson.D{{}}, options)
 	for cur.Next(context.TODO()) {
@@ -105,11 +105,12 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 			log.Println(err)
 			log.Fatal(err)
 		}
+
 		//fmt.Printf("post: %+v\n", p)
 		workout = append(workout, u)
 	}
 	for _, item3 := range workout {
-		filter := bson.D{{"user_id", item3.UserID}}
+		filter := bson.D{bson.E{Key: "user_id", Value: item3.UserID}}
 		count, err2 := migrationMongo.ConnectionDB.Collection(newCollection).CountDocuments(context.TODO(), filter)
 		if err2 != nil {
 			log.Println(err2)
@@ -140,7 +141,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 				return err
 			}
 		}
-	}
+	}*/
 
 	return nil
 }
