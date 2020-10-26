@@ -22,7 +22,14 @@ func (api MigrationAPI) MigrateWorkout(c *gin.Context) {
 	)
 
 	newCollection := c.Param("newCollection")
-	// modTime := time.Now().Round(0).Add(-(125) * time.Second)
+
+	// integer, fraction := math.Modf(24.3488998413086)
+	// var modTimeMin int = int(integer * 60)
+	// var modTimeSec int = int(fraction * 100)
+	// fmt.Println(modTimeMin)
+	// fmt.Println(modTimeSec)
+	// durTime := time.Duration(modTimeMin+modTimeSec) * time.Second
+	// modTime := time.Now().Round(0).Add(-(durTime))
 	// since := time.Since(modTime)
 	// fmt.Println(since)
 	// durStr := fmtDuration(since)
