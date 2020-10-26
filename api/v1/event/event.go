@@ -8,6 +8,7 @@ import (
 	"os"
 
 	guuid "github.com/google/uuid"
+	"github.com/gosimple/slug"
 
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -427,6 +428,69 @@ func (api EventAPI) SearchEvent(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, event)
+
+}
+
+func (api EventAPI) ValidateSlug(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+	)
+
+	var json model.Slug
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	slugText := slug.MakeLang(json.Slug, "th")
+	//slug.Make(json.Slug)
+	//slug.MakeLang("Diese & Dass", "de")
+	//slug.Make(json.Slug)
+	fmt.Println(slugText) // Will print: "hello-world-khello-vorld"
+	existsSlug, err2 := api.EventRepository.ValidateBySlug(json.Slug)
+
+	if err2 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err2.Error()})
+		return
+	}
+
+	if !existsSlug {
+		appG.Response(http.StatusBadRequest, e.ERROR_EXIST_EVENT_SLUG, json.Slug)
+		return
+	}
+
+	appG.Response(http.StatusOK, e.SUCCESS, json.Slug)
+
+}
+
+func (api EventAPI) GetBySlug(c *gin.Context) {
+	var (
+		appG = app.Gin{C: c}
+	)
+	slug := c.Param("slug")
+	log.Printf("[info] id %s", slug)
+
+	existsSlug, err2 := api.EventRepository.ValidateBySlug(slug)
+	log.Printf("[ValidateBySlug] id %s", slug)
+	if existsSlug {
+		appG.Response(http.StatusBadRequest, e.ERROR_EXIST_EVENT_SLUG, slug)
+		return
+	}
+
+	event, err := api.EventRepository.GetEventBySlug(slug)
+	if err != nil {
+		log.Println("error AddEvent", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		return
+	}
+
+	user, err2 := api.EventRepository.GetUserEvent(event.OwnerID.Hex())
+	if err2 != nil {
+		log.Println("error owner event", err2.Error())
+	}
+	//data := EventRes{event, user}
+	appG.Response(http.StatusOK, e.SUCCESS, gin.H{"event": event, "user": user})
 
 }
 

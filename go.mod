@@ -24,6 +24,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/google/uuid v1.1.1
+	github.com/gosimple/slug v1.9.0
 	github.com/jordan-wright/email v0.0.0-20190819015918-041e0cec78b0
 	github.com/kr/pty v1.1.5 // indirect
 	github.com/labstack/gommon v0.3.0 // indirect

@@ -30,6 +30,7 @@ type Event struct {
 	EndEvent        time.Time          `json:"end_event" bson:"end_event"`
 	Inapp           bool               `json:"inapp" bson:"inapp"`
 	IsPost          bool               `json:"is_post" bson:"is_post"`
+	Slug            string             `json:"slug" bson:"slug"`
 	PostEndDate     time.Time          `json:"post_end_date" bson:"post_end_date"`
 	CreatedTime     time.Time          `json:"created_time" bson:"created_time"`
 	UpdatedTime     time.Time          `json:"updated_time" bson:"updated_time"`
@@ -130,6 +131,10 @@ type EventRegInfo struct {
 	IsActive    bool               `json:"is_active" bson:"is_active"`
 	StartEvent  time.Time          `json:"start_event" bson:"start_event"`
 	EndEvent    time.Time          `json:"end_event" bson:"end_event"`
+}
+
+type Slug struct {
+	Slug string `json:"slug" bson:"slug" binding:"required"`
 }
 
 // type ProductUpdateForm struct {
