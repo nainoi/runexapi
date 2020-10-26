@@ -11,8 +11,6 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
-	"thinkdev.app/think/runex/runexapi/pkg/app"
-	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository"
 	"thinkdev.app/think/runex/runexapi/utils"
 )
@@ -37,12 +35,12 @@ type WorkoutsAPI struct {
 // @Router /workout [post]
 func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		res = response.Gin{C: c}
 	)
 	var form model.AddWorkoutForm
 	fmt.Println(form)
 	if err := c.ShouldBind(&form); err != nil {
-		appG.Response(http.StatusBadRequest, e.ERROR, nil)
+		res.Response(http.StatusBadRequest, err.Error(), nil)
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
@@ -95,11 +93,11 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 	workoutInfo, err2 := api.WorkoutsRepository.AddWorkout(workoutModel)
 	if err2 != nil {
 		log.Println("error AddWorkout", err2.Error())
-		appG.Response(http.StatusInternalServerError, e.ERROR, nil)
+		res.Response(http.StatusInternalServerError, err2.Error(), nil)
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, workoutInfo)
+	res.Response(http.StatusOK, "success", workoutInfo)
 }
 
 // GetWorkouts api godoc
