@@ -26,7 +26,7 @@ func (migrationMongo MigrationRepositoryMongo) MigrateWorkout(newCollection stri
 	var history []model.RunHistory
 
 	options := options.Find()
-	options.SetLimit(2)
+	//options.SetLimit(2)
 	cur, err := migrationMongo.ConnectionDB.Collection("run_history").Find(context.TODO(), bson.D{{}}, options)
 
 	if err != nil {
