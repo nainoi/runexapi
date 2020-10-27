@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+	handle_event_v2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
@@ -27,6 +28,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		migrationGroup(*api, connectionDB)
 		workoutGroup(*api, connectionDB)
 		activityGroup(*api, connectionDB)
+		eventGroup(*api, connectionDB)
 	}
 }
 
@@ -137,4 +139,21 @@ func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		MigrationRepository: migrationRepo,
 	}
 	g.POST("/migrateWorkout/:newCollection", migrationAPI.MigrateWorkout)
+}
+
+func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	eventRepository := repo.EventRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	eventAPI := handle_event_v2.EventAPI{
+		EventRepository: &eventRepository,
+	}
+	group := g.Group("/event")
+	{
+		group.Use(oauth.AuthMiddleware())
+		{
+			group.POST("", eventAPI.AddEvent)
+		}
+	}
+
 }

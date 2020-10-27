@@ -15,6 +15,7 @@ type Event struct {
 	Cover           string             `json:"cover" bson:"cover"`
 	CoverThumb      string             `json:"cover_thumb" bson:"cover_thumb"`
 	Category        Category           `json:"category" bson:"category"`
+	Slug            string             `json:"slug" bson:"slug"`
 	Product         []ProduceEvent     `json:"product" bson:"product"`
 	Ticket          []TicketEvent      `json:"ticket" bson:"ticket"`
 	Tag             []Tag              `json:"tags" bson:"tags"`
@@ -30,7 +31,6 @@ type Event struct {
 	EndEvent        time.Time          `json:"end_event" bson:"end_event"`
 	Inapp           bool               `json:"inapp" bson:"inapp"`
 	IsPost          bool               `json:"is_post" bson:"is_post"`
-	Slug            string             `json:"slug" bson:"slug"`
 	PostEndDate     time.Time          `json:"post_end_date" bson:"post_end_date"`
 	CreatedTime     time.Time          `json:"created_time" bson:"created_time"`
 	UpdatedTime     time.Time          `json:"updated_time" bson:"updated_time"`
