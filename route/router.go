@@ -153,6 +153,20 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("", eventAPI.AddEvent)
+			group.GET("/myEvent", eventAPI.MyEvent)
+			group.POST("", eventAPI.AddEvent)
+			group.PUT("/edit/:id", eventAPI.EditEvent)
+			group.DELETE("/delete/:id", eventAPI.DeleteEvent)
+			group.POST("/:id/uploadImage", eventAPI.UploadImage)
+			group.POST("/:id/addProduct", eventAPI.AddProduct)
+			group.POST("/:id/editProduct", eventAPI.EditProduct)
+			group.GET("/getProduct/:id", eventAPI.GetProductEvent)
+
+			group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
+			group.POST("/:id/addTicket", eventAPI.AddTicket)
+			group.POST("/:id/editTicket", eventAPI.EditTicket)
+			group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
+			group.PUT("/validateSlug", eventAPI.ValidateSlug)
 		}
 	}
 
