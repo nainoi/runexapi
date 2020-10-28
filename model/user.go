@@ -122,7 +122,7 @@ type Provider struct {
 // swagger:model
 type UserProviderRequest struct {
 	// in: body
-	Email      string    `json:"email" bson:"email" binding:"exists,email"`
+	Email      string    `json:"email" bson:"email"`
 	Provider   string    `json:"provider" bson:"provider" binding:"required"`
 	ProviderID string    `json:"provider_id" bson:"provider_id" binding:"required"`
 	FullName   string    `json:"fullname" bson:"fullname"`

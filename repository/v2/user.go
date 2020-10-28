@@ -53,8 +53,12 @@ func (db RepoUserDB) Signin(u model.UserProviderRequest) (model.User, error) {
 	}
 	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
-		user, err = db.AddUser(u)
-		return user, err
+		count, err := db.ConnectionDB.Collection(userConlection).CountDocuments(context.TODO(), filter)
+		if count < 1 {
+			user, err = db.AddUser(u)
+			return user, err
+		}
+		
 	}
 	return user, err
 }

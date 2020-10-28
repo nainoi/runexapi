@@ -45,14 +45,12 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
 		if err != nil {
 			log.Printf("[info] err %s", err)
-			log.Fatal(err)
 			return dataInfo, err
 		}
 		dataInfo.ID = primitive.NewObjectID()
 		update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
 		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
-			log.Fatal(err)
 			log.Printf("[info] err %s", err)
 			return dataInfo, err
 		}

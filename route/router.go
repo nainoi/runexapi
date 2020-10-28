@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
@@ -27,6 +28,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		migrationGroup(*api, connectionDB)
 		workoutGroup(*api, connectionDB)
 		activityGroup(*api, connectionDB)
+		kaoGroup(*api, connectionDB)
 	}
 }
 
@@ -89,6 +91,21 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
 		g.GET("/workouts", workoutsAPI.GetWorkouts)
+	}
+
+}
+
+func kaoGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	kaoRepository := repo.KaoRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	kaoAPI := kao.KoaAPI{
+		KaoRepository: &kaoRepository,
+	}
+	g.Use(oauth.AuthMiddleware())
+	{
+		//g.POST("/kaoActivity", kaoAPI.)
+		g.POST("/kao", kaoAPI.GetKaoActivity)
 	}
 
 }
