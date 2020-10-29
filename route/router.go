@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+	handle_event_v2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
@@ -29,6 +30,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		workoutGroup(*api, connectionDB)
 		activityGroup(*api, connectionDB)
 		kaoGroup(*api, connectionDB)
+		eventGroup(*api, connectionDB)
 	}
 }
 
@@ -154,4 +156,34 @@ func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		MigrationRepository: migrationRepo,
 	}
 	g.POST("/migrateWorkout/:newCollection", migrationAPI.MigrateWorkout)
+}
+
+func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	eventRepository := repo.EventRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	eventAPI := handle_event_v2.EventAPI{
+		EventRepository: &eventRepository,
+	}
+	group := g.Group("/event")
+	{
+		group.Use(oauth.AuthMiddleware())
+		{
+			group.POST("", eventAPI.AddEvent)
+			group.GET("/myEvent", eventAPI.MyEvent)
+			group.PUT("/edit/:id", eventAPI.EditEvent)
+			group.DELETE("/delete/:id", eventAPI.DeleteEvent)
+			group.POST("/:id/uploadImage", eventAPI.UploadImage)
+			group.POST("/:id/addProduct", eventAPI.AddProduct)
+			group.POST("/:id/editProduct", eventAPI.EditProduct)
+			group.GET("/getProduct/:id", eventAPI.GetProductEvent)
+
+			group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
+			group.POST("/:id/addTicket", eventAPI.AddTicket)
+			group.POST("/:id/editTicket", eventAPI.EditTicket)
+			group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
+			group.PUT("/validateSlug", eventAPI.ValidateSlug)
+		}
+	}
+
 }
