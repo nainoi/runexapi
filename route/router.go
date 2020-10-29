@@ -159,7 +159,7 @@ func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 }
 
 func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	eventRepository := repo.EventRepositoryMongo{
+	eventRepository := repository.EventRepositoryMongo{
 		ConnectionDB: connectionDB,
 	}
 	eventAPI := handle_event_v2.EventAPI{
@@ -167,6 +167,12 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	}
 	group := g.Group("/event")
 	{
+		group.GET("/findByStatus/:status", eventAPI.GetByStatus)
+		group.GET("/eventInfo/:id", eventAPI.GetByID)
+		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
+		group.GET("/all", eventAPI.GetAll)
+		group.GET("/active", eventAPI.GetAllActive)
+
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("", eventAPI.AddEvent)
@@ -174,11 +180,10 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.PUT("/edit/:id", eventAPI.EditEvent)
 			group.DELETE("/delete/:id", eventAPI.DeleteEvent)
 			group.POST("/:id/uploadImage", eventAPI.UploadImage)
-			group.POST("/:id/addProduct", eventAPI.AddProduct)
-			group.POST("/:id/editProduct", eventAPI.EditProduct)
-			group.GET("/getProduct/:id", eventAPI.GetProductEvent)
-
-			group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
+			// group.POST("/:id/addProduct", eventAPI.AddProduct)
+			// group.POST("/:id/editProduct", eventAPI.EditProduct)
+			// group.GET("/getProduct/:id", eventAPI.GetProductEvent)
+			// group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
 			group.POST("/:id/addTicket", eventAPI.AddTicket)
 			group.POST("/:id/editTicket", eventAPI.EditTicket)
 			group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
