@@ -10,6 +10,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
+	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
@@ -31,6 +32,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		activityGroup(*api, connectionDB)
 		kaoGroup(*api, connectionDB)
 		eventGroup(*api, connectionDB)
+		registerGroup(*api, connectionDB)
 	}
 }
 
@@ -188,6 +190,24 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.POST("/:id/editTicket", eventAPI.EditTicket)
 			group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
 			group.PUT("/validateSlug", eventAPI.ValidateSlug)
+		}
+	}
+
+}
+
+func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	registerRepository := repository.RegisterRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	registerAPI := handle_register_v2.RegisterAPI{
+		RegisterRepository: &registerRepository,
+	}
+	group := g.Group("/register")
+	{
+
+		group.Use(oauth.AuthMiddleware())
+		{
+			group.POST("/add", registerAPI.AddRegister)
 		}
 	}
 
