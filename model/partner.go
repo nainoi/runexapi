@@ -4,8 +4,9 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // Partner struct
 type Partner struct {
-	ID   primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Name string             `json:"name" bson:"name"`
+	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Name          string             `json:"name" bson:"name"`
+	PartnerConfig PartnerConfig      `json:"config" bson:"config"`
 }
 
 // PartnerConfig partner struct

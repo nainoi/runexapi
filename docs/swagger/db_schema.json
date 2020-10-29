@@ -451,6 +451,32 @@
               }
             }
           },
+          "partner":{
+            "type": "object",
+            "properties": {
+              "partner_id": {
+                "type": "string",
+                "format": "hexadecimal",
+                "description": "partner id is key"
+              },
+              "partner_name": {
+                "type": "string",
+                "description": "partner name"
+              },
+              "slug": {
+                "type": "string",
+                "description": "slug is ref partner event id is key"
+              },
+              "ref_event_key": {
+                "type": "string",
+                "description": "reference event data api"
+              },
+              "ref_activity_key": {
+                "type": "string",
+                "description": "reference activity key for send workout to event api"
+              }
+            }
+          },
           "created_at": {
             "type": "string",
             "format": "datetime"
@@ -692,6 +718,32 @@
             "type": "string",
             "format": "datetime",
             "description": "end date selected shipping"
+          },
+          "partner":{
+            "type": "object",
+            "properties": {
+              "partner_id": {
+                "type": "string",
+                "format": "hexadecimal",
+                "description": "partner id is key"
+              },
+              "partner_name": {
+                "type": "string",
+                "description": "partner name"
+              },
+              "slug": {
+                "type": "string",
+                "description": "slug is ref partner event id is key"
+              },
+              "ref_event_key": {
+                "type": "string",
+                "description": "reference event data api"
+              },
+              "ref_activity_key": {
+                "type": "string",
+                "description": "reference activity key for send workout to event api"
+              }
+            }
           },
           "created_at": {
             "type": "string",
