@@ -12,7 +12,7 @@ import (
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
-	"thinkdev.app/think/runex/runexapi/repository"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
@@ -37,7 +37,7 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 	userID, _ := oauth.GetValuesToken(c)
 	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
 
-	var json model.Event
+	var json model.EventV2
 
 	json.OwnerID = ownerObjectID
 
@@ -166,7 +166,7 @@ func (api EventAPI) EditEvent(c *gin.Context) {
 	)
 	id := c.Param("id")
 	log.Printf("[info] id %s", id)
-	var json model.Event
+	var json model.EventV2
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -342,7 +342,7 @@ func (api EventAPI) AddTicket(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 	id := c.Param("id")
-	var json model.TicketEvent
+	var json model.TicketEventV2
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -364,7 +364,7 @@ func (api EventAPI) EditTicket(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 	id := c.Param("id")
-	var json model.TicketEvent
+	var json model.TicketEventV2
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

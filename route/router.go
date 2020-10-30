@@ -10,6 +10,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
+	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
@@ -31,6 +32,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		activityGroup(*api, connectionDB)
 		kaoGroup(*api, connectionDB)
 		eventGroup(*api, connectionDB)
+		registerGroup(*api, connectionDB)
 	}
 }
 
@@ -159,7 +161,7 @@ func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 }
 
 func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	eventRepository := repo.EventRepositoryMongo{
+	eventRepository := repository.EventRepositoryMongo{
 		ConnectionDB: connectionDB,
 	}
 	eventAPI := handle_event_v2.EventAPI{
@@ -167,6 +169,12 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	}
 	group := g.Group("/event")
 	{
+		group.GET("/findByStatus/:status", eventAPI.GetByStatus)
+		group.GET("/eventInfo/:id", eventAPI.GetByID)
+		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
+		group.GET("/all", eventAPI.GetAll)
+		group.GET("/active", eventAPI.GetAllActive)
+
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("", eventAPI.AddEvent)
@@ -174,15 +182,32 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.PUT("/edit/:id", eventAPI.EditEvent)
 			group.DELETE("/delete/:id", eventAPI.DeleteEvent)
 			group.POST("/:id/uploadImage", eventAPI.UploadImage)
-			group.POST("/:id/addProduct", eventAPI.AddProduct)
-			group.POST("/:id/editProduct", eventAPI.EditProduct)
-			group.GET("/getProduct/:id", eventAPI.GetProductEvent)
-
-			group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
+			// group.POST("/:id/addProduct", eventAPI.AddProduct)
+			// group.POST("/:id/editProduct", eventAPI.EditProduct)
+			// group.GET("/getProduct/:id", eventAPI.GetProductEvent)
+			// group.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
 			group.POST("/:id/addTicket", eventAPI.AddTicket)
 			group.POST("/:id/editTicket", eventAPI.EditTicket)
 			group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
 			group.PUT("/validateSlug", eventAPI.ValidateSlug)
+		}
+	}
+
+}
+
+func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	registerRepository := repository.RegisterRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+	registerAPI := handle_register_v2.RegisterAPI{
+		RegisterRepository: &registerRepository,
+	}
+	group := g.Group("/register")
+	{
+
+		group.Use(oauth.AuthMiddleware())
+		{
+			group.POST("/add", registerAPI.AddRegister)
 		}
 	}
 
