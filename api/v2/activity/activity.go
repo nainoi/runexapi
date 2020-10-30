@@ -141,7 +141,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		eventObjectID, err := primitive.ObjectIDFromHex(eventID)
 
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 
 		activityInfo := model.ActivityInfo{

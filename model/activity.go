@@ -136,3 +136,8 @@ type ActivityAllInfo struct {
 	UserInfo User     `json:"user_info"`
 	Activity Activity `json:"activity"`
 }
+
+type EventActivity struct {
+	EventID string `json:"event_id" bson:"event_id"`
+	
+}

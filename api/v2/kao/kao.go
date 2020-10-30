@@ -1,15 +1,21 @@
 package kao
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/repository"
 )
@@ -87,13 +93,13 @@ func (api KoaAPI) GetKaoActivity(c *gin.Context) {
 }
 
 //SendKaoActivity api
-/*func (api KoaAPI) SendKaoActivity(c *gin.Context) {
+func (api KoaAPI) SendKaoActivity(c *gin.Context) {
 	url := fmt.Sprintf("https://kaokonlakao-www-tabshier.azurewebsites.net/api/%s/bib/%s/submit")
 	var (
 		res = response.Gin{C: c}
 	)
 
-	file, header, err := c.Request.FormFile("image")
+	file, _, err := c.Request.FormFile("image")
 	if err != nil {
 		res.Response(http.StatusBadRequest, "Image is require", nil)
 		c.Abort()
@@ -123,7 +129,7 @@ func (api KoaAPI) GetKaoActivity(c *gin.Context) {
 
 	out, err := os.Create(pathDir + uniqidFilename.String() + ".png")
 
-	path := pathDir + uniqidFilename.String() + ".png"
+	//path := pathDir + uniqidFilename.String() + ".png"
 	if err != nil {
 		log.Println(err)
 		res.Response(http.StatusInternalServerError, err.Error(), nil)
@@ -161,11 +167,12 @@ func (api KoaAPI) GetKaoActivity(c *gin.Context) {
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		b, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("[%d %s]%s", resp.StatusCode, resp.Status, string(b))
+		errString := fmt.Errorf("[%d %s]%s", resp.StatusCode, resp.Status, string(b))
+		log.Println(errString)
 	}
 	respData, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		log.Println(err)
 	}
 	fmt.Println(string(respData))
 	// if err == nil {
@@ -180,9 +187,64 @@ func (api KoaAPI) GetKaoActivity(c *gin.Context) {
 	// 		defer resp.Body.Close()
 	// 	}
 	// }
-}*/
+}
 
 func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 	req.Header.Add("Authorization", via[0].Header.Get("Authorization"))
 	return nil
+}
+
+// KaoActivity send activity data to Kao
+func KaoActivity(file multipart.File, distance float64, time int64, slug string, ebib string, orderID string) ([]byte, error) {
+	urls := fmt.Sprintf("https://kaokonlakao-www-tabshier.azurewebsites.net/api/%s/bib/%s/submit", slug, ebib)
+	uniqidFilename := uuid.New()
+
+	pathDir := "." + config.UPLOAD_KAO
+	if _, err := os.Stat(pathDir); os.IsNotExist(err) {
+		os.MkdirAll(pathDir, os.ModePerm)
+	}
+
+	out, err := os.Create(pathDir + uniqidFilename.String() + ".png")
+
+	//path := pathDir + uniqidFilename.String() + ".png"
+	if err != nil {
+		log.Println(err)
+	}
+	defer out.Close()
+	_, err = io.Copy(out, file)
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+	bodyWriter.WriteField("distance", fmt.Sprintf("%.2f", distance))
+	bodyWriter.WriteField("time", fmt.Sprintf("%d", time))
+	fileWriter, err := bodyWriter.CreateFormFile("imageData", uniqidFilename.String()+".png")
+	if err != nil {
+		fmt.Println(err)
+		return []byte{}, err
+	}
+	buf := bytes.NewBuffer(nil)
+	_, err = io.Copy(buf, file)
+	fileWriter.Write(buf.Bytes())
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+	resp, err := http.Post(urls, contentType, bodyBuf)
+	if err != nil {
+		return []byte{}, err
+	}
+	resp.Header.Add("Authorization", TK)
+	defer resp.Body.Close()
+	fmt.Println(resp)
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		b, _ := ioutil.ReadAll(resp.Body)
+		errString := fmt.Errorf("[%d %s]%s", resp.StatusCode, resp.Status, string(b))
+		log.Println(errString)
+		return []byte{}, errString
+	}
+	respData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+		return []byte{}, err
+	}
+	fmt.Println(string(respData))
+	return respData, err
 }
