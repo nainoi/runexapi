@@ -19,6 +19,7 @@ type ActivityV2Repository interface {
 	HistoryMonthByEvent(event_id string, user_id string, year int) ([]model.HistoryMonthInfo, error)
 	DeleteActivity(event_id string, user_id string, activity_id string) error
 	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
+	AddKaoLogActivity(activity model.LogSendKaoActivity) error
 }
 
 type ActivityV2RepositoryMongo struct {
@@ -27,6 +28,8 @@ type ActivityV2RepositoryMongo struct {
 
 const (
 	activityV2Collection = "activityV2"
+	activityLog = "activity_log"
+	activityKaoLog = "activity_kao_log"
 )
 
 func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddActivityV2) error {
@@ -52,7 +55,6 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 			return err2
 		}
 		dataInfo := activity.ActivityInfo
-		dataInfo.ID = primitive.NewObjectID()
 		update := bson.M{"$push": bson.M{"activities.activity_info": dataInfo}}
 		res, err := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
@@ -60,12 +62,24 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 			log.Printf("[info] err %s", res)
 			return err
 		}
+		activityLogInfo := model.LogActivityInfo{
+			UserID: activity.UserID,
+			ActivityInfoID: dataInfo.ID,
+			Distance: dataInfo.Distance,
+			ImageURL: dataInfo.ImageURL,
+			Caption: dataInfo.Caption,
+			Time: dataInfo.Time,
+			APP: dataInfo.APP,
+			ActivityDate: dataInfo.ActivityDate,
+			CreatedAt: dataInfo.CreatedAt,
+			UpdatedAt: dataInfo.UpdatedAt,
+		}
+		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 
 	} else {
 		var arrActivityInfo []model.ActivityInfo
 
 		dataInfo := activity.ActivityInfo
-		dataInfo.ID = primitive.NewObjectID()
 		arrActivityInfo = append(arrActivityInfo, dataInfo)
 
 		activities := model.Activities{
@@ -84,6 +98,20 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 			log.Fatal(res)
 			return err
 		}
+
+		activityLogInfo := model.LogActivityInfo{
+			UserID: activity.UserID,
+			ActivityInfoID: dataInfo.ID,
+			Distance: dataInfo.Distance,
+			ImageURL: dataInfo.ImageURL,
+			Caption: dataInfo.Caption,
+			Time: dataInfo.Time,
+			APP: dataInfo.APP,
+			ActivityDate: dataInfo.ActivityDate,
+			CreatedAt: dataInfo.CreatedAt,
+			UpdatedAt: dataInfo.UpdatedAt,
+		}
+		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 	}
 
 	return nil
@@ -284,6 +312,15 @@ func (activityMongo ActivityV2RepositoryMongo) UpdateWorkout(workout model.Worko
 	_, err := activityMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 	if err == nil {
 		log.Println("update workout success")
+	}
+	return err
+}
+
+// AddKaoLogActivity log store send activity to Kao
+func (activityMongo ActivityV2RepositoryMongo) AddKaoLogActivity(activity model.LogSendKaoActivity) error {
+	_, err := activityMongo.ConnectionDB.Collection(activityKaoLog).InsertOne(context.TODO(), activity)
+	if err == nil {
+		log.Println("insert send activity kao success")
 	}
 	return err
 }

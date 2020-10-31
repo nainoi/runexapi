@@ -16,18 +16,6 @@ type AddActivityForm struct {
 	ImageURL     string  `form:"image_url" json:"image_url" bson:"image_url"`
 }
 
-//AddActivityFormWorkout model request
-type AddActivityFormWorkout struct {
-	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
-	EventID             string              `form:"event_id" json:"event_id" binding:"required"`
-}
-
-//AddMultiActivityFormWorkout model request
-type AddMultiActivityFormWorkout struct {
-	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
-	EventID             []string            `form:"event_id" json:"event_id" binding:"required"`
-}
-
 //AddMultiActivityForm model request
 type AddMultiActivityForm struct {
 	Caption      string   `form:"caption" json:"caption"`
@@ -87,12 +75,14 @@ type ActivitySingel struct {
 	// ActivityType string    `json:"activity_type" bson:"activity_type"`
 }
 
+// ActivityInfo info data
 type ActivityInfo struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Distance     float64            `json:"distance" bson:"distance"`
 	ImageURL     string             `json:"img_url" bson:"img_url"`
 	Caption      string             `form:"caption" json:"caption"`
 	APP          string             `form:"app" json:"app"`
+	Time         int64              `form:"time" json:"time"`
 	ActivityDate time.Time          `json:"activity_date" bson:"activity_date"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
@@ -132,12 +122,8 @@ type DeleteActivityForm struct {
 	ActivityID string `form:"activity_id" json:"activity_id" bson:"activity_id"`
 }
 
+// ActivityAllInfo for request get all activity
 type ActivityAllInfo struct {
 	UserInfo User     `json:"user_info"`
 	Activity Activity `json:"activity"`
-}
-
-type EventActivity struct {
-	EventID string `json:"event_id" bson:"event_id"`
-	
 }
