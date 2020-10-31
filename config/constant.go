@@ -35,3 +35,9 @@ const (
 	PAYMENT_QRCODE         string = "PAYMENT_QRCODE"
 	PAYMENT_FREE           string = "PAYMENT_FREE"
 )
+
+// partner name
+const (
+	// PartnerKao ก้าว company
+	PartnerKao string = "KAO"
+)

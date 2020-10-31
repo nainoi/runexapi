@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	_ "image/png"
-	_ "io"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +15,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/nfnt/resize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
@@ -134,38 +134,141 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		return
 	}
 
-	for index, each := range form.EventID {
-		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
-		eventID := each
+	path := ""
+	file, header, err := c.Request.FormFile("image")
+	if err != nil {
+		fmt.Println("Error Retrieving the File")
+		path = ""
+	} else {
+		img, str, err := image.Decode(file)
+		log.Println(str)
+		if err != nil {
+			log.Println(err)
+		}
 
-		eventObjectID, err := primitive.ObjectIDFromHex(eventID)
+		// resize to width 1000 using Lanczos resampling
+		// and preserve aspect ratio
+		m := resize.Resize(960, 0, img, resize.Lanczos3)
 
+		filename := header.Filename
+		fmt.Println(filename)
+
+		uniqidFilename := guuid.New()
+		fmt.Printf("github.com/google/uuid:         %s\n", uniqidFilename.String())
+
+		t := time.Now()
+		year := t.Year()
+		month := t.Month()
+
+		pathDir := "./upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month))
+		if _, err := os.Stat(pathDir); os.IsNotExist(err) {
+			os.MkdirAll(pathDir, os.ModePerm)
+		}
+
+		out, err := os.Create(pathDir + "/" + uniqidFilename.String() + ".png")
+
+		path = "/upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month)) + "/" + uniqidFilename.String() + ".png"
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer out.Close()
+		// write new image to file
+		jpeg.Encode(out, m, nil)
+		//_, err = io.Copy(out, file)
+	}
 
-		activityInfo := model.ActivityInfo{
-			Caption:      form.WorkoutActivityInfo.Caption,
-			Distance:     form.WorkoutActivityInfo.Distance,
-			ImageURL:     "",
-			APP:          form.WorkoutActivityInfo.APP,
-			ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-		}
+	defer file.Close()
 
-		activityModel := model.AddActivityV2{
-			UserID:       userObjectID,
-			EventID:      eventObjectID,
-			ActivityInfo: activityInfo,
-		}
+	for index, each := range form.EventActivity {
+		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
+		eventActivity := each
 
-		err2 := api.ActivityV2Repository.AddActivity(activityModel)
-		if err2 != nil {
-			log.Println("error AddActivity", err2.Error())
-			res.Response(http.StatusInternalServerError, err2.Error(), nil)
-			c.Abort()
-			return
+		if each.Partner.PartnerName != "" {
+			if each.Partner.PartnerName == config.PartnerKao {
+				body, err := kao.KaoActivity(file, form.WorkoutActivityInfo.Distance, form.WorkoutActivityInfo.Duration, each.Partner.Slug, each.Partner.RefEventKey, each.Partner.RefActivityKey)
+				if err == nil {
+					eventObjectID, err := primitive.ObjectIDFromHex(eventActivity.EventID)
+
+					if err != nil {
+						log.Println(err)
+					}
+
+					activityInfo := model.ActivityInfo{
+						ID:           primitive.NewObjectID(),
+						Caption:      form.WorkoutActivityInfo.Caption,
+						Distance:     form.WorkoutActivityInfo.Distance,
+						ImageURL:     path,
+						Time:         form.WorkoutActivityInfo.Duration,
+						APP:          form.WorkoutActivityInfo.APP,
+						ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+						CreatedAt:    time.Now(),
+						UpdatedAt:    time.Now(),
+					}
+
+					activityModel := model.AddActivityV2{
+						UserID:       userObjectID,
+						EventID:      eventObjectID,
+						ActivityInfo: activityInfo,
+					}
+
+					err2 := api.ActivityV2Repository.AddActivity(activityModel)
+					if err2 != nil {
+						log.Println("error AddActivity", err2.Error())
+						res.Response(http.StatusInternalServerError, err2.Error(), nil)
+						c.Abort()
+						return
+					}
+
+					kaoActivity := model.LogSendKaoActivity{
+						UserID:         userObjectID,
+						EventID:        eventObjectID,
+						ActivityInfoID: activityInfo.ID,
+						Distance:       form.WorkoutActivityInfo.Distance,
+						ImageURL:       path,
+						Time:           form.WorkoutActivityInfo.Duration,
+						APP:            form.WorkoutActivityInfo.APP,
+						ActivityDate:   form.WorkoutActivityInfo.WorkoutDate,
+						Slug:           each.Partner.Slug,
+						Ebib:           each.Partner.RefEventKey,
+						CreatedAt:      time.Now(),
+						UpdatedAt:      time.Now(),
+					}
+					_ = api.ActivityV2Repository.AddKaoLogActivity(kaoActivity)
+				}
+				log.Println(string(body))
+			}
+		} else {
+			eventObjectID, err := primitive.ObjectIDFromHex(eventActivity.EventID)
+
+			if err != nil {
+				log.Println(err)
+			}
+
+			activityInfo := model.ActivityInfo{
+				ID:           primitive.NewObjectID(),
+				Caption:      form.WorkoutActivityInfo.Caption,
+				Distance:     form.WorkoutActivityInfo.Distance,
+				ImageURL:     path,
+				Time:         form.WorkoutActivityInfo.Duration,
+				APP:          form.WorkoutActivityInfo.APP,
+				ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
+			}
+
+			activityModel := model.AddActivityV2{
+				UserID:       userObjectID,
+				EventID:      eventObjectID,
+				ActivityInfo: activityInfo,
+			}
+
+			err2 := api.ActivityV2Repository.AddActivity(activityModel)
+			if err2 != nil {
+				log.Println("error AddActivity", err2.Error())
+				res.Response(http.StatusInternalServerError, err2.Error(), nil)
+				c.Abort()
+				return
+			}
 		}
 
 	}
