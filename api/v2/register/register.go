@@ -123,12 +123,12 @@ func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 			register.OrderID = charge.ID
 			register.UpdatedAt = time.Now()
 
-			err = api.RegisterRepository.EditRegister(regID, register)
-			if err != nil {
-				log.Println("error update register payment success", err.Error())
-				c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-				return
-			}
+			// err = api.RegisterRepository.EditRegister(regID, register)
+			// if err != nil {
+			// 	log.Println("error update register payment success", err.Error())
+			// 	c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			// 	return
+			// }
 		}
 
 		appG.Response(http.StatusOK, e.SUCCESS, charge)
@@ -176,7 +176,7 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 	userID, _ := oauth.GetValuesToken(c)
 	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
 
-	var json model.RegisterAdd
+	var json model.RegisterRequest
 
 	json.Regs.UserID = ownerObjectID
 
@@ -205,12 +205,12 @@ func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
 		appG = app.Gin{C: c}
 	)
 
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
 
-	var json model.Register
+	var json model.RegisterRequest
 
-	json.UserID = ownerObjectID
+	json.Regs.UserID = ownerObjectID
 
 	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
 
@@ -220,7 +220,7 @@ func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
 		return
 	}
 
-	json.TotalPrice = utils.ToFixed(json.TotalPrice, 2)
+	json.Regs.TotalPrice = utils.ToFixed(json.Regs.TotalPrice, 2)
 
 	registerID, err := api.RegisterRepository.AddRaceRegister(json)
 	if err != nil {
@@ -240,7 +240,7 @@ func (api RegisterAPI) EditRegister(c *gin.Context) {
 	id := c.Param("id")
 	log.Printf("[info] id %s", id)
 
-	var json model.Register
+	var json model.RegisterRequest
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

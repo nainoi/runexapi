@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type RegisterAdd struct {
+type RegisterRequest struct {
 	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
 	Regs    Regs               `json:"regs" bson:"regs"`
 }
