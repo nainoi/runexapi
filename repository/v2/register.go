@@ -31,7 +31,7 @@ type RegisterRepository interface {
 	GetRegEventByID(regID string) (model.Register, error)
 	GetRegEventByIDNew(regID string, eventID string) (model.RegisterV2, error)
 	CheckUserRegisterEvent(eventID string, userID string) (bool, error)
-	GetRegisterByUserID(userID string) ([]model.Register, error)
+	GetRegisterByUserID(userID string) ([]model.RegisterV2, error)
 	GetRegisterByUserAndEvent(userID string, id string) (model.Register, error)
 	SendMailRegister(registerID string) error
 	SendMailRegisterNew(registerID string, eventID string) error
@@ -278,31 +278,39 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) 
 	return register, err
 }
 
-func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) ([]model.Register, error) {
+func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) ([]model.RegisterV2, error) {
 
-	var register []model.Register
+	var register []model.RegisterV2
 	objectID, err := primitive.ObjectIDFromHex(userID)
-	filter := bson.D{{"user_id", objectID}}
-	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
+	//filter := bson.D{{"regs.user_id", objectID}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	matchStage := bson.D{{"$match", bson.M{"regs.user_id": objectID}}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
+	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
+	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
+	projectStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1}}}
+	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
 		log.Println(err)
 	}
 
 	for cur.Next(context.TODO()) {
-		var u model.Register
+		var u model.RegisterV2
 
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
 			log.Print(err)
 		}
-		var event model.EventReg
-		filter = bson.D{{"_id", u.EventID}}
-		err := registerMongo.ConnectionDB.Collection("event").FindOne(context.TODO(), filter).Decode(&event)
-		if err != nil {
-			log.Print(err)
-		}
-		u.Event = event
+		// var event model.EventReg
+		// filter = bson.D{{"_id", u.EventID}}
+		// err := registerMongo.ConnectionDB.Collection("event").FindOne(context.TODO(), filter).Decode(&event)
+		// if err != nil {
+		// 	log.Print(err)
+		// }
+		// u.Event = event
 		// var event model.Event
 		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
 		// //fmt.Printf("post: %+v\n", p)

@@ -58,7 +58,7 @@ func (api RegisterAPI) GetByUserID(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 	)
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	register, err := api.RegisterRepository.GetRegisterByUserID(userID)
 	if err != nil {
 		log.Println("error GetAll", err.Error())
