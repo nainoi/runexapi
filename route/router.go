@@ -211,6 +211,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.POST("/add", registerAPI.AddRegister)
 			group.POST("/addRace", registerAPI.AddRaceRegister)
 			group.PUT("/edit/:id", registerAPI.EditRegister)
+			group.GET("/myRegEvent", registerAPI.GetByUserID)
 		}
 	}
 
