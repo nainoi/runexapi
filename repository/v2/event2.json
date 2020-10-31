@@ -1,0 +1,106 @@
+{
+    "_id": {
+        "$oid": "5f97ef578cbfeb674f7388f4"
+    },
+    "name": "ก้าวเพื่อน้อง เหรียญภาคเหนือ (สีฟ้า)",
+    "description": "",
+    "body": "{\"blocks\":[{\"key\":\"58vh\",\"text\":\"ร่วมสะสมเหรียญรางวัล ที่คุณอาจยังไม่มีครบจากงานวิ่งก้าวต่อไปด้วยพลังเล็กๆ ภาคอีสาน ภาคใต้ ภาคเหนือ เพื่อประกอบเป็นฐานปิรามิดที่สมบูรณ์ รวมถึงวิ่งเพื่อสะสมสถิติตลอด 55 วัน ร่วมกับนักวิ่งจากทั่วประเทศ  \",\"type\":\"unstyled\",\"depth\":0,\"inlineStyleRanges\":[{\"offset\":0,\"length\":198,\"style\":\"color-rgb(33,37,41)\"},{\"offset\":0,\"length\":198,\"style\":\"bgcolor-rgb(255,255,255)\"},{\"offset\":0,\"length\":198,\"style\":\"fontsize-16\"},{\"offset\":0,\"length\":198,\"style\":\"fontfamily--apple-system, BlinkMacSystemFont, \\\"Segoe UI\\\", Roboto, \\\"Helvetica Neue\\\", Arial, \\\"Noto Sans\\\", sans-serif, \\\"Apple Color Emoji\\\", \\\"Segoe UI Emoji\\\", \\\"Segoe UI Symbol\\\", \\\"Noto Color Emoji\"},{\"offset\":0,\"length\":198,\"style\":\"fontfamily-inherit\"}],\"entityRanges\":[],\"data\":{}}],\"entityMap\":{}}",
+    "captions": null,
+    "cover": "/upload/image/event/7a9dea9e-9fee-47ce-ab29-4f2bd1f1da72.png",
+    "cover_thumb": "/upload/image/event/thumbnail/7a9dea9e-9fee-47ce-ab29-4f2bd1f1da72.png",
+    "category": {
+        "_id": {
+            "$oid": "5d7dbc800ea2d6053ea1e226"
+        },
+        "name": "Virtual Run",
+        "active": true
+    },
+    "product": [
+        {
+            "_id": {
+                "$oid": "5f97ef578cbfeb674f7388f6"
+            },
+            "name": "เหรียญภาคเหนือ (สีฟ้า)",
+            "image": [
+                {
+                    "path_url": ""
+                }
+            ],
+            "detail": "",
+            "type": [],
+            "unit": 0,
+            "currency": "",
+            "status": "sold",
+            "reuse": true,
+            "created_at": {
+                "$date": "2020-10-27T09:58:47.818Z"
+            },
+            "updated_at": {
+                "$date": "2020-10-30T14:41:04.013Z"
+            }
+        }
+    ],
+    "ticket": [
+        {
+            "_id": {
+                "$oid": "5f97ef578cbfeb674f7388f7"
+            },
+            "product": [
+                {
+                    "_id": {
+                        "$oid": "5f97ef578cbfeb674f7388f6"
+                    },
+                    "show": true,
+                    "reuse": true
+                }
+            ],
+            "price": 0,
+            "unit": "THB",
+            "title": "10 KM",
+            "description": "",
+            "image": "",
+            "subtype": null,
+            "distance": 0,
+            "currency": "",
+            "created_at": {
+                "$date": "2020-10-27T09:58:47.935Z"
+            },
+            "updated_at": {
+                "$date": "2020-10-30T14:41:04.013Z"
+            }
+        }
+    ],
+    "tags": null,
+    "owner_id": {
+        "$oid": "5d93b27b4f33016b9422b86e"
+    },
+    "status": "",
+    "location": "",
+    "receive_location": "",
+    "is_active": true,
+    "is_free": true,
+    "start_reg": {
+        "$date": "2020-11-01T00:00:00.000Z"
+    },
+    "end_reg": {
+        "$date": "2020-12-25T23:59:59.000Z"
+    },
+    "start_event": {
+        "$date": "2020-11-01T06:00:00.000Z"
+    },
+    "end_event": {
+        "$date": "2020-12-25T12:00:00.000Z"
+    },
+    "inapp": true,
+    "is_post": false,
+    "post_end_date": {
+        "$date": "2020-10-27T00:00:00.000Z"
+    },
+    "created_time": {
+        "$date": "2020-10-27T09:58:47.708Z"
+    },
+    "updated_time": {
+        "$date": "2020-10-30T07:41:09.200Z"
+    },
+    "slug": ""
+}
