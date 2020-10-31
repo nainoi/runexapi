@@ -203,13 +203,13 @@ func (eventMongo EventRepositoryMongo) GetEventByID(eventID string) (model.Event
 	var event model.Event
 	id, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	filter := bson.M{"_id": id}
 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 	log.Printf("[info Event] cur %s", err2)
 	if err2 != nil {
-		log.Fatal(err2)
+		log.Println(err2)
 	}
 
 	return event, err2

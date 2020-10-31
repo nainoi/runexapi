@@ -58,7 +58,7 @@ func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, er
 	event.UpdatedTime = time.Now()
 	res, err := eventMongo.ConnectionDB.Collection(eventCollection).InsertOne(context.TODO(), event)
 	if err != nil {
-		log.Fatal(res)
+		log.Println(res)
 	}
 	var ebib model.EbibEvent
 	ebib.EventID = event.ID
@@ -205,13 +205,13 @@ func (eventMongo EventRepositoryMongo) GetEventByID(eventID string) (model.Event
 	var event model.EventV2
 	id, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	filter := bson.M{"_id": id}
 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 	log.Printf("[info Event] cur %s", err2)
 	if err2 != nil {
-		log.Fatal(err2)
+		log.Println(err2)
 	}
 
 	return event, err2
