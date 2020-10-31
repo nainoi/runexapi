@@ -207,7 +207,10 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 
 		group.Use(oauth.AuthMiddleware())
 		{
+			group.GET("/all", registerAPI.GetAll)
 			group.POST("/add", registerAPI.AddRegister)
+			group.POST("/addRace", registerAPI.AddRaceRegister)
+			group.PUT("/edit/:id", registerAPI.EditRegister)
 		}
 	}
 
