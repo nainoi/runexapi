@@ -11,6 +11,7 @@ import (
 
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
 
@@ -21,14 +22,29 @@ import (
 	"thinkdev.app/think/runex/runexapi/pkg/e"
 )
 
+// EventAPI reference
 type EventAPI struct {
 	EventRepository repository.EventRepository
 }
 
+// EventStatus struct
 type EventStatus struct {
 	Status string `json:"status" bson:"status" binding:"required"`
 }
 
+// AddEvent api godoc
+// @Summary add new event
+// @Description add new event API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.EventV2 true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event [post]
 func (api EventAPI) AddEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -71,51 +87,88 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 
 }
 
+// MyEvent api godoc
+// @Summary Get my event
+// @Description get event owner API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.EventV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event/myEvent [get]
 func (api EventAPI) MyEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		res = response.Gin{C: c}
 	)
 	userID, _ := oauth.GetValuesToken(c)
 	event, err := api.EventRepository.GetEventByUser(userID)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		log.Println("error get my event", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
 		return
 	}
+	
 
-	appG.Response(http.StatusOK, e.SUCCESS, event)
+	res.Response(http.StatusOK, "success", event)
 
 }
 
+// GetAll api godoc
+// @Summary Get event all
+// @Description get Get event all API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.EventV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event/all [get]
 func (api EventAPI) GetAll(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 
 	event, err := api.EventRepository.GetEventAll()
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		log.Println("error get all", err.Error())
+		appG.Response(http.StatusInternalServerError,err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, event)
+	appG.Response(http.StatusOK, "success", event)
 
 }
 
+// GetAllActive api godoc
+// @Summary Get event active status
+// @Description get Get event active status API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.EventV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event/active [get]
 func (api EventAPI) GetAllActive(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 
 	event, err := api.EventRepository.GetEventActive()
 	if err != nil {
 		log.Println("error AddEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, event)
+	appG.Response(http.StatusOK, "success", event)
 
 }
 

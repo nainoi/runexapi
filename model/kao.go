@@ -14,9 +14,8 @@ type SendActivityRequest struct {
 
 // GetKaoActivityRequest struct for get activity from kao
 type GetKaoActivityRequest struct {
-	Slug  string `json:"slug" bson:"slug"`
-	EBIB  string `json:"ebib" bson:"ebib"`
-	Event Event  `json:"event" bson:"event"`
+	Slug string `json:"slug" bson:"slug"`
+	EBIB string `json:"ebib" bson:"ebib"`
 }
 
 // Kao struct model
@@ -65,6 +64,6 @@ type KaoObject struct {
 		Time            int     `json:"time"`
 		SubmissionCount int     `json:"submissionCount"`
 	} `json:"virtualRaceProfile"`
-	DailyDistance int `json:"dailyDistance"`
-	LastRank      int `json:"lastRank"`
+	DailyDistance float64 `json:"dailyDistance"`
+	LastRank      int     `json:"lastRank"`
 }

@@ -212,6 +212,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.POST("/addRace", registerAPI.AddRaceRegister)
 			group.PUT("/edit/:id", registerAPI.EditRegister)
 			group.GET("/myRegEvent", registerAPI.GetByUserID)
+			group.GET("/checkUserRegisterEvent/:eventID", registerAPI.CheckUserRegisterEvent)
 		}
 	}
 

@@ -6,16 +6,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// RegisterRequest struct for request register event
 type RegisterRequest struct {
-	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
-	Regs    Regs               `json:"regs" bson:"regs"`
+	EventID    primitive.ObjectID    `json:"event_id" bson:"event_id"`
+	Regs       Regs                  `json:"regs" bson:"regs"`
+	KoaRequest GetKaoActivityRequest `json:"kao_request" bson:"kao_request"`
 }
 
+// RegisterV2 struct for register v2 event data
 type RegisterV2 struct {
 	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
 	Regs    []Regs             `json:"regs" bson:"regs"`
 }
 
+// Regs struct for register v2 event data
 type Regs struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
@@ -31,6 +35,7 @@ type Regs struct {
 	Coupon         Coupon             `json:"coupon" bson:"coupon"`
 	TicketOptions  TicketOptionV2     `json:"ticket_options" bson:"ticket_options"`
 	Partner        PartnerEvent       `json:"partner" bson:"partner"`
+	Event          EventRegV2         `json:"event" bson:"event"`
 	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
 }

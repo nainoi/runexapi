@@ -14,6 +14,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/model"
 )
 
+// EventRepository interface
 type EventRepository interface {
 	AddEvent(event model.EventV2) (string, error)
 	GetEventByStatus(status string) ([]model.EventV2, error)
@@ -50,6 +51,7 @@ const (
 	ebibCollection  = "ebib"
 )
 
+// AddEvent repository
 func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, error) {
 
 	// event.Product = []model.ProduceEvent{}
@@ -71,16 +73,17 @@ func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, er
 	return res.InsertedID.(primitive.ObjectID).Hex(), err
 }
 
+// EditEvent repository
 func (eventMongo EventRepositoryMongo) EditEvent(eventID string, event model.EventV2) error {
 
 	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{primitive.E{Key:"_id",Value: objectID}}
 	event.UpdatedTime = time.Now()
 	updated := bson.M{"$set": event}
-	res, err := eventMongo.ConnectionDB.Collection(eventCollection).UpdateOne(context.TODO(), filter, updated)
+	_, err = eventMongo.ConnectionDB.Collection(eventCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		log.Printf("[info] err %s", err.Error())
 		return err
 	}
 
@@ -407,6 +410,7 @@ func (eventMongo EventRepositoryMongo) DeleteTicketEvent(eventID string, ticketI
 	return nil
 }
 
+//GetUserEvent get user event repository
 func (eventMongo EventRepositoryMongo) GetUserEvent(userID string) (model.UserEvent, error) {
 	var user model.UserEvent
 	id, err := primitive.ObjectIDFromHex(userID)
@@ -421,10 +425,11 @@ func (eventMongo EventRepositoryMongo) GetUserEvent(userID string) (model.UserEv
 	return user, err
 }
 
+//GetEventByUser get my event repository
 func (eventMongo EventRepositoryMongo) GetEventByUser(userID string) ([]model.EventV2, error) {
 	objectID, err := primitive.ObjectIDFromHex(userID)
-	var events []model.EventV2
-	filter := bson.D{{"owner_id", objectID}}
+	var events = []model.EventV2{}
+	filter := bson.D{primitive.E{Key:"owner_id",Value: objectID}}
 	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
@@ -435,7 +440,7 @@ func (eventMongo EventRepositoryMongo) GetEventByUser(userID string) ([]model.Ev
 		var u model.EventV2
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		//fmt.Printf("post: %+v\n", p)
 		events = append(events, u)

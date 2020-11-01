@@ -157,6 +157,52 @@
                 }
             }
         },
+        "/kao": {
+            "post": {
+                "description": "GetKaoActivity get Kao event detail open id API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "kao"
+                ],
+                "summary": "get Kao event detail",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.GetKaoActivityRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ResponseOAuth"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/login": {
             "post": {
                 "description": "login or add new user from open id API calls",
@@ -324,6 +370,179 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/:{eventID}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get register API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "Get register by event id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Register"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/add": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save register API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "add register event",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.RegisterV2"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/myRegEvent": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get register API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "Get register by user id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RegisterV2"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -946,13 +1165,13 @@
         "model.AddMultiActivityFormWorkout": {
             "type": "object",
             "required": [
-                "event_id"
+                "event_activity"
             ],
             "properties": {
-                "event_id": {
+                "event_activity": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/model.EventActivity"
                     }
                 },
                 "workout_info": {
@@ -1060,10 +1279,228 @@
                 }
             }
         },
+        "model.BankAccount": {
+            "type": "object",
+            "properties": {
+                "account_name": {
+                    "type": "string"
+                },
+                "account_number": {
+                    "type": "string"
+                },
+                "bank": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Category": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Coupon": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "coupon_code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "sale_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.CoverThumb": {
+            "type": "object",
+            "properties": {
+                "image": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventActivity": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "partner": {
+                    "$ref": "#/definitions/model.PartnerEvent"
+                }
+            }
+        },
+        "model.EventReg": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/model.Category"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "cover_thumb": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_event": {
+                    "type": "string"
+                },
+                "end_reg": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inapp": {
+                    "type": "boolean"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_event": {
+                    "type": "string"
+                },
+                "start_reg": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "Product     []ProduceEvent     `json:\"product\" bson:\"product\"`\nTicket      []TicketEvent      `json:\"ticket\" bson:\"ticket\"`",
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventRegV2": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "cover_thumb": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CoverThumb"
+                    }
+                },
+                "created_time": {
+                    "type": "string"
+                },
+                "end_event": {
+                    "type": "string"
+                },
+                "end_reg": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inapp": {
+                    "type": "boolean"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_free": {
+                    "type": "boolean"
+                },
+                "is_post": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "partner": {
+                    "$ref": "#/definitions/model.PartnerEvent"
+                },
+                "post_end_date": {
+                    "type": "string"
+                },
+                "receive_location": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "start_event": {
+                    "type": "string"
+                },
+                "start_reg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_time": {
+                    "type": "string"
+                }
+            }
+        },
         "model.FindPreOrderRequest": {
             "type": "object",
             "properties": {
                 "keyword": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GetKaoActivityRequest": {
+            "type": "object",
+            "properties": {
+                "ebib": {
+                    "type": "string"
+                },
+                "slug": {
                     "type": "string"
                 }
             }
@@ -1200,6 +1637,32 @@
                 }
             }
         },
+        "model.PartnerEvent": {
+            "type": "object",
+            "properties": {
+                "partner_id": {
+                    "type": "string"
+                },
+                "partner_name": {
+                    "type": "string"
+                },
+                "ref_activity_key": {
+                    "type": "string"
+                },
+                "ref_activity_value": {
+                    "type": "string"
+                },
+                "ref_event_key": {
+                    "type": "string"
+                },
+                "ref_event_value": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Photos": {
             "type": "object",
             "properties": {
@@ -1240,10 +1703,402 @@
                 }
             }
         },
+        "model.ProduceEventV2": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "detail": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductImage"
+                    }
+                },
+                "is_show": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "reuse": {
+                    "type": "boolean"
+                },
+                "sizes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductSizes"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProductImage": {
+            "type": "object",
+            "properties": {
+                "path_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProductSizes": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ProductTicket": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "reuse": {
+                    "type": "boolean"
+                },
+                "show": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "model.Register": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "$ref": "#/definitions/model.Coupon"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "discount_price": {
+                    "type": "number"
+                },
+                "event": {
+                    "$ref": "#/definitions/model.EventReg"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "payment_type": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "product": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterProduct"
+                    }
+                },
+                "promo_code": {
+                    "type": "string"
+                },
+                "reg_date": {
+                    "type": "string"
+                },
+                "register_number": {
+                    "type": "string"
+                },
+                "shiping_address": {
+                    "$ref": "#/definitions/model.ShipingAddress"
+                },
+                "slip": {
+                    "$ref": "#/definitions/model.SlipTransfer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticket_options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketOption"
+                    }
+                },
+                "tickets": {
+                    "description": "Ticket         RegisterTicket     `json:\"ticket\" bson:\"ticket\"`",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterTicket"
+                    }
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterProduct": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product": {
+                    "$ref": "#/definitions/model.RegisterProductDetail"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterProductDetail": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "detail": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductImage"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterProductType"
+                    }
+                },
+                "unit": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterProductType": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "remark": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "kao_request": {
+                    "$ref": "#/definitions/model.GetKaoActivityRequest"
+                },
+                "regs": {
+                    "$ref": "#/definitions/model.Regs"
+                }
+            }
+        },
+        "model.RegisterTicket": {
+            "type": "object",
+            "properties": {
+                "distance": {
+                    "type": "string"
+                },
+                "product": {
+                    "$ref": "#/definitions/model.RegisterProductDetail"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "ticket": {
+                    "$ref": "#/definitions/model.TicketEvent"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterTicketV2": {
+            "type": "object",
+            "properties": {
+                "distance": {
+                    "type": "number"
+                },
+                "product": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProduceEventV2"
+                    }
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "ticket_id": {
+                    "type": "string"
+                },
+                "ticket_name": {
+                    "type": "string"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "model.RegisterTokenRequest": {
             "type": "object",
             "properties": {
                 "firebase_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.RegisterV2": {
+            "type": "object",
+            "properties": {
+                "event_id": {
+                    "type": "string"
+                },
+                "regs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Regs"
+                    }
+                }
+            }
+        },
+        "model.Regs": {
+            "type": "object",
+            "properties": {
+                "coupon": {
+                    "$ref": "#/definitions/model.Coupon"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "discount_price": {
+                    "type": "number"
+                },
+                "event": {
+                    "$ref": "#/definitions/model.EventRegV2"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "partner": {
+                    "$ref": "#/definitions/model.PartnerEvent"
+                },
+                "payment_date": {
+                    "type": "string"
+                },
+                "payment_type": {
+                    "type": "string"
+                },
+                "promo_code": {
+                    "type": "string"
+                },
+                "reg_date": {
+                    "type": "string"
+                },
+                "register_number": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticket_options": {
+                    "$ref": "#/definitions/model.TicketOptionV2"
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ShipingAddress": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "zipcode": {
                     "type": "string"
                 }
             }
@@ -1277,6 +2132,32 @@
                 },
                 "trend": {
                     "$ref": "#/definitions/model.Trend"
+                }
+            }
+        },
+        "model.SlipTransfer": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "bank_account": {
+                    "$ref": "#/definitions/model.BankAccount"
+                },
+                "date_tranfer": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "time_tranfer": {
+                    "type": "string"
                 }
             }
         },
@@ -1576,6 +2457,105 @@
                 }
             }
         },
+        "model.TicketEvent": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "product": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ProductTicket"
+                    }
+                },
+                "subtype": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.TicketOption": {
+            "type": "object",
+            "properties": {
+                "product": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterProduct"
+                    }
+                },
+                "reciept_type": {
+                    "type": "string"
+                },
+                "register_number": {
+                    "type": "string"
+                },
+                "tickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterTicket"
+                    }
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "user_option": {
+                    "$ref": "#/definitions/model.UserOption"
+                }
+            }
+        },
+        "model.TicketOptionV2": {
+            "type": "object",
+            "properties": {
+                "reciept_type": {
+                    "type": "string"
+                },
+                "register_number": {
+                    "type": "string"
+                },
+                "tickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.RegisterTicketV2"
+                    }
+                },
+                "total_price": {
+                    "type": "number"
+                },
+                "user_option": {
+                    "$ref": "#/definitions/model.UserOption"
+                }
+            }
+        },
         "model.Trend": {
             "type": "object",
             "properties": {
@@ -1687,6 +2667,65 @@
                     "type": "string"
                 },
                 "strava_latname": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserOption": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ShipingAddress"
+                    }
+                },
+                "birthdate": {
+                    "type": "string"
+                },
+                "blood_type": {
+                    "type": "string"
+                },
+                "citycen_id": {
+                    "type": "string"
+                },
+                "confirm": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "emergency_contact": {
+                    "type": "string"
+                },
+                "emergency_phone": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "firstname_th": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "lastname_th": {
+                    "type": "string"
+                },
+                "nationality": {
+                    "type": "string"
+                },
+                "passport": {
+                    "type": "string"
+                },
+                "phone": {
                     "type": "string"
                 },
                 "updated_at": {

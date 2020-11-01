@@ -17,7 +17,7 @@ func GetRequest(urlS string, bearer string, params map[string]interface{}) ([]by
 	req.Header.Add("Authorization", bearer)
 	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
 
-	timeout := time.Duration(6 * time.Second)
+	timeout := time.Duration(6 * 3 * time.Second)
 	client := &http.Client{
 		Timeout: timeout,
 	}

@@ -305,7 +305,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	path := ""
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {

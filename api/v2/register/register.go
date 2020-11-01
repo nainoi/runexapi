@@ -11,6 +11,7 @@ import (
 	"github.com/omise/omise-go/operations"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/mail"
+	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
@@ -35,10 +36,23 @@ const (
 	// OmiseSecretKey = "skey_test_5h9vov2hqe9iv55o8tu"
 )
 
+//RegisterAPI repo struct
 type RegisterAPI struct {
 	RegisterRepository repository.RegisterRepository
 }
 
+// GetByEvent api godoc
+// @Summary Get register by event id
+// @Description get register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.Register}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/:{eventID} [get]
 func (api RegisterAPI) GetByEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -54,19 +68,31 @@ func (api RegisterAPI) GetByEvent(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, register)
 }
 
+// GetByUserID api godoc
+// @Summary Get register by user id
+// @Description get register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/myRegEvent [get]
 func (api RegisterAPI) GetByUserID(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		res = response.Gin{C: c}
 	)
 	userID, _ := oauth.GetValuesToken(c)
 	register, err := api.RegisterRepository.GetRegisterByUserID(userID)
 	if err != nil {
 		log.Println("error GetAll", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, register)
+	res.Response(http.StatusOK, "success", register)
 }
 
 func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
@@ -168,9 +194,22 @@ func (api RegisterAPI) GetAll(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, register)
 }
 
+// AddRegister api godoc
+// @Summary add register event
+// @Description save register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegisterRequest true "payload"
+// @Success 200 {object} response.Response{data=model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/add [post]
 func (api RegisterAPI) AddRegister(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		res = response.Gin{C: c}
 	)
 
 	userID, _ := oauth.GetValuesToken(c)
@@ -184,7 +223,7 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&json); err != nil {
 		log.Println(err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		res.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
 		return
 	}
 
@@ -193,11 +232,11 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 	registerID, err := api.RegisterRepository.AddRegister(json)
 	if err != nil {
 		log.Println("error AddRegister", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, registerID)
+	res.Response(http.StatusOK, "success", registerID)
 }
 
 func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
@@ -343,20 +382,32 @@ func (api RegisterAPI) CountRegisterEvent(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, count)
 }
 
+// CheckUserRegisterEvent api godoc
+// @Summary check register by user id
+// @Description check register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register//checkUserRegisterEvent/:{eventID} [get]
 func (api RegisterAPI) CheckUserRegisterEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		res = response.Gin{C: c}
 	)
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	eventID := c.Param("eventID")
 	check, err := api.RegisterRepository.CheckUserRegisterEvent(eventID, userID)
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, check)
+	res.Response(http.StatusOK, "success", gin.H{"is_reg" :check})
 }
 
 func (api RegisterAPI) SendMailRegister2(c *gin.Context) {

@@ -220,7 +220,6 @@ func (eventMongo EventRepositoryMongo) DeleteEventByID(eventID string) error {
 	id, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
 		return err
-		log.Fatal(err)
 	}
 	filter := bson.M{"_id": id}
 	deleteResult, err2 := eventMongo.ConnectionDB.Collection(eventCollection).DeleteOne(context.TODO(), filter)
