@@ -119,6 +119,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
 	)
+	file, header, err := c.Request.FormFile("image")
 	var form model.AddMultiActivityFormWorkout
 	if err := c.ShouldBind(&form); err != nil {
 		res.Response(http.StatusBadRequest, err.Error(), nil)
@@ -135,7 +136,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 	}
 
 	path := ""
-	file, header, err := c.Request.FormFile("image")
+	
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
 		path = ""

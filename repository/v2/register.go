@@ -21,6 +21,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/mail"
 )
 
+// RegisterRepository interface
 type RegisterRepository interface {
 	GetRegisterAll() ([]model.RegisterV2, error)
 	AddRegister(register model.RegisterRequest) (model.RegisterV2, error)
@@ -38,13 +39,14 @@ type RegisterRepository interface {
 	GetRegisterByUserAndEvent(userID string, id string) (model.Register, error)
 	SendMailRegister(registerID string) error
 	SendMailRegisterNew(registerID string, eventID string) error
-	GetRegisterActivateEvent(userID string) ([]model.EventRegInfo, error)
+	GetRegisterActivateEvent(userID string) ([]model.RegisterV2, error)
 	GetRegisterReport(formRequest model.DataRegisterRequest) (model.ReportRegister, error)
 	GetRegisterReportAll(formRequest model.DataRegisterRequest) (model.ReportRegister, error)
 	FindPersonRegEvent(formRequest model.DataRegisterRequest) (model.ReportRegister, error)
 	UpdateStatusRegister(registerID string, status string, userID string) error
 }
 
+// RegisterRepositoryMongo mongo ref
 type RegisterRepositoryMongo struct {
 	ConnectionDB *mongo.Database
 }
@@ -55,6 +57,7 @@ const (
 	activityCollection = "activityV2"
 )
 
+// GetRegisterAll repo
 func (registerMongo RegisterRepositoryMongo) GetRegisterAll() ([]model.RegisterV2, error) {
 	var register []model.RegisterV2
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), bson.D{{}})
@@ -703,17 +706,50 @@ func (registerMongo RegisterRepositoryMongo) SendRaceMailRegister(registerID str
 	return err
 }
 
-func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID string) ([]model.EventRegInfo, error) {
-	var register []model.Register
+// GetRegisterActivateEvent repository
+func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID string) ([]model.RegisterV2, error) {
+	var register = []model.RegisterV2{}
 	objectID, err := primitive.ObjectIDFromHex(userID)
-	filter := bson.D{{"user_id", objectID}, {"status", "PAYMENT_SUCCESS"}}
-	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"regs.user_id": objectID, "regs.status": config.PAYMENT_SUCCESS}}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
+	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
+	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
+	projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1}}}
+	//projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$elemMatch": bson.M{"$$regs.user_id": objectID, "$$regs.status": config.PAYMENT_SUCCESS}}, "event_id": 1}}}
+
+	//filter := bson.D{primitive.E{Key:"user_id",Value: objectID}, primitive.E{Key: "status",Value: "PAYMENT_SUCCESS"}}
+	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
 		log.Println(err)
 	}
 
 	for cur.Next(context.TODO()) {
+		var u model.RegisterV2
+
+		// decode the document
+		if err := cur.Decode(&u); err != nil {
+			log.Print(err)
+		}
+
+		var event model.EventRegV2
+		filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
+		err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+		if err != nil {
+			log.Print(err)
+		}
+		u.Regs[0].Event = event
+		// var event model.Event
+		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
+		// //fmt.Printf("post: %+v\n", p)
+		//u.Event = event
+		register = append(register, u)
+	}
+
+	return register, err
+
+	/*for cur.Next(context.TODO()) {
 		var u model.Register
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
@@ -765,7 +801,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 		}
 	}
 	//uniqueEvents := unique(events)
-	return events, nil
+	return events, nil*/
 }
 
 func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model.DataRegisterRequest) (model.ReportRegister, error) {

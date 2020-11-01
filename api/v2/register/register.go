@@ -425,19 +425,31 @@ func (api RegisterAPI) SendMailRegister2(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
 
+// GetMyRegEventActivate api godoc
+// @Summary check register by user id
+// @Description check register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register//checkUserRegisterEvent/:{eventID} [get]
 func (api RegisterAPI) GetMyRegEventActivate(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 	events, err := api.RegisterRepository.GetRegisterActivateEvent(userID)
 	if err != nil {
-		log.Println("error GetAll", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		log.Println("error GetAll activate", err.Error())
+		appG.Response(http.StatusInternalServerError,err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, events)
+	appG.Response(http.StatusOK, "success", events)
 }
 
 func (api RegisterAPI) GetReport(c *gin.Context) {
