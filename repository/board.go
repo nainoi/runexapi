@@ -40,7 +40,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 	option := options.Find()
 	//option.SetLimit(10)
 	option.SetSort(bson.D{primitive.E{Key:"total_distance",Value: -1}})
-	cur, err := boardMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter, option)
+	cur, err := boardMongo.ConnectionDB.Collection(activityV2Collection).Find(context.TODO(), filter, option)
 
 	if err != nil {
 		log.Println(err)
