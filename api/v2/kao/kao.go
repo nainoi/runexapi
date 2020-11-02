@@ -196,7 +196,7 @@ func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 
 // KaoActivity send activity data to Kao
 func KaoActivity(file multipart.File, distance float64, time int64, slug string, ebib string, orderID string) ([]byte, error) {
-	urls := fmt.Sprintf(" https://kaokonlakao.com/api/%s/item/%s/submit", slug, ebib)
+	urls := fmt.Sprintf(" https://kaokonlakao.com/api/%s/item/%s/submit", slug, orderID)
 	uniqidFilename := uuid.New()
 
 	pathDir := "." + config.UPLOAD_KAO
