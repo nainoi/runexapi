@@ -198,6 +198,7 @@ func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 // KaoActivity send activity data to Kao
 func KaoActivity(path string, distance float64, timeRun int64, slug string, ebib string, orderID string, phone string) ([]byte, error) {
 	urls := fmt.Sprintf("https://kaokonlakao.com/api/%s/item/%s/submit", slug, orderID)
+	log.Println(urls)
 	pathAbs, err := filepath.Abs(fmt.Sprintf(".%s",path))
 	if err != nil {
 		return []byte{}, err

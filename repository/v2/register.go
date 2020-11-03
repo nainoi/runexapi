@@ -94,7 +94,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		// if register.KoaRequest.Slug == "" || register.KoaRequest.EBIB == "" {
 		// 	return regModel, err
 		// }
-		urlS := fmt.Sprintf(" https://kaokonlakao.com/api/%s/bib/%s", register.KoaRequest.Slug, register.KoaRequest.EBIB)
+		urlS := fmt.Sprintf("https://kaokonlakao.com/api/%s/bib/%s", register.KoaRequest.Slug, register.KoaRequest.EBIB)
 		var bearer = "Bearer olcgZVpqDXQikRDG"
 		response, err := request.GetRequest(urlS, bearer, nil)
 		if err != nil {

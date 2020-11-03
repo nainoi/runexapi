@@ -24,9 +24,10 @@ type BoardEvent struct {
 
 // BoardResponse response struct
 type BoardResponse struct {
-	Event   model.EventV2   `json:"event"`
-	AllRank []model.Ranking `json:"ranks"`
-	MyRank  []model.Ranking `json:"myrank`
+	Event         model.EventV2   `json:"event"`
+	AllRank       []model.Ranking `json:"ranks"`
+	MyRank        []model.Ranking `json:"myrank"`
+	TotalActivity int64           `json:"total_activity"`
 }
 
 // GetBoardByEvent api godoc
@@ -49,22 +50,24 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 
-	event, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
+	event, count, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
 		appG.Response(http.StatusBadRequest, e.ERROR, BoardResponse{
-			Event:   event,
-			AllRank: []model.Ranking{},
-			MyRank:  []model.Ranking{},
+			Event:         event,
+			TotalActivity: count,
+			AllRank:       []model.Ranking{},
+			MyRank:        []model.Ranking{},
 		})
 		return
 	}
 
 	ranks := BoardResponse{
-		Event: event,
-		AllRank: allActivities,
-		MyRank:  myActivities,
+		Event:         event,
+		TotalActivity: count,
+		AllRank:       allActivities,
+		MyRank:        myActivities,
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, ranks)

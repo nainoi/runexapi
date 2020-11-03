@@ -13,7 +13,7 @@ import (
 
 // BoardRepository interface
 type BoardRepository interface {
-	GetBoardByEvent(eventID string, userID string) (model.EventV2,[]model.Ranking, []model.Ranking, error)
+	GetBoardByEvent(eventID string, userID string) (model.EventV2, int64, []model.Ranking, []model.Ranking, error)
 }
 
 // BoardRepositoryMongo db struct
@@ -26,7 +26,7 @@ const (
 )
 
 //GetBoardByEvent board ranking
-func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID string) ( model.EventV2 ,[]model.Ranking, []model.Ranking, error) {
+func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID string) ( model.EventV2, int64 ,[]model.Ranking, []model.Ranking, error) {
 	//var activity model.Activity
 	//var activityInfo []model.ActivityInfo
 	var event = model.EventV2{}
@@ -36,12 +36,12 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 	objectEventID, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
 		log.Println(err)
-		return event, activities, myActivities, err
+		return event, 0, activities, myActivities, err
 	}
 	objectUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Println(err)
-		return event, activities, myActivities, err
+		return event, 0, activities, myActivities, err
 	}
 	
 	var temps = []model.Ranking{}
@@ -54,12 +54,12 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 	
 	err = boardMongo.ConnectionDB.Collection("event_v2").FindOne(context.TODO(), filterEvent).Decode(&event)
 	if err != nil {
-		return event, activities, myActivities, err
+		return event, 0, activities, myActivities, err
 	}
 	//option.SetLimit(10)
 	count, err := boardMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	if count == 0 {
-		return event, activities, myActivities, err
+		return event, count, activities, myActivities, err
 	}
 	//filter = bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
 	option.SetSort(bson.D{primitive.E{Key:"activities.total_distance",Value: -1}})
@@ -67,14 +67,14 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 
 	if err != nil {
 		log.Println(err)
-		return event, activities, myActivities, err
+		return event, count, activities, myActivities, err
 	}
 
 	//objectUserID, err := primitive.ObjectIDFromHex(userID)
 
 	if err != nil {
 		log.Println(err)
-		return event, activities, myActivities, err
+		return event, count, activities, myActivities, err
 	}
 
 	n := 0
@@ -202,7 +202,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 	// option.SetSort(bson.D{{"total_distance", -1}})
 	// cur, err := boardMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter, option)
 
-	return event, activities, myActivities, err
+	return event, count, activities, myActivities, err
 }
 
 //SliceIndex get index array object
