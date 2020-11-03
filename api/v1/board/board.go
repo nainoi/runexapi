@@ -24,6 +24,7 @@ type BoardEvent struct {
 
 // BoardResponse response struct
 type BoardResponse struct {
+	Event   model.EventV2   `json:"event"`
 	AllRank []model.Ranking `json:"ranks"`
 	MyRank  []model.Ranking `json:"myrank`
 }
@@ -48,11 +49,12 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 
-	allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
+	event, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
 		appG.Response(http.StatusBadRequest, e.ERROR, BoardResponse{
+			Event:   event,
 			AllRank: []model.Ranking{},
 			MyRank:  []model.Ranking{},
 		})
@@ -60,6 +62,7 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	}
 
 	ranks := BoardResponse{
+		Event: event,
 		AllRank: allActivities,
 		MyRank:  myActivities,
 	}
