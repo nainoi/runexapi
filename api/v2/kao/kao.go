@@ -10,6 +10,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -195,44 +196,56 @@ func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 }
 
 // KaoActivity send activity data to Kao
-func KaoActivity(file multipart.File, distance float64, time int64, slug string, ebib string, orderID string) ([]byte, error) {
+func KaoActivity(path string, distance float64, timeRun int64, slug string, ebib string, orderID string, phone string) ([]byte, error) {
 	urls := fmt.Sprintf("https://kaokonlakao-www-tabshier.azurewebsites.net/api/%s/bib/%s/submit", slug, ebib)
-	uniqidFilename := uuid.New()
-
-	pathDir := "." + config.UPLOAD_KAO
-	if _, err := os.Stat(pathDir); os.IsNotExist(err) {
-		os.MkdirAll(pathDir, os.ModePerm)
-	}
-
-	out, err := os.Create(pathDir + uniqidFilename.String() + ".png")
-
-	//path := pathDir + uniqidFilename.String() + ".png"
-	if err != nil {
-		log.Println(err)
-	}
-	defer out.Close()
-	_, err = io.Copy(out, file)
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-	bodyWriter.WriteField("distance", fmt.Sprintf("%.2f", distance))
-	bodyWriter.WriteField("time", fmt.Sprintf("%d", time))
-	fileWriter, err := bodyWriter.CreateFormFile("imageData", uniqidFilename.String()+".png")
-	if err != nil {
-		fmt.Println(err)
-		return []byte{}, err
-	}
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, file)
-	fileWriter.Write(buf.Bytes())
-	contentType := bodyWriter.FormDataContentType()
-	bodyWriter.Close()
-	resp, err := http.Post(urls, contentType, bodyBuf)
+	pathAbs, err := filepath.Abs(fmt.Sprintf(".%s",path))
 	if err != nil {
 		return []byte{}, err
 	}
-	resp.Header.Add("Authorization", TK)
+	file, err := os.Open(pathAbs)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("imageData", filepath.Base(path))
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(part, file)
+
+	writer.WriteField("distance", fmt.Sprintf("%.2f", distance))
+	writer.WriteField("time", fmt.Sprintf("%d", timeRun))
+	writer.WriteField("submitterMobileNumber", phone)
+
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	var bearer = "Bearer e35Sa9MvZJ1fA0PV"
+	req, err := http.NewRequest("POST", urls, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.Header.Add("Authorization", bearer)
+	
+	timeout := time.Duration(6 * 3 * time.Second)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	//client.CheckRedirect = checkRedirectFunc
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	// resp, err := http.Post(urls, "multipart/form-data", bodyBuf)
+	// if err != nil {
+	// 	return []byte{}, err
+	// }
 	defer resp.Body.Close()
-	fmt.Println(resp)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		b, _ := ioutil.ReadAll(resp.Body)
@@ -245,6 +258,5 @@ func KaoActivity(file multipart.File, distance float64, time int64, slug string,
 		log.Println(err)
 		return []byte{}, err
 	}
-	fmt.Println(string(respData))
 	return respData, err
 }

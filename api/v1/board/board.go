@@ -1,39 +1,52 @@
 package board
 
 import (
-	_ "image/png"
-	_ "io"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
 	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository"
-	"thinkdev.app/think/runex/runexapi/utils"
 )
 
+// BoardAPI struct ref repo
 type BoardAPI struct {
 	BoardRepository repository.BoardRepository
 }
 
+// BoardEvent struct
 type BoardEvent struct {
 	EventID string `json:"event_id" bson:"event_id" binding:"required"`
 }
 
+// BoardResponse response struct
 type BoardResponse struct {
 	AllRank []model.Ranking `json:"ranks"`
 	MyRank  []model.Ranking `json:"myrank`
 }
 
+// GetBoardByEvent api godoc
+// @Summary get leader board activty
+// @Description get leader board activty API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags board
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=BoardResponse}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /api/v1/board/ranking/:{eventID} [get]
 func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 	)
 	eventID := c.Param("eventID")
 	//userID := "5d772660c8a56133c2d7c5ba"
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 
 	allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
 

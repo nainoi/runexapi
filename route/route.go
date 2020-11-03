@@ -10,6 +10,7 @@ import (
 	// handle_admin "bitbucket.org/suthisakch/runex/api/v1/admin"
 	handle_banner "thinkdev.app/think/runex/runexapi/api/v1/banner"
 	"thinkdev.app/think/runex/runexapi/api/v1/board"
+	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 
 	//handle_importData "bitbucket.org/suthisakch/runex/api/v1/importdata"
 	// handle_register "thinkdev.app/think/runex/runexapi/api/v1/register"
@@ -316,7 +317,7 @@ func BoardRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt
 	api := route.Group("/api/v1/board")
 	{
 
-		api.Use(middleware.MiddlewareFunc())
+		api.Use(oauth.AuthMiddleware())
 		{
 			api.GET("/ranking/:eventID", boardAPI.GetBoardByEvent)
 

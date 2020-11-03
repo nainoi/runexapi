@@ -236,7 +236,7 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 		return
 	}
 
-	res.Response(http.StatusOK, "success", registerID)
+	res.Response(http.StatusOK, "ลงทะเบียนสำเร็จ", registerID)
 }
 
 func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
@@ -393,7 +393,7 @@ func (api RegisterAPI) CountRegisterEvent(c *gin.Context) {
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /register//checkUserRegisterEvent/:{eventID} [get]
+// @Router /register/checkUserRegisterEvent/:{eventID} [get]
 func (api RegisterAPI) CheckUserRegisterEvent(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
@@ -426,17 +426,17 @@ func (api RegisterAPI) SendMailRegister2(c *gin.Context) {
 }
 
 // GetMyRegEventActivate api godoc
-// @Summary check register by user id
-// @Description check register API calls
+// @Summary get register payment success by user id
+// @Description get register payment success API calls
 // @Consume application/x-www-form-urlencoded
 // @Security bearerAuth
 // @Tags register
 // @Accept  application/json
 // @Produce application/json
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=[]model.RegisterV2}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /register//checkUserRegisterEvent/:{eventID} [get]
+// @Router /register/myRegEventActivate [get]
 func (api RegisterAPI) GetMyRegEventActivate(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}

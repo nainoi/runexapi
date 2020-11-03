@@ -34,24 +34,29 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		log.Println(err)
 		return nil, nil, err
 	}
-	var activities []model.Ranking
-	var temps []model.Ranking
+	var activities = []model.Ranking{}
+	var temps = []model.Ranking{}
+	myActivities := []model.Ranking{}
 	filter := bson.D{primitive.E{Key: "event_id",Value: objectEventID}}
 	option := options.Find()
 	//option.SetLimit(10)
+	count, err := boardMongo.ConnectionDB.Collection(activityCollection).CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		return activities, myActivities, err
+	}
 	option.SetSort(bson.D{primitive.E{Key:"total_distance",Value: -1}})
 	cur, err := boardMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter, option)
 
 	if err != nil {
 		log.Println(err)
-		return nil, nil, err
+		return activities, myActivities, err
 	}
 
 	objectUserID, err := primitive.ObjectIDFromHex(userID)
 
 	if err != nil {
 		log.Println(err)
-		return nil, nil, err
+		return activities, myActivities, err
 	}
 
 	n := 0
@@ -84,7 +89,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		n++
 	}
 
-	myActivities := []model.Ranking{}
+	
 
 	index := -1
 	for n, s := range temps {

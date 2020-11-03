@@ -28,8 +28,8 @@ type ActivityV2RepositoryMongo struct {
 
 const (
 	activityV2Collection = "activityV2"
-	activityLog = "activity_log"
-	activityKaoLog = "activity_kao_log"
+	activityLog          = "activity_log"
+	activityKaoLog       = "activity_kao_log"
 )
 
 func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddActivityV2) error {
@@ -63,16 +63,16 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 			return err
 		}
 		activityLogInfo := model.LogActivityInfo{
-			UserID: activity.UserID,
+			UserID:         activity.UserID,
 			ActivityInfoID: dataInfo.ID,
-			Distance: dataInfo.Distance,
-			ImageURL: dataInfo.ImageURL,
-			Caption: dataInfo.Caption,
-			Time: dataInfo.Time,
-			APP: dataInfo.APP,
-			ActivityDate: dataInfo.ActivityDate,
-			CreatedAt: dataInfo.CreatedAt,
-			UpdatedAt: dataInfo.UpdatedAt,
+			Distance:       dataInfo.Distance,
+			ImageURL:       dataInfo.ImageURL,
+			Caption:        dataInfo.Caption,
+			Time:           dataInfo.Time,
+			APP:            dataInfo.APP,
+			ActivityDate:   dataInfo.ActivityDate,
+			CreatedAt:      dataInfo.CreatedAt,
+			UpdatedAt:      dataInfo.UpdatedAt,
 		}
 		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 
@@ -100,53 +100,62 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 		}
 
 		activityLogInfo := model.LogActivityInfo{
-			UserID: activity.UserID,
+			UserID:         activity.UserID,
 			ActivityInfoID: dataInfo.ID,
-			Distance: dataInfo.Distance,
-			ImageURL: dataInfo.ImageURL,
-			Caption: dataInfo.Caption,
-			Time: dataInfo.Time,
-			APP: dataInfo.APP,
-			ActivityDate: dataInfo.ActivityDate,
-			CreatedAt: dataInfo.CreatedAt,
-			UpdatedAt: dataInfo.UpdatedAt,
+			Distance:       dataInfo.Distance,
+			ImageURL:       dataInfo.ImageURL,
+			Caption:        dataInfo.Caption,
+			Time:           dataInfo.Time,
+			APP:            dataInfo.APP,
+			ActivityDate:   dataInfo.ActivityDate,
+			CreatedAt:      dataInfo.CreatedAt,
+			UpdatedAt:      dataInfo.UpdatedAt,
 		}
 		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 	}
 
 	return nil
 }
-
-func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent(event_id string, user_id string) ([]model.ActivityInfo, error) {
+// GetActivityByEvent event and activity detail
+func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent(eventID string, userID string) ([]model.ActivityInfo, error) {
 	var activity model.ActivityV2
-	var activityInfo []model.ActivityInfo
-	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
-	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
-	filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
-	err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
+	var activityInfo = []model.ActivityInfo{}
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{Key:"event_id",Value: eventObjectID}, primitive.E{Key:"activities.user_id",Value: userObjectID}}
+	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if count > 0 {
+		err = activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
 
-	if err != nil {
-		log.Println(err)
-		return nil, err
+		if err != nil {
+			log.Println(err)
+			return activityInfo, err
+		}
+		//activityInfo = activity.ActivityInfo
+
+		return activityInfo, err
 	}
-	activityInfo = activity.Activities.ActivityInfo
-
 	return activityInfo, err
 }
 
-func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(event_id string, user_id string) (model.ActivityV2, error) {
-	var activity model.ActivityV2
-	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
-	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
-	filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
-	err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
+// GetActivityByEvent2 event and activity detail
+func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(eventID string, userID string) (model.ActivityV2, error) {
+	var activity = model.ActivityV2{}
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{Key: "event_id", Value: eventObjectID}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
+	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if count > 0 {
+		err = activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
 
-	if err != nil {
-		log.Println(err)
+		if err != nil {
+			log.Println(err)
+			return activity, err
+		}
+		//activityInfo = activity.ActivityInfo
+
 		return activity, err
 	}
-	//activityInfo = activity.ActivityInfo
-
 	return activity, err
 }
 
@@ -307,7 +316,7 @@ func (activityMongo ActivityV2RepositoryMongo) DeleteActivity(event_id string, u
 
 // UpdateWorkout repository for insert workouts
 func (activityMongo ActivityV2RepositoryMongo) UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error {
-	filter := bson.D{primitive.E{Key:"user_id", Value: userID}, primitive.E{ Key:"activity_info._id",Value: workout.ID}}
+	filter := bson.D{primitive.E{Key: "user_id", Value: userID}, primitive.E{Key: "activity_info._id", Value: workout.ID}}
 	update := bson.M{"$set": bson.M{"activity_info.$": workout}}
 	_, err := activityMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 	if err == nil {

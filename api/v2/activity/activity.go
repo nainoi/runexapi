@@ -1,6 +1,7 @@
 package activityV2
 
 import (
+	"encoding/json"
 	"fmt"
 	"image"
 	"image/jpeg"
@@ -119,13 +120,38 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
 	)
+
 	file, header, err := c.Request.FormFile("image")
-	var form model.AddMultiActivityFormWorkout
-	if err := c.ShouldBind(&form); err != nil {
+	if err != nil {
+		log.Println(err)
+	}
+	workout := c.PostForm("workout_info")
+	eventInfo := c.PostForm("event_activity")
+	var workoutInfo model.WorkoutActivityInfo
+	var eventActivity []model.EventActivity
+	//b, err := json.Marshal()
+	err = json.Unmarshal([]byte(workout), &workoutInfo)
+	if err != nil {
+		log.Println("workout")
 		res.Response(http.StatusBadRequest, err.Error(), nil)
 		c.Abort()
 		return
 	}
+	err = json.Unmarshal([]byte(eventInfo), &eventActivity)
+	if err != nil {
+		log.Println("eventActivity")
+		log.Println(err.Error())
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	// var form model.AddMultiActivityFormWorkout
+	// if err := c.ShouldBind(&form); err != nil {
+	// 	res.Response(http.StatusBadRequest, err.Error(), nil)
+	// 	c.Abort()
+	// 	return
+	// }
 
 	userID, _ := oauth.GetValuesToken(c)
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
@@ -136,7 +162,6 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 	}
 
 	path := ""
-	
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
 		path = ""
@@ -180,13 +205,19 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 
 	defer file.Close()
 
-	for index, each := range form.EventActivity {
+	for index, each := range eventActivity {
 		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
 		eventActivity := each
 
 		if each.Partner.PartnerName != "" {
 			if each.Partner.PartnerName == config.PartnerKao {
-				body, err := kao.KaoActivity(file, form.WorkoutActivityInfo.Distance, form.WorkoutActivityInfo.Duration, each.Partner.Slug, each.Partner.RefEventKey, each.Partner.RefActivityKey)
+				body, err := kao.KaoActivity(path, workoutInfo.Distance, workoutInfo.Duration, each.Partner.Slug, each.Partner.RefActivityValue, each.Partner.RefEventValue, each.Partner.RefPhoneValue)
+				if err != nil {
+					log.Println("error AddActivity", err.Error())
+					res.Response(http.StatusInternalServerError, err.Error(), nil)
+					c.Abort()
+					return
+				}
 				if err == nil {
 					eventObjectID, err := primitive.ObjectIDFromHex(eventActivity.EventID)
 
@@ -196,12 +227,12 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 
 					activityInfo := model.ActivityInfo{
 						ID:           primitive.NewObjectID(),
-						Caption:      form.WorkoutActivityInfo.Caption,
-						Distance:     form.WorkoutActivityInfo.Distance,
+						Caption:      workoutInfo.Caption,
+						Distance:     workoutInfo.Distance,
 						ImageURL:     path,
-						Time:         form.WorkoutActivityInfo.Duration,
-						APP:          form.WorkoutActivityInfo.APP,
-						ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+						Time:         workoutInfo.Duration,
+						APP:          workoutInfo.APP,
+						ActivityDate: workoutInfo.WorkoutDate,
 						CreatedAt:    time.Now(),
 						UpdatedAt:    time.Now(),
 					}
@@ -224,11 +255,11 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 						UserID:         userObjectID,
 						EventID:        eventObjectID,
 						ActivityInfoID: activityInfo.ID,
-						Distance:       form.WorkoutActivityInfo.Distance,
+						Distance:       workoutInfo.Distance,
 						ImageURL:       path,
-						Time:           form.WorkoutActivityInfo.Duration,
-						APP:            form.WorkoutActivityInfo.APP,
-						ActivityDate:   form.WorkoutActivityInfo.WorkoutDate,
+						Time:           workoutInfo.Duration,
+						APP:            workoutInfo.APP,
+						ActivityDate:   workoutInfo.WorkoutDate,
 						Slug:           each.Partner.Slug,
 						Ebib:           each.Partner.RefEventKey,
 						CreatedAt:      time.Now(),
@@ -247,12 +278,12 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 
 			activityInfo := model.ActivityInfo{
 				ID:           primitive.NewObjectID(),
-				Caption:      form.WorkoutActivityInfo.Caption,
-				Distance:     form.WorkoutActivityInfo.Distance,
+				Caption:      workoutInfo.Caption,
+				Distance:     workoutInfo.Distance,
 				ImageURL:     path,
-				Time:         form.WorkoutActivityInfo.Duration,
-				APP:          form.WorkoutActivityInfo.APP,
-				ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
+				Time:         workoutInfo.Duration,
+				APP:          workoutInfo.APP,
+				ActivityDate: workoutInfo.WorkoutDate,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
 			}
@@ -273,8 +304,8 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		}
 
 	}
-	form.WorkoutActivityInfo.IsSync = true
-	err = api.ActivityV2Repository.UpdateWorkout(form.WorkoutActivityInfo, userObjectID)
+	workoutInfo.IsSync = true
+	err = api.ActivityV2Repository.UpdateWorkout(workoutInfo, userObjectID)
 
 	if err != nil {
 		log.Println(err.Error())
@@ -410,21 +441,21 @@ func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
 
 func (api ActivityV2API) GetActivityByEvent2(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	eventID := c.Param("event")
 	//userID := "5d772660c8a56133c2d7c5ba"
-	userID, _, _ := utils.GetTokenValue(c)
+	userID, _ := oauth.GetValuesToken(c)
 
 	activity, err := api.ActivityV2Repository.GetActivityByEvent2(eventID, userID)
 
 	if err != nil {
 		log.Println("error AddEvent Get Event info2", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, activity)
+	appG.Response(http.StatusOK, "success", activity)
 }
 
 func (api ActivityV2API) GetHistoryDayByEvent(c *gin.Context) {

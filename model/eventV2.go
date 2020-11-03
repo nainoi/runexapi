@@ -99,11 +99,12 @@ type ProductSizes struct {
 
 // PartnerEvent struct
 type PartnerEvent struct {
-	PartnerID        primitive.ObjectID `json:"partner_id" bson:"partner_id"`
-	PartnerName      string             `json:"partner_name" bson:"partner_name"`
-	Slug             string             `json:"slug" bson:"slug"`
-	RefEventKey      string             `json:"ref_event_key" bson:"ref_event_key"`
-	RefActivityKey   string             `json:"ref_activity_key" bson:"ref_activity_key"`
-	RefEventValue    string             `json:"ref_event_value" bson:"ref_event_value"`
-	RefActivityValue string             `json:"ref_activity_value" bson:"ref_activity_value"`
+	PartnerID        primitive.ObjectID `form:"partner_id" json:"partner_id" bson:"partner_id"`
+	PartnerName      string             `form:"partner_name" json:"partner_name" bson:"partner_name"`
+	Slug             string             `form:"slug" json:"slug" bson:"slug"`
+	RefEventKey      string             `form:"ref_event_key" json:"ref_event_key" bson:"ref_event_key"`
+	RefActivityKey   string             `form:"ref_activity_key" json:"ref_activity_key" bson:"ref_activity_key"`
+	RefEventValue    string             `form:"ref_event_value" json:"ref_event_value" bson:"ref_event_value"`
+	RefActivityValue string             `form:"ref_activity_value" json:"ref_activity_value" bson:"ref_activity_value"`
+	RefPhoneValue    string             `form:"ref_phone_value" json:"ref_phone_value" bson:"ref_phone_value"`
 }

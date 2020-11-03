@@ -51,14 +51,11 @@ func (db RepoUserDB) Signin(u model.UserProviderRequest) (model.User, error) {
 		primitive.E{Key: "provider_id", Value: u.ProviderID},
 		primitive.E{Key: "provider", Value: u.Provider},
 	}
-	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
-	if err != nil {
-		count, err := db.ConnectionDB.Collection(userConlection).CountDocuments(context.TODO(), filter)
-		if count < 1 {
-			user, err = db.AddUser(u)
-			return user, err
-		}
-		
+	count, err := db.ConnectionDB.Collection(userConlection).CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		user, err = db.AddUser(u)
+	}else {
+		err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	}
 	return user, err
 }

@@ -99,17 +99,18 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		response, err := request.GetRequest(urlS, bearer, nil)
 		if err != nil {
 			log.Println(err)
-			return model.RegisterV2{}, fmt.Errorf("get event kao not success")
+			return model.RegisterV2{}, fmt.Errorf("ไม่พบ E-BIB นี้ในรายการ ก้าวเพื่อน้อง")
 		}
 		var koaObject model.KaoObject
 		err = json.Unmarshal(response, &koaObject)
 		if err != nil {
 			log.Println(err)
-			return model.RegisterV2{}, fmt.Errorf("get event kao not success")
+			return model.RegisterV2{}, fmt.Errorf("ไม่พบ E-BIB นี้ในรายการ ก้าวเพื่อน้อง")
 		}
 
 		dataInfo.Partner.RefActivityValue = register.KoaRequest.EBIB
 		dataInfo.Partner.RefEventValue = strconv.Itoa(koaObject.VirtualRaceProfile.OrderItemID)
+		dataInfo.Partner.RefPhoneValue = koaObject.HolderPhone
 	}
 
 	if count > 0 {
@@ -128,7 +129,12 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.UpdatedAt = time.Now()
 		dataInfo.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
 		update := bson.M{"$push": bson.M{"regs": dataInfo}}
+		filter = bson.D{primitive.E{Key: "event_id", Value: register.EventID}}
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			log.Println(err.Error())
+			return regModel, err
+		}
 
 	} else {
 		var arrRegs []model.Regs
@@ -146,9 +152,14 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		if err != nil {
 			//log.Fatal(res)
 			log.Println(err)
+			return registerModel, err
 		}
 	}
 
+	var regModel model.RegisterV2
+	if err != nil {
+		return regModel, err
+	}
 	err3 := registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventID.Hex())
 	if err3 != nil {
 		log.Println(err3)
@@ -156,7 +167,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 
 	regModel, err2 := registerMongo.GetRegEventByIDNew(dataInfo.ID.Hex(), register.EventID.Hex())
 	if err2 != nil {
-		return regModel, err
+		return regModel, err2
 	}
 
 	return regModel, err
