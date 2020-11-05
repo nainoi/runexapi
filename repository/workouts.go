@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/model"
 )
 
@@ -81,6 +82,9 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 func (workoutsMongo WorkoutsRepositoryMongo) GetWorkouts(userID primitive.ObjectID) (bool, model.Workouts, error) {
 	var workout model.Workouts
 	filter := bson.M{"user_id": userID}
+	option := options.FindOne()
+	option.SetSort(bson.D{primitive.E{Key: "activity_info.workout_date", Value: -1}})
+	//option.SetSort(bson.D{primitive.E{Key: "activity_info.workout_date", Value: -1}})
 	count, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
 	//log.Printf("[info] count %s", count)
 	if err != nil {
@@ -93,13 +97,14 @@ func (workoutsMongo WorkoutsRepositoryMongo) GetWorkouts(userID primitive.Object
 		workout.WorkoutActivityInfo = []model.WorkoutActivityInfo{}
 		return false, workout, nil
 	}
-	err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workout)
-	if err == nil {
-		var total = 0.0
-		for _, each := range workout.WorkoutActivityInfo {
-			total += each.Distance
-		}
-		workout.TotalDistance = total
+	
+	//limit := bson.D{primitive.E{Key: "$limit", Value: 1}}
+	err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter, option).Decode(&workout)
+	if err != nil {
+		workout.UserID = userID
+		workout.TotalDistance = 0
+		workout.WorkoutActivityInfo = []model.WorkoutActivityInfo{}
+		return false, workout, nil
 	}
 	return false, workout, err
 }

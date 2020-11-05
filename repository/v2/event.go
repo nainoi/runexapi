@@ -160,11 +160,12 @@ func (eventMongo EventRepositoryMongo) GetEventActive() ([]model.EventV2, error)
 	return events, err
 }
 
+// ExistByName repo
 func (eventMongo EventRepositoryMongo) ExistByName(name string) (bool, error) {
 
-	filter := bson.D{{"name", name}}
+	filter := bson.D{primitive.E{Key: "name",Value: name}}
 	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
-	log.Printf("[info] count %s", count)
+	log.Printf("[info] count %d", count)
 	if err != nil {
 		log.Println(err)
 	}
@@ -474,11 +475,12 @@ func (eventMongo EventRepositoryMongo) SearchEvent(term string) ([]model.EventV2
 	return events, err
 }
 
+// ValidateBySlug repo
 func (eventMongo EventRepositoryMongo) ValidateBySlug(slugText string) (bool, error) {
 
-	filter := bson.D{{"slug", slugText}}
+	filter := bson.D{primitive.E{Key: "slug",Value: slugText}}
 	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
-	log.Printf("[info] count %s", count)
+	log.Printf("[info] count %d", count)
 	if err != nil {
 		log.Println(err)
 	}
@@ -489,9 +491,10 @@ func (eventMongo EventRepositoryMongo) ValidateBySlug(slugText string) (bool, er
 	return true, nil
 }
 
+//GetEventBySlug repo
 func (eventMongo EventRepositoryMongo) GetEventBySlug(slug string) (model.EventV2, error) {
 	var event model.EventV2
-	filter := bson.D{{"slug", slug}}
+	filter := bson.D{primitive.E{Key: "slug",Value: slug}}
 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 	log.Printf("[info Event] cur %s", err2)
 	if err2 != nil {

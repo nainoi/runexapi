@@ -329,11 +329,11 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 // @Router /activity [post]
 func (api ActivityV2API) AddActivity(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	var form model.AddActivityForm
 	if err := c.ShouldBind(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest,err.Error(), gin.H{"error": err.Error()})
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
@@ -374,7 +374,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 
 		path = "/upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month)) + "/" + uniqidFilename.String() + ".png"
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		defer out.Close()
 		// write new image to file
@@ -413,11 +413,11 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	err2 := api.ActivityV2Repository.AddActivity(activityModel)
 	if err2 != nil {
 		log.Println("error AddActivity", err2.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err2.Error()})
+		appG.Response(http.StatusInternalServerError, err2.Error(),gin.H{"message": err2.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, nil)
+	appG.Response(http.StatusOK, "success", nil)
 }
 
 func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
@@ -432,7 +432,7 @@ func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, e.ERROR, gin.H{"message": err.Error()})
 		return
 	}
 

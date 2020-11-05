@@ -173,6 +173,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 	return regModel, err
 }
 
+// AddRaceRegister repo for race running
 func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.RegisterRequest) (model.RegisterV2, error) {
 	// register.CreatedAt = time.Now()
 	// register.UpdatedAt = time.Now()
