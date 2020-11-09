@@ -78,7 +78,7 @@ func ToFixed(num float64, precision int) float64 {
 }
 
 //StringToSlug convert event name to slug
-func StringToSlug(s string) (string, error) {
+func StringToSlug(s string) string {
 	str := []byte(strings.ToLower(s))
 
 	// convert all spaces to dash
@@ -134,5 +134,5 @@ func StringToSlug(s string) (string, error) {
 	//        return "", err
 	//}
 
-	return strings.TrimSpace(strReplaced), nil
+	return strings.TrimSpace(strReplaced)
 }

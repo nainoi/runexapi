@@ -18,6 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
@@ -161,6 +162,8 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		return
 	}
 
+	var resObject = model.UploadResponse{}
+
 	path := ""
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
@@ -201,9 +204,14 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		// write new image to file
 		jpeg.Encode(out, m, nil)
 		//_, err = io.Copy(out, file)
+
+		resObject = upload.UploadWithFolderToS3(path, "activity", uniqidFilename.String()+".png")
+
+		
 	}
 
 	defer file.Close()
+	defer os.Remove(path)
 
 	for index, each := range eventActivity {
 		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
@@ -229,7 +237,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 						ID:           primitive.NewObjectID(),
 						Caption:      workoutInfo.Caption,
 						Distance:     workoutInfo.Distance,
-						ImageURL:     path,
+						ImageURL:     resObject.URL,
 						Time:         workoutInfo.Duration,
 						APP:          workoutInfo.APP,
 						ActivityDate: workoutInfo.WorkoutDate,
@@ -256,7 +264,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 						EventID:        eventObjectID,
 						ActivityInfoID: activityInfo.ID,
 						Distance:       workoutInfo.Distance,
-						ImageURL:       path,
+						ImageURL:       resObject.URL,
 						Time:           workoutInfo.Duration,
 						APP:            workoutInfo.APP,
 						ActivityDate:   workoutInfo.WorkoutDate,
@@ -280,7 +288,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 				ID:           primitive.NewObjectID(),
 				Caption:      workoutInfo.Caption,
 				Distance:     workoutInfo.Distance,
-				ImageURL:     path,
+				ImageURL:     resObject.URL,
 				Time:         workoutInfo.Duration,
 				APP:          workoutInfo.APP,
 				ActivityDate: workoutInfo.WorkoutDate,
@@ -333,13 +341,15 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	)
 	var form model.AddActivityForm
 	if err := c.ShouldBind(&form); err != nil {
-		appG.Response(http.StatusBadRequest,err.Error(), gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 	path := ""
 	file, header, err := c.Request.FormFile("image")
+
+	var resObject = model.UploadResponse{}
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
 		path = ""
@@ -353,7 +363,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 
 		// resize to width 1000 using Lanczos resampling
 		// and preserve aspect ratio
-		m := resize.Resize(680, 0, img, resize.Lanczos3)
+		m := resize.Resize(800, 0, img, resize.Lanczos3)
 
 		filename := header.Filename
 		fmt.Println(filename)
@@ -379,7 +389,12 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 		defer out.Close()
 		// write new image to file
 		jpeg.Encode(out, m, nil)
+
 		//_, err = io.Copy(out, file)
+
+		resObject = upload.UploadWithFolderToS3(path, "activity", uniqidFilename.String()+".png")
+
+		defer os.Remove(path)
 	}
 	fmt.Println(form)
 	time1, err := time.Parse(time.RFC3339, form.ActivityDate)
@@ -390,7 +405,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	}
 
 	form.UserID = userID
-	form.ImageURL = path
+	form.ImageURL = resObject.URL
 
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
 	eventObjectID, err := primitive.ObjectIDFromHex(form.EventID)
@@ -413,7 +428,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	err2 := api.ActivityV2Repository.AddActivity(activityModel)
 	if err2 != nil {
 		log.Println("error AddActivity", err2.Error())
-		appG.Response(http.StatusInternalServerError, err2.Error(),gin.H{"message": err2.Error()})
+		appG.Response(http.StatusInternalServerError, err2.Error(), gin.H{"message": err2.Error()})
 		return
 	}
 

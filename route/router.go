@@ -12,6 +12,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
+	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	repo "thinkdev.app/think/runex/runexapi/repository"
@@ -54,6 +55,8 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.POST("/logout", userAPI.LogoutUser)
 		g.PUT("/syncStrava", userAPI.UpdateUserStrava)
 		g.POST("/registerFirebase", userAPI.RegFirebase)
+		g.POST("/uploads", upload.Uploads)
+		g.POST("/uploadCover", upload.UploadCover)
 	}
 }
 
@@ -174,7 +177,7 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
 		group.GET("/all", eventAPI.GetAll)
 		group.GET("/active", eventAPI.GetAllActive)
-
+		group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("", eventAPI.AddEvent)

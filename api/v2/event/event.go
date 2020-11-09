@@ -47,7 +47,7 @@ type EventStatus struct {
 // @Router /event [post]
 func (api EventAPI) AddEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 
 	userID, _ := oauth.GetValuesToken(c)
@@ -55,35 +55,37 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 
 	var json model.EventV2
 
-	json.OwnerID = ownerObjectID
+	
 
 	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
 
 	if err := c.ShouldBindJSON(&json); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
 		return
 	}
+
+	json.OwnerID = ownerObjectID
 
 	exists, err2 := api.EventRepository.ExistByName(json.Name)
 
 	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err2.Error()})
+		appG.Response(http.StatusInternalServerError, err2.Error(), gin.H{"message": err2.Error()})
 		return
 	}
 
 	if exists {
-		appG.Response(http.StatusBadRequest, e.ERROR_EXIST_EVENT, nil)
+		appG.Response(http.StatusBadRequest, "event not exits", nil)
 		return
 	}
 
 	eventID, err := api.EventRepository.AddEvent(json)
 	if err != nil {
 		log.Println("error AddEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, eventID)
+	appG.Response(http.StatusOK, "success", eventID)
 
 }
 
@@ -483,7 +485,7 @@ func (api EventAPI) ValidateSlug(c *gin.Context) {
 	var json model.Slug
 
 	if err := c.ShouldBindJSON(&json); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, e.INVALID_PARAMS, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -495,7 +497,7 @@ func (api EventAPI) ValidateSlug(c *gin.Context) {
 	existsSlug, err2 := api.EventRepository.ValidateBySlug(json.Slug)
 
 	if err2 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err2.Error()})
+		appG.Response(http.StatusInternalServerError, e.ERROR, gin.H{"message": err2.Error()})
 		return
 	}
 
@@ -508,9 +510,21 @@ func (api EventAPI) ValidateSlug(c *gin.Context) {
 
 }
 
+// GetBySlug api godoc
+// @Summary Get my event
+// @Description get event owner API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=model.EventV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event/GetBySlug/{slug} [get]
 func (api EventAPI) GetBySlug(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	slug := c.Param("slug")
 	log.Printf("[info] id %s", slug)
@@ -518,14 +532,14 @@ func (api EventAPI) GetBySlug(c *gin.Context) {
 	existsSlug, err2 := api.EventRepository.ValidateBySlug(slug)
 	log.Printf("[ValidateBySlug] id %s", slug)
 	if existsSlug {
-		appG.Response(http.StatusBadRequest, e.ERROR_EXIST_EVENT_SLUG, slug)
+		appG.Response(http.StatusBadRequest, "slug event exit", slug)
 		return
 	}
 
 	event, err := api.EventRepository.GetEventBySlug(slug)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		log.Println("error get Event", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
@@ -534,6 +548,6 @@ func (api EventAPI) GetBySlug(c *gin.Context) {
 		log.Println("error owner event", err2.Error())
 	}
 	//data := EventRes{event, user}
-	appG.Response(http.StatusOK, e.SUCCESS, gin.H{"event": event, "user": user})
+	appG.Response(http.StatusOK, "success", gin.H{"event": event, "user": user})
 
 }

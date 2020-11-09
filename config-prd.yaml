@@ -4,13 +4,13 @@ app:
     debug: false
 
 mongodb:
-    connection: "mongodb://178.128.85.151:27017"
+    connection: "mongodb://188.166.219.22:27017"
     db: "Runex"
     user: "idever"
     pass: "idever@987"
     
 redis:
-    host: "178.128.85.151"
+    host: "188.166.219.22"
     port: "6379"
     pass: "__@redis__P@ss"
 

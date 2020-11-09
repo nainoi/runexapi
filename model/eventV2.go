@@ -65,7 +65,7 @@ type CoverThumb struct {
 }
 
 type TicketEventV2 struct {
-	TicketID    primitive.ObjectID `json:"id" bson:"_id"`
+	TicketID    primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Title       string             `json:"title" bson:"title"`
 	Price       float64            `json:"price" bson:"price"`
 	Description string             `json:"description" bson:"description"`
@@ -80,7 +80,7 @@ type TicketEventV2 struct {
 }
 
 type ProduceEventV2 struct {
-	ProductID primitive.ObjectID `json:"id" bson:"_id"`
+	ProductID primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name      string             `json:"name" bson:"name" binding:"required"`
 	Image     []ProductImage     `json:"image" bson:"image"`
 	Detail    string             `json:"detail" bson:"detail"`

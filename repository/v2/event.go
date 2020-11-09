@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/utils"
 )
 
 // EventRepository interface
@@ -58,6 +59,14 @@ func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, er
 	// event.Ticket = []model.TicketEvent{}
 	event.CreatedTime = time.Now()
 	event.UpdatedTime = time.Now()
+	slug := utils.StringToSlug(event.Name)
+	check, _ := eventMongo.ValidateBySlug(slug)
+	if !check {
+		return "", fmt.Errorf("event not exits by name")
+	}
+
+	event.Slug = slug
+
 	res, err := eventMongo.ConnectionDB.Collection(eventCollection).InsertOne(context.TODO(), event)
 	if err != nil {
 		log.Println(res)
@@ -77,8 +86,16 @@ func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, er
 func (eventMongo EventRepositoryMongo) EditEvent(eventID string, event model.EventV2) error {
 
 	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{Key:"_id",Value: objectID}}
+	filter := bson.D{primitive.E{Key: "_id", Value: objectID}}
 	event.UpdatedTime = time.Now()
+
+	slug := utils.StringToSlug(event.Name)
+	check, _ := eventMongo.ValidateBySlug(slug)
+	if !check {
+		return fmt.Errorf("event not exits by name")
+	}
+
+	event.Slug = slug
 	updated := bson.M{"$set": event}
 	_, err = eventMongo.ConnectionDB.Collection(eventCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
@@ -163,7 +180,7 @@ func (eventMongo EventRepositoryMongo) GetEventActive() ([]model.EventV2, error)
 // ExistByName repo
 func (eventMongo EventRepositoryMongo) ExistByName(name string) (bool, error) {
 
-	filter := bson.D{primitive.E{Key: "name",Value: name}}
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
 	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
 	log.Printf("[info] count %d", count)
 	if err != nil {
@@ -430,7 +447,7 @@ func (eventMongo EventRepositoryMongo) GetUserEvent(userID string) (model.UserEv
 func (eventMongo EventRepositoryMongo) GetEventByUser(userID string) ([]model.EventV2, error) {
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	var events = []model.EventV2{}
-	filter := bson.D{primitive.E{Key:"owner_id",Value: objectID}}
+	filter := bson.D{primitive.E{Key: "owner_id", Value: objectID}}
 	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
@@ -477,10 +494,8 @@ func (eventMongo EventRepositoryMongo) SearchEvent(term string) ([]model.EventV2
 
 // ValidateBySlug repo
 func (eventMongo EventRepositoryMongo) ValidateBySlug(slugText string) (bool, error) {
-
-	filter := bson.D{primitive.E{Key: "slug",Value: slugText}}
+	filter := bson.D{primitive.E{Key: "slug", Value: slugText}}
 	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
-	log.Printf("[info] count %d", count)
 	if err != nil {
 		log.Println(err)
 	}
@@ -494,11 +509,11 @@ func (eventMongo EventRepositoryMongo) ValidateBySlug(slugText string) (bool, er
 //GetEventBySlug repo
 func (eventMongo EventRepositoryMongo) GetEventBySlug(slug string) (model.EventV2, error) {
 	var event model.EventV2
-	filter := bson.D{primitive.E{Key: "slug",Value: slug}}
+	filter := bson.D{primitive.E{Key: "slug", Value: slug}}
 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 	log.Printf("[info Event] cur %s", err2)
 	if err2 != nil {
-		log.Fatal(err2)
+		log.Println(err2)
 	}
 
 	return event, err2

@@ -8,6 +8,7 @@ require (
 	github.com/EDDYCJY/go-gin-example v0.0.0-20200505102242-63963976dee0
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/appleboy/gin-jwt/v2 v2.6.2
+	github.com/aws/aws-sdk-go v1.35.23
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/codahale/hdrhistogram v0.9.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
@@ -16,7 +17,7 @@ require (
 	github.com/getkin/kin-openapi v0.22.0 // indirect
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-openapi/spec v0.19.11 // indirect
+	github.com/go-openapi/spec v0.19.12 // indirect
 	github.com/go-openapi/swag v0.19.11 // indirect
 	github.com/go-redis/redis/v8 v8.0.0-beta.5
 	github.com/go-stack/stack v1.8.0 // indirect
@@ -45,15 +46,16 @@ require (
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/ugorji/go v1.1.7 // indirect
 	github.com/urfave/cli v1.22.4 // indirect
-	github.com/urfave/cli/v2 v2.2.0 // indirect
+	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c // indirect
 	github.com/xdg/stringprep v0.0.0-20180714160509-73f8eece6fdc // indirect
 	go.mongodb.org/mongo-driver v1.4.1
 	go.uber.org/atomic v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/exp v0.0.0-20200821190819-94841d0725da // indirect
-	golang.org/x/net v0.0.0-20201024042810-be3efd7ff127
-	golang.org/x/tools v0.0.0-20201023174141-c8cfbd0f21e6 // indirect
+	golang.org/x/net v0.0.0-20201031054903-ff519b6c9102
+	golang.org/x/text v0.3.4 // indirect
+	golang.org/x/tools v0.0.0-20201105001634-bc3cf281b174 // indirect
 	google.golang.org/api v0.17.0
 	google.golang.org/genproto v0.0.0-20200924141100-a14c0a98937d // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
