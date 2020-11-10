@@ -203,11 +203,8 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		defer out.Close()
 		// write new image to file
 		jpeg.Encode(out, m, nil)
-		//_, err = io.Copy(out, file)
 
-		resObject = upload.UploadWithFolderToS3(path, "activity", uniqidFilename.String()+".png")
-
-		
+		resObject = upload.UploadWithFolderToS3(pathDir + "/" + uniqidFilename.String() + ".png", "activty", uniqidFilename.String() + ".png")
 	}
 
 	defer file.Close()

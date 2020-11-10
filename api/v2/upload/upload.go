@@ -122,8 +122,8 @@ func UploadCover(c *gin.Context) {
 		//log.Fatal(err)
 	}
 
-	thumbObject := UploadWithFolderToS3(thumbPath, "event", uniqidFilename.String()+"."+str)
-	coverObject := UploadWithFolderToS3(path, "thumbnail", uniqidFilename.String()+"."+str)
+	thumbObject := UploadWithFolderToS3(thumbPath, "thumbnail", uniqidFilename.String()+"."+str)
+	coverObject := UploadWithFolderToS3(path, "event", uniqidFilename.String()+"."+str)
 
 	defer outThumbnail.Close()
 	defer out.Close()
