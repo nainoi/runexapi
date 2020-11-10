@@ -53,6 +53,7 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.GET("/user", userAPI.GetUser)
 		g.PUT("/user", userAPI.UpdateUser)
 		g.POST("/logout", userAPI.LogoutUser)
+		g.GET("/logout", userAPI.Signout)
 		g.PUT("/syncStrava", userAPI.UpdateUserStrava)
 		g.POST("/registerFirebase", userAPI.RegFirebase)
 		g.POST("/uploads", upload.Uploads)
@@ -97,6 +98,7 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	g.Use(oauth.AuthMiddleware())
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
+		g.POST("/workouts", workoutsAPI.AddMultiWorkout)
 		g.GET("/workouts", workoutsAPI.GetWorkouts)
 	}
 

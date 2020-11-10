@@ -551,6 +551,61 @@ func (api API) LogoutUser(c *gin.Context) {
 
 }
 
+// Signout Method
+// @Summary user logout
+// @Description user logout system API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Success 202 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /logout [get]
+func (api API) Signout(c *gin.Context) {
+
+	//span, err := tracer.CreateTracerAndSpan("logout", c)
+
+	// if err != nil {
+	// 	//logger.Logger.Errorf(err.Error())
+	// 	//fmt.Println(err.Error())
+	// }
+	var (
+		res = response.Gin{C: c}
+	)
+
+	token := c.GetHeader("Authorization")
+	if token == "" {
+		// span.LogFields(
+		// 	tracelog.String("event", "error"),
+		// 	tracelog.String("message", "Authorization token was not provided"),
+		// )
+		// logger.Logger.Errorf("Authorization token was not provided")
+		res.Response(http.StatusUnauthorized, "Authorization Token is required", nil)
+		c.Abort()
+		return
+	}
+
+	extractedToken := strings.Split(token, "Bearer ")
+
+	err := oauth.InvalidateToken(extractedToken[1])
+	if err != nil {
+		//tracer.OnErrorLog(span, err)
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	// span.LogFields(
+	// 	tracelog.String("event", "success"),
+	// 	tracelog.Int("status", http.StatusAccepted),
+	// )
+	res.Response(http.StatusAccepted, "Done", nil)
+	return
+
+}
+
 // RegFirebase godoc
 // @Summary user firebase register
 // @Description user firebase register API calls

@@ -14,6 +14,7 @@ import (
 // WorkoutsRepository struct interface
 type WorkoutsRepository interface {
 	AddWorkout(workout model.AddWorkout) (model.WorkoutActivityInfo, error)
+	AddMultiWorkout(userID string, workouts []model.WorkoutActivityInfo) error
 	GetWorkouts(userID primitive.ObjectID) (bool, model.Workouts, error)
 	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
 }
@@ -76,6 +77,58 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 	}
 
 	return dataInfo, nil
+}
+
+// AddMultiWorkout repository for insert workouts
+func (workoutsMongo WorkoutsRepositoryMongo) AddMultiWorkout(userID string, workouts []model.WorkoutActivityInfo) error {
+	userObjectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+	filter := bson.M{"user_id": userObjectID}
+	count, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
+	//log.Printf("[info] count %s", count)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	total := 0.0
+	for _, s := range workouts {
+		total += s.Distance
+	}
+	if count > 0 {
+		var workoutsModel model.Workouts
+		err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workoutsModel)
+
+		var totalDistance = workoutsModel.TotalDistance + total
+		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
+		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
+		if err != nil {
+			log.Printf("[info] err %s", err)
+			return err
+		}
+		update := bson.M{"$push": bson.M{"activity_info": workouts}}
+		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
+		if err != nil {
+			log.Printf("[info] err %s", err)
+			return err
+		}
+
+	} else {
+		workoutsModel := model.Workouts{
+			UserID:              userObjectID,
+			WorkoutActivityInfo: workouts,
+			TotalDistance:       total,
+		}
+		//log.Println(workoutsModel)
+		_, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).InsertOne(context.TODO(), workoutsModel)
+		if err != nil {
+			//log.Fatal(res)
+			return err
+		}
+	}
+
+	return nil
 }
 
 // GetWorkouts repository for get workouts data

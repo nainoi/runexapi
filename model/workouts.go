@@ -40,6 +40,11 @@ type AddWorkout struct {
 	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
 }
 
+// AddMultiWorkout struct model for request
+type AddMultiWorkout struct {
+	WorkoutActivityInfos []WorkoutActivityInfo `form:"workouts" json:"workouts"`
+}
+
 // AddWorkoutForm struct model for request
 type AddWorkoutForm struct {
 	UserID           string     `form:"user_id" json:"user_id" bson:"user_id"`
