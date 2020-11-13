@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+	"thinkdev.app/think/runex/runexapi/api/v2/config"
 	handle_event_v2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
@@ -41,9 +42,17 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	userRepoDB := repository.RepoUserDB{
 		ConnectionDB: connectionDB,
 	}
+	cfRepoDB := repository.ConfigRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
 	userAPI := user.API{
 		UserRepo: userRepoDB,
 	}
+	configAPI := config.ConfigAPI{
+		ConfigRepo: cfRepoDB,
+	}
+	g.GET("/test", configAPI.GetTest)
+	g.GET("/config", configAPI.GetConfig)
 	g.POST("/login", userAPI.LoginUser)
 	g.POST("/signup", userAPI.AddUser)
 	g.POST("/refreshAccessToken", userAPI.RefreshAccessToken)

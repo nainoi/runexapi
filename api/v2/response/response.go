@@ -29,5 +29,6 @@ func (g *Gin) Response(httpCode int, errMsg string, data interface{}) {
 		Msg:  errMsg,
 		Data: data,
 	})
+	//g.C.Abort()
 	return
 }

@@ -138,7 +138,16 @@ func main() {
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	router.Run(viper.GetString("app.port"))
+	//router.Run(viper.GetString("app.port"))
+
+	s := &http.Server{
+		Addr:           viper.GetString("app.port"),
+		Handler:        router,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	s.ListenAndServe()
 
 	// err2 := router.RunTLS(config.PORT_WEB_SERVICE, sslcert, sslkey)
 	// if err2 != nil {

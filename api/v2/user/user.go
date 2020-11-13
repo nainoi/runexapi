@@ -44,7 +44,6 @@ func (api API) VerifyAuthToken(c *gin.Context) {
 	if foundInBlacklist == true {
 		logger.Logger.Infof("Found in Blacklist")
 		res.Response(http.StatusUnauthorized, "Invalid Token", nil)
-		c.Abort()
 		return
 	}
 
@@ -53,7 +52,6 @@ func (api API) VerifyAuthToken(c *gin.Context) {
 		message := err.Error()
 		logger.Logger.Errorf(message)
 		res.Response(http.StatusUnauthorized, "Invalid Key. User Not Authorized", nil)
-		c.Abort()
 		return
 	}
 

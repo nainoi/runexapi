@@ -197,7 +197,6 @@ func (api WorkoutsAPI) GetWorkouts(c *gin.Context) {
 	)
 	userID, _ := oauth.GetValuesToken(c)
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
-
 	isNotHas, workout, err := api.WorkoutsRepository.GetWorkouts(userObjectID)
 	if isNotHas {
 		res.Response(http.StatusNoContent, "status no content", workout)
