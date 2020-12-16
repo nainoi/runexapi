@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/request"
 
@@ -26,17 +27,18 @@ type RegisterRepository interface {
 	GetRegisterAll() ([]model.RegisterV2, error)
 	AddRegister(register model.RegisterRequest) (model.RegisterV2, error)
 	AddRaceRegister(register model.RegisterRequest) (model.RegisterV2, error)
-	AddMerChant(userID string, eventID string, charge omise.Charge) error
+	AddMerChant(userID string, eventID string, regID string, charge omise.Charge) error
 	EditRegister(registerID string, register model.RegisterRequest) error
-	GetRegisterByEvent(eventID string) ([]model.Register, error)
+	GetRegisterByEvent(eventID string) ([]model.RegisterV2, error)
 	NotifySlipRegister(registerID string, slip model.SlipTransfer) error
 	AdminNotifySlipRegister(registerID string, slip model.SlipTransfer) error
 	CountByEvent(eventID string) (int64, error)
-	GetRegEventByID(regID string) (model.Register, error)
+	GetRegEventByID(regID string) (model.RegisterV2, error)
 	GetRegEventByIDNew(regID string, eventID string) (model.RegisterV2, error)
 	CheckUserRegisterEvent(eventID string, userID string) (bool, error)
 	GetRegisterByUserID(userID string) ([]model.RegisterV2, error)
-	GetRegisterByUserAndEvent(userID string, id string) (model.Register, error)
+	GetRegisterByUserAndEvent(userID string, id string) (model.RegisterV2, error)
+	GetRegisterByUserEventAndRegID(userID string, eventID string, regID string) (model.RegisterV2, error)
 	SendMailRegister(registerID string) error
 	SendMailRegisterNew(registerID string, eventID string) error
 	GetRegisterActivateEvent(userID string) ([]model.RegisterV2, error)
@@ -52,9 +54,10 @@ type RegisterRepositoryMongo struct {
 }
 
 const (
-	registerCollection = "register_v2"
-	merchantCollection = "merchant"
-	activityCollection = "activityV2"
+	registerCollection    = "register_v2"
+	merchantCollection    = "merchant"
+	activityCollection    = "activityV2"
+	registerAllCollection = "register_all"
 )
 
 // GetRegisterAll repo
@@ -135,6 +138,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			log.Println(err.Error())
 			return regModel, err
 		}
+		SaveRegister(dataInfo, register.EventID)
 
 	} else {
 		var arrRegs []model.Regs
@@ -154,6 +158,8 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			log.Println(err)
 			return registerModel, err
 		}
+
+		SaveRegister(dataInfo, register.EventID)
 	}
 
 	var regModel model.RegisterV2
@@ -185,7 +191,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 		log.Println(err)
 	}
 
-	filterBib := bson.D{{"event_id", register.EventID}}
+	filterBib := bson.D{bson.E{Key: "event_id", Value: register.EventID}}
 	var ebibEvent model.EbibEvent
 	err = registerMongo.ConnectionDB.Collection(ebibCollection).FindOne(context.TODO(), filterBib).Decode(&ebibEvent)
 	if err != nil {
@@ -235,7 +241,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 		return regModel, err
 	}
 	//ebibEvent.LastNo += int64(len(regModel.TicketOptions))
-	ebibEvent.LastNo += 1
+	ebibEvent.LastNo++
 	ebibEvent.UpdatedAt = time.Now()
 	updated := bson.M{"$set": ebibEvent}
 	_, err = registerMongo.ConnectionDB.Collection(ebibCollection).UpdateOne(context.TODO(), filterBib, updated)
@@ -253,9 +259,11 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 	return regModel, err
 }
 
-func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventID string, charge omise.Charge) error {
+// AddMerChant repo for payment success
+func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventID string, regID string, charge omise.Charge) error {
 	uid, err := primitive.ObjectIDFromHex(userID)
 	eid, err := primitive.ObjectIDFromHex(eventID)
+	rid, err := primitive.ObjectIDFromHex(regID)
 	typePay := ""
 	if charge.Source != nil {
 		if len(charge.Source.Type) > 0 {
@@ -266,6 +274,7 @@ func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventID 
 	var merchant model.Merchant
 	merchant.UserID = uid
 	merchant.EventID = eid
+	merchant.RegID = rid
 	merchant.PaymentType = typePay
 	merchant.Status = string(charge.Status)
 	merchant.OrderID = charge.Object
@@ -278,23 +287,40 @@ func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventID 
 	if err != nil {
 		log.Println(res)
 	}
+
+	if registerMongo.UpdatePaymentStatus(rid, eid, uid, config.PAYMENT_SUCCESS) {
+		return nil
+	}
 	return err
 }
 
+// UpdatePaymentStatus repo
+func (registerMongo RegisterRepositoryMongo) UpdatePaymentStatus(registerID primitive.ObjectID, eventID primitive.ObjectID, userID primitive.ObjectID, status string) bool {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_id": eventID}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
+	_, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println("updating the Data", err)
+		return false
+	}
+	return true
+}
+
+// EditRegister repo
 func (registerMongo RegisterRepositoryMongo) EditRegister(registerID string, register model.RegisterRequest) error {
 	regObjectID, err := primitive.ObjectIDFromHex(registerID)
 	eventObjectID := register.EventID
-	filterUpdate := bson.D{{"event_id", eventObjectID}, {"regs._id", regObjectID}}
+	filterUpdate := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
 	//register.UpdatedAt = time.Now()
 	dataInfo := register.Regs
 	dataInfo.UpdatedAt = time.Now()
 	dataInfo.ID = regObjectID
 	//updated := bson.M{"$set": register}
 	updated := bson.M{"$set": bson.M{"regs.$": dataInfo}}
-	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
+	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		//log.Printf("[info] err %s", res)
 		return err
 
 	}
@@ -308,11 +334,12 @@ func (registerMongo RegisterRepositoryMongo) EditRegister(registerID string, reg
 	return nil
 }
 
-func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) ([]model.Register, error) {
+// GetRegisterByEvent repo list data register event
+func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) ([]model.RegisterV2, error) {
 
-	var register []model.Register
+	var register = []model.RegisterV2{}
 	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{{"event_id", objectID}}
+	filter := bson.D{bson.E{Key: "event_id", Value: objectID}}
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
@@ -320,7 +347,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) 
 	}
 
 	for cur.Next(context.TODO()) {
-		var u model.Register
+		var u model.RegisterV2
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
 			log.Fatal(err)
@@ -344,7 +371,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
-	projectStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1}}}
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
 	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
@@ -377,10 +404,57 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 	return register, err
 }
 
-//GetRegisterByUserAndEvent detail reg
-func (registerMongo RegisterRepositoryMongo) GetRegisterByUserAndEvent(userID string, id string) (model.Register, error) {
+//GetRegisterByUserEventAndRegID repository get my event register with user id, event id, and reg id
+func (registerMongo RegisterRepositoryMongo) GetRegisterByUserEventAndRegID(userID string, eventID string, regID string) (model.RegisterV2, error) {
 
-	var register model.Register
+	var register model.RegisterV2
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	eID, err := primitive.ObjectIDFromHex(userID)
+	rID, err := primitive.ObjectIDFromHex(userID)
+	//filter := bson.D{{"regs.user_id", objectID}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"regs.user_id": objectID, "regs._id": rID, "event_id": eID}}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
+	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
+	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": eventID}}}
+	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
+	//log.Printf("[info] cur %s", cur)
+	if err != nil {
+		log.Println(err)
+	}
+
+	for cur.Next(context.TODO()) {
+		var u model.RegisterV2
+
+		// decode the document
+		if err := cur.Decode(&u); err != nil {
+			log.Print(err)
+		}
+
+		var event model.EventRegV2
+		filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
+		err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+		if err != nil {
+			log.Print(err)
+		}
+		u.Regs[0].Event = event
+		// var event model.Event
+		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
+		// //fmt.Printf("post: %+v\n", p)
+		//u.Event = event
+		register = u
+	}
+
+	return register, err
+}
+
+//GetRegisterByUserAndEvent detail reg
+func (registerMongo RegisterRepositoryMongo) GetRegisterByUserAndEvent(userID string, id string) (model.RegisterV2, error) {
+
+	var register model.RegisterV2
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	regID, err := primitive.ObjectIDFromHex(id)
 	filter := bson.D{primitive.E{Key: "user_id", Value: objectID}, primitive.E{Key: "_id", Value: regID}}
@@ -406,16 +480,17 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserAndEvent(userID st
 	return register, err
 }
 
+//NotifySlipRegister repo for send mail on user send slip
 func (registerMongo RegisterRepositoryMongo) NotifySlipRegister(registerID string, slip model.SlipTransfer) error {
 	objectID, err := primitive.ObjectIDFromHex(registerID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 
 	updated := bson.M{"$set": bson.M{"slip": slip, "status": config.PAYMENT_WAITING_APPROVE, "updated_at": time.Now()}}
 
-	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
+	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		log.Printf("[info] err %s", err.Error())
 		return err
 	}
 
@@ -435,7 +510,7 @@ func (registerMongo RegisterRepositoryMongo) NotifySlipRegister(registerID strin
 //AdminNotifySlipRegister admin upload slip and update status
 func (registerMongo RegisterRepositoryMongo) AdminNotifySlipRegister(registerID string, slip model.SlipTransfer) error {
 	objectID, err := primitive.ObjectIDFromHex(registerID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 
 	var register model.Register
 	err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filter).Decode(&register)
@@ -448,10 +523,9 @@ func (registerMongo RegisterRepositoryMongo) AdminNotifySlipRegister(registerID 
 
 	updated := bson.M{"$set": bson.M{"slip": slip, "status": config.PAYMENT_WAITING_APPROVE, "payment_type": paymentType, "updated_at": time.Now()}}
 
-	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
+	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
-		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		//log.Printf("[info] err %s", res)
 		return err
 	}
 
@@ -468,13 +542,14 @@ func (registerMongo RegisterRepositoryMongo) AdminNotifySlipRegister(registerID 
 	return nil
 }
 
+//CountByEvent count register by event
 func (registerMongo RegisterRepositoryMongo) CountByEvent(eventID string) (int64, error) {
 
 	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{{"event_id", objectID}}
+	filter := bson.D{bson.E{Key: "event_id", Value: objectID}}
 
 	count, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filter)
-	log.Printf("[info] count %s", count)
+	//log.Printf("[info] count %s", count)
 	if err != nil {
 		log.Println(err)
 	}
@@ -482,9 +557,10 @@ func (registerMongo RegisterRepositoryMongo) CountByEvent(eventID string) (int64
 	return count, err
 }
 
-func (registerMongo RegisterRepositoryMongo) GetRegEventByID(regID string) (model.Register, error) {
+// GetRegEventByID repo
+func (registerMongo RegisterRepositoryMongo) GetRegEventByID(regID string) (model.RegisterV2, error) {
 
-	var regEvent model.Register
+	var regEvent model.RegisterV2
 	id, err := primitive.ObjectIDFromHex(regID)
 	if err != nil {
 		log.Fatal(err)
@@ -499,6 +575,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByID(regID string) (mode
 	return regEvent, err2
 }
 
+//GetRegEventByIDNew repo for register detail
 func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, eventID string) (model.RegisterV2, error) {
 
 	var regEvent model.RegisterV2
@@ -514,7 +591,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, ev
 	log.Printf("[info eventObjectID] cur %s", eventObjectID)
 	log.Printf("[info regObjectID] cur %s", regObjectID)
 
-	filter := bson.D{{"event_id", eventObjectID}, {"regs._id", regObjectID}}
+	filter := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
 
 	options := options.FindOne()
 	options.SetProjection(bson.M{"regs.$": 1})
@@ -545,33 +622,33 @@ func (registerMongo RegisterRepositoryMongo) CheckUserRegisterEvent(eventID stri
 	return false, nil
 }
 
+// SendMailRegister send email for register
 func (registerMongo RegisterRepositoryMongo) SendMailRegister(registerID string) error {
 	var register model.Register
 	var user model.UserProvider
 	var mailTemplate model.EmailTemplateData2
 	objectID, _ := primitive.ObjectIDFromHex(registerID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 	err := registerMongo.ConnectionDB.Collection("register").FindOne(context.TODO(), filter).Decode(&register)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	filterUser := bson.D{{"_id", register.UserID}}
+	filterUser := bson.D{bson.E{Key: "_id", Value: register.UserID}}
 	err = registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	filterEvent := bson.D{{"event_id", register.EventID}}
+	filterEvent := bson.D{bson.E{Key: "event_id", Value: register.EventID}}
 	count, err := registerMongo.ConnectionDB.Collection("register").CountDocuments(context.TODO(), filterEvent)
 	registerNumber := fmt.Sprintf("%05d", count)
 	address := register.ShipingAddress.Address + " City " + register.ShipingAddress.City + " District " + register.ShipingAddress.District + " Province " + register.ShipingAddress.Province + " " + register.ShipingAddress.Zipcode
 
 	updated := bson.M{"$set": bson.M{"register_number": registerNumber}}
-	res, err := registerMongo.ConnectionDB.Collection("register").UpdateOne(context.TODO(), filter, updated)
+	_, err = registerMongo.ConnectionDB.Collection("register").UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
-		log.Fatal(err)
-		log.Printf("[info] err %s", res)
+		log.Printf("[info] err %s", err.Error())
 		return err
 	}
 
@@ -600,6 +677,7 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegister(registerID string)
 	return err
 }
 
+// SendMailRegisterNew new version
 func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID string, eventID string) error {
 	var registerEvent model.RegisterV2
 	var register model.Regs
@@ -607,9 +685,8 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 	var mailTemplate model.EmailTemplateData2
 	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
 	regObjectID, _ := primitive.ObjectIDFromHex(registerID)
-	log.Printf("[info] err %s", regObjectID)
 	//filter := bson.D{{"event_id", eventObjectID}}
-	filter := bson.D{{"event_id", eventObjectID}, {"regs._id", regObjectID}}
+	filter := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
 
 	options := options.FindOne()
 	options.SetProjection(bson.M{"regs.$": 1})
@@ -618,13 +695,13 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 		log.Println(err)
 	}
 	register = registerEvent.Regs[0]
-	filterUser := bson.D{{"_id", register.UserID}}
+	filterUser := bson.D{bson.E{Key: "_id", Value: register.UserID}}
 	err = registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 	if err != nil {
 		log.Println(err)
 	}
 	var registerEventAll model.RegisterV2
-	filterEvent := bson.D{{"event_id", eventObjectID}}
+	filterEvent := bson.D{bson.E{Key: "event_id", Value: eventObjectID}}
 	err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filterEvent).Decode(&registerEventAll)
 	count := len(registerEventAll.Regs)
 	fmt.Println("First Length:", count)
@@ -636,12 +713,11 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 
 	}
 
-	filterUpdate := bson.D{{"event_id", eventObjectID}, {"regs._id", regObjectID}}
+	filterUpdate := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
 	updated := bson.M{"$set": bson.M{"regs.$.register_number": registerNumber}}
-	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
+	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
 	if err != nil {
-		log.Fatal(err)
-		log.Printf("[info] err %s", res)
+		log.Printf("[info] err %s", err.Error())
 		return err
 	}
 
@@ -669,21 +745,22 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 	return err
 }
 
+// SendRaceMailRegister to race register
 func (registerMongo RegisterRepositoryMongo) SendRaceMailRegister(registerID string) error {
 	var register model.Register
 	var user model.UserProvider
 	var mailTemplate model.EmailTemplateData2
 	objectID, _ := primitive.ObjectIDFromHex(registerID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 	err := registerMongo.ConnectionDB.Collection("register").FindOne(context.TODO(), filter).Decode(&register)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
-	filterUser := bson.D{{"_id", register.UserID}}
+	filterUser := bson.D{bson.E{Key: "_id", Value: register.UserID}}
 	err = registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 
 	loc, _ := time.LoadLocation("Asia/Bangkok")
@@ -742,7 +819,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
-			log.Print(err)
+			log.Println(err)
 		}
 
 		var event model.EventRegV2
@@ -816,21 +893,21 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 	return events, nil*/
 }
 
+//GetRegisterReport all
 func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model.DataRegisterRequest) (model.ReportRegister, error) {
 	var register []model.Register
 	var report model.ReportRegister
 
 	objectEventID, err := primitive.ObjectIDFromHex(formRequest.EventID)
 	if err != nil {
-		log.Fatal(err)
-
+		log.Println(err)
 	}
 
-	filterSuccess := bson.D{{"status", config.PAYMENT_SUCCESS}, {"event_id", objectEventID}}
-	filterWaiting := bson.D{{"status", config.PAYMENT_WAITING}, {"event_id", objectEventID}}
-	filterWaitingApprove := bson.D{{"status", config.PAYMENT_WAITING_APPROVE}, {"event_id", objectEventID}}
+	filterSuccess := bson.D{bson.E{Key: "status", Value: config.PAYMENT_SUCCESS}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaiting := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaitingApprove := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING_APPROVE}, bson.E{Key: "event_id", Value: objectEventID}}
 
-	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{{"event_id", objectEventID}})
+	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{bson.E{Key: "event_id", Value: objectEventID}})
 
 	countSuccess, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterSuccess)
 
@@ -839,7 +916,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model
 	countWaitingApprove, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterWaitingApprove)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 
 	}
 
@@ -854,7 +931,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model
 	options := options.Find()
 	options.SetSkip(skip)
 	options.SetLimit(limit)
-	options.SetSort(bson.D{{"created_at", -1}})
+	options.SetSort(bson.D{bson.E{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"event_id": objectEventID}
 	if formRequest.Status != "" {
@@ -884,7 +961,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model
 		var user model.User
 		userID := item.UserID
 		// log.Printf("[info] userID %s", userID)
-		filterUser := bson.D{{"_id", userID}}
+		filterUser := bson.D{bson.E{Key: "_id", Value: userID}}
 		err := registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 
 		if err != nil {
@@ -892,7 +969,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model
 		}
 		eventUser := item.EventID.Hex() + "." + userID.Hex()
 		var activity model.Activity
-		filter := bson.D{{"event_user", eventUser}}
+		filter := bson.D{bson.E{Key: "event_user", Value: eventUser}}
 		// log.Println(eventUser)
 		distanceTotal := 0.0
 		if item.Event.Category.Name != "Run" {
@@ -973,6 +1050,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model
 	return report, nil
 }
 
+// GetRegisterReportAll to list all register
 func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest model.DataRegisterRequest) (model.ReportRegister, error) {
 	var register []model.Register
 	var report model.ReportRegister
@@ -983,9 +1061,9 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest mo
 
 	}
 
-	filterSuccess := bson.D{{"status", config.PAYMENT_SUCCESS}, {"event_id", objectEventID}}
-	filterWaiting := bson.D{{"status", config.PAYMENT_WAITING}, {"event_id", objectEventID}}
-	filterWaitingApprove := bson.D{{"status", config.PAYMENT_WAITING_APPROVE}, {"event_id", objectEventID}}
+	filterSuccess := bson.D{bson.E{Key: "status", Value: config.PAYMENT_SUCCESS}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaiting := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaitingApprove := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING_APPROVE}, bson.E{Key: "event_id", Value: objectEventID}}
 
 	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{{"event_id", objectEventID}})
 
@@ -996,8 +1074,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest mo
 	countWaitingApprove, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterWaitingApprove)
 
 	if err != nil {
-		log.Fatal(err)
-
+		log.Println(err)
 	}
 
 	report.PaymentAll = countAll
@@ -1011,7 +1088,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest mo
 	options := options.Find()
 	// options.SetSkip(skip)
 	// options.SetLimit(limit)
-	options.SetSort(bson.D{{"created_at", -1}})
+	options.SetSort(bson.D{bson.E{Key: "created_at", Value: -1}})
 
 	filter := bson.M{"event_id": objectEventID}
 	if formRequest.Status != "" {
@@ -1041,15 +1118,15 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest mo
 		var user model.User
 		userID := item.UserID
 		// log.Printf("[info] userID %s", userID)
-		filterUser := bson.D{{"_id", userID}}
-		err := registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
+		filterUser := bson.D{bson.E{Key: "_id", Value: userID}}
+		err := registerMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 		if err != nil {
 			log.Println(err)
 		}
 		eventUser := item.EventID.Hex() + "." + userID.Hex()
 		var activity model.Activity
-		filter := bson.D{{"event_user", eventUser}}
+		filter := bson.D{bson.E{Key: "event_user", Value: eventUser}}
 		// log.Println(eventUser)
 		distanceTotal := 0.0
 		if item.Event.Category.Name != "Run" {
@@ -1138,15 +1215,15 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportDated(formRequest 
 
 	objectEventID, err := primitive.ObjectIDFromHex(formRequest.EventID)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 
 	}
 
-	filterSuccess := bson.D{{"status", config.PAYMENT_SUCCESS}, {"event_id", objectEventID}}
-	filterWaiting := bson.D{{"status", config.PAYMENT_WAITING}, {"event_id", objectEventID}}
-	filterWaitingApprove := bson.D{{"status", config.PAYMENT_WAITING_APPROVE}, {"event_id", objectEventID}}
+	filterSuccess := bson.D{bson.E{Key: "status", Value: config.PAYMENT_SUCCESS}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaiting := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaitingApprove := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING_APPROVE}, bson.E{Key: "event_id", Value: objectEventID}}
 
-	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{{"event_id", objectEventID}})
+	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{bson.E{Key: "event_id", Value: objectEventID}})
 
 	countSuccess, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterSuccess)
 
@@ -1155,7 +1232,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportDated(formRequest 
 	countWaitingApprove, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterWaitingApprove)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 
 	}
 
@@ -1196,7 +1273,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportDated(formRequest 
 		var user model.User
 		userID := item.UserID
 		// log.Printf("[info] userID %s", userID)
-		filterUser := bson.D{{"_id", userID}}
+		filterUser := bson.D{bson.E{Key: "_id", Value: userID}}
 		err := registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 
 		if err != nil {
@@ -1204,7 +1281,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportDated(formRequest 
 		}
 		eventUser := item.EventID.Hex() + "." + userID.Hex()
 		var activity model.Activity
-		filter := bson.D{{"event_user", eventUser}}
+		filter := bson.D{bson.E{Key: "event_user", Value: eventUser}}
 		// log.Println(eventUser)
 		distanceTotal := 0.0
 		if item.Event.Category.Name != "Run" {
@@ -1282,21 +1359,22 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportDated(formRequest 
 	return report, nil
 }
 
+// FindPersonRegEvent to search person register
 func (registerMongo RegisterRepositoryMongo) FindPersonRegEvent(formRequest model.DataRegisterRequest) (model.ReportRegister, error) {
 	var register []model.Register
 	var report model.ReportRegister
 
 	objectEventID, err := primitive.ObjectIDFromHex(formRequest.EventID)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 
 	}
 
-	filterSuccess := bson.D{{"status", config.PAYMENT_SUCCESS}, {"event_id", objectEventID}}
-	filterWaiting := bson.D{{"status", config.PAYMENT_WAITING}, {"event_id", objectEventID}}
-	filterWaitingApprove := bson.D{{"status", config.PAYMENT_WAITING_APPROVE}, {"event_id", objectEventID}}
+	filterSuccess := bson.D{bson.E{Key: "status", Value: config.PAYMENT_SUCCESS}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaiting := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING}, bson.E{Key: "event_id", Value: objectEventID}}
+	filterWaitingApprove := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING_APPROVE}, bson.E{Key: "event_id", Value: objectEventID}}
 
-	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{{"event_id", objectEventID}})
+	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{bson.E{Key: "event_id", Value: objectEventID}})
 
 	countSuccess, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterSuccess)
 
@@ -1305,7 +1383,7 @@ func (registerMongo RegisterRepositoryMongo) FindPersonRegEvent(formRequest mode
 	countWaitingApprove, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterWaitingApprove)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 
 	}
 
@@ -1360,7 +1438,7 @@ func (registerMongo RegisterRepositoryMongo) FindPersonRegEvent(formRequest mode
 		if err == nil {
 			eventUser := item.EventID.Hex() + "." + userID.Hex()
 			var activity model.Activity
-			filter := bson.D{{"event_user", eventUser}}
+			filter := bson.D{bson.E{Key: "event_user", Value: eventUser}}
 			// log.Println(eventUser)
 			distanceTotal := 0.0
 			if item.Event.Category.Name != "Run" {
@@ -1435,18 +1513,19 @@ func (registerMongo RegisterRepositoryMongo) FindPersonRegEvent(formRequest mode
 	return report, nil
 }
 
+//UpdateStatusRegister repo with register_id, status, user_id
 func (registerMongo RegisterRepositoryMongo) UpdateStatusRegister(registerID string, status string, userID string) error {
 
 	objectID, err := primitive.ObjectIDFromHex(registerID)
 
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key: "_id", Value: objectID}}
 
 	updated := bson.M{"$set": bson.M{"status": status}}
 
-	res, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
+	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		log.Printf("[info] err %s", err.Error())
 		return err
 	}
 
@@ -1480,4 +1559,15 @@ func (registerMongo RegisterRepositoryMongo) UpdateStatusRegister(registerID str
 
 	return nil
 
+}
+
+//SaveRegister repo
+func SaveRegister(data model.Regs, eventID primitive.ObjectID) error {
+	filter := bson.D{bson.E{Key: "reg_id", Value: data.ID}, bson.E{Key: "event_id", Value: eventID}}
+	count, err := db.DB.Collection(registerAllCollection).CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		_, err := db.DB.Collection(registerAllCollection).InsertOne(context.TODO(), data)
+		return err
+	}
+	return err
 }

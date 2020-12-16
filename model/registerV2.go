@@ -16,6 +16,7 @@ type RegisterRequest struct {
 // RegisterV2 struct for register v2 event data
 type RegisterV2 struct {
 	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
+	OwnerID primitive.ObjectID `json:"owner_id" bson:"owner_id"`
 	Regs    []Regs             `json:"regs" bson:"regs"`
 }
 
@@ -23,6 +24,7 @@ type RegisterV2 struct {
 type Regs struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
+	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
 	Status         string             `json:"status" bson:"status"`
 	PaymentType    string             `json:"payment_type" bson:"payment_type"`
 	TotalPrice     float64            `json:"total_price" bson:"total_price"`
@@ -40,6 +42,7 @@ type Regs struct {
 	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
+//TicketOptionV2 struct
 type TicketOptionV2 struct {
 	UserOption     UserOption         `json:"user_option" bson:"user_option"`
 	TotalPrice     float64            `json:"total_price" bson:"total_price"`
@@ -48,6 +51,7 @@ type TicketOptionV2 struct {
 	Tickets        []RegisterTicketV2 `json:"tickets" bson:"tickets"`
 }
 
+//RegisterTicketV2 struct
 type RegisterTicketV2 struct {
 	TicketID   primitive.ObjectID `json:"ticket_id" bson:"ticket_id"`
 	TicketName string             `json:"ticket_name" bson:"ticket_name"`

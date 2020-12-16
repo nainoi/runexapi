@@ -138,6 +138,73 @@ func UploadCover(c *gin.Context) {
 	res.Response(http.StatusOK, "success", resCover)
 }
 
+// UploadAvatar profile image upload to s3
+func UploadAvatar(c *gin.Context) {
+	file, header, err := c.Request.FormFile("upload")
+	file2, _, _ := c.Request.FormFile("upload")
+	filename := header.Filename
+	fmt.Println(filename)
+
+	var res = response.Gin{C: c}
+
+	uniqidFilename := uuid.New()
+	//fmt.Printf("github.com/google/uuid:         %s\n", uniqidFilename.String())
+
+	pathDir := "." + config.UPLOAD_IMAGE
+	if _, err := os.Stat(pathDir); os.IsNotExist(err) {
+		os.MkdirAll(pathDir, os.ModePerm)
+	}
+
+	// decode jpeg into image.Image
+	//img, err := jpeg.Decode(file2)
+	img, str, err := image.Decode(file2)
+	log.Println(str)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//thumbnail
+	pathDirThumbnail := "." + config.UPLOAD_AVATAR
+	if _, err := os.Stat(pathDirThumbnail); os.IsNotExist(err) {
+		os.MkdirAll(pathDirThumbnail, os.ModePerm)
+	}
+
+	defer file.Close()
+
+	m := resize.Resize(540, 0, img, resize.Lanczos3)
+
+	thumbPath := pathDirThumbnail + uniqidFilename.String() + "." + str
+
+	outThumbnail, err := os.Create(thumbPath)
+	if err != nil {
+		log.Println(err)
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	// write new image to file
+	jpeg.Encode(outThumbnail, m, nil)
+	//_, err = io.Copy(outThumbnail, file)
+
+	if err != nil {
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+		//log.Fatal(err)
+	}
+
+	thumbObject := UploadWithFolderToS3(thumbPath, "avatar", uniqidFilename.String()+"."+str)
+
+	defer outThumbnail.Close()
+	defer os.Remove(thumbPath)
+
+	resCover := model.UploadResponse{
+		URL:  thumbObject.URL,
+		FileName: uniqidFilename.String()+"."+str,
+		Type: "image",
+	}
+	res.Response(http.StatusOK, "success", resCover)
+}
+
 func uploadToS3(data *[]byte, name string) model.UploadResponse {
 	url := "https://storage.runex.co/upload"
 	method := "POST"

@@ -42,6 +42,7 @@ type EventRepository interface {
 	SearchEvent(term string) ([]model.EventV2, error)
 	ValidateBySlug(slug string) (bool, error)
 	GetEventBySlug(slug string) (model.EventV2, error)
+	IsOwner(eventID string, userID string) bool 
 }
 type EventRepositoryMongo struct {
 	ConnectionDB *mongo.Database
@@ -467,9 +468,10 @@ func (eventMongo EventRepositoryMongo) GetEventByUser(userID string) ([]model.Ev
 	return events, err
 }
 
+//SearchEvent re
 func (eventMongo EventRepositoryMongo) SearchEvent(term string) ([]model.EventV2, error) {
 
-	filter := bson.D{{"name", bson.D{{"$regex", strings.TrimSpace(term)}}}}
+	filter := bson.D{primitive.E{Key:"name", Value: bson.D{ primitive.E{Key: "$regex", Value: strings.TrimSpace(term)}}}}
 	//filter := bson.D{{"$text", bson.D{{"$search", strings.TrimSpace(term)}}}}
 	//index := bson.D{{"name", "text"}, {"description", "text"}}
 	var events []model.EventV2
@@ -517,4 +519,27 @@ func (eventMongo EventRepositoryMongo) GetEventBySlug(slug string) (model.EventV
 	}
 
 	return event, err2
+}
+
+//IsOwner repo
+func (eventMongo EventRepositoryMongo) IsOwner(eventID string, userID string) bool {
+	eID, err := primitive.ObjectIDFromHex(eventID)
+	if err != nil {
+		return false
+	}
+	uID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return false
+	}
+	filter := bson.D{primitive.E{Key: "_id", Value: eID}, primitive.E{Key: "user_id", Value: uID}}
+	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
+	if err != nil {
+		return false
+	}
+
+	if count > 0 {
+		return true
+	}
+
+	return false
 }

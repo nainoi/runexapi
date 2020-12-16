@@ -12,12 +12,15 @@ import (
 	"thinkdev.app/think/runex/runexapi/model"
 )
 
+//CategoryRepository interface
 type CategoryRepository interface {
 	AddCategory(category model.CategoryMaster) (string, error)
 	GetCategoryAll() ([]model.CategoryMaster, error)
 	EditCategory(categoryID string, category model.CategoryUpdateForm) error
 	DeleteCategoryByID(categoryID string) error
 }
+
+//CategoryRepositoryMongo db connect
 type CategoryRepositoryMongo struct {
 	ConnectionDB *mongo.Database
 }
@@ -26,6 +29,7 @@ const (
 	categoryCollection = "category"
 )
 
+//AddCategory repo
 func (categoryMongo CategoryRepositoryMongo) AddCategory(category model.CategoryMaster) (string, error) {
 
 	category.CreatedAt = time.Now()
@@ -37,22 +41,24 @@ func (categoryMongo CategoryRepositoryMongo) AddCategory(category model.Category
 	return res.InsertedID.(primitive.ObjectID).Hex(), err
 }
 
+//EditCategory repo
 func (categoryMongo CategoryRepositoryMongo) EditCategory(categoryID string, category model.CategoryUpdateForm) error {
 
 	objectID, err := primitive.ObjectIDFromHex(categoryID)
-	filter := bson.D{{"_id", objectID}}
+	filter := bson.D{bson.E{Key:"_id", Value: objectID}}
 	category.UpdatedAt = time.Now()
 	updated := bson.M{"$set": category}
-	res, err := categoryMongo.ConnectionDB.Collection(categoryCollection).UpdateOne(context.TODO(), filter, updated)
+	_, err = categoryMongo.ConnectionDB.Collection(categoryCollection).UpdateOne(context.TODO(), filter, updated)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
+		//log.Printf("[info] err %s", res)
 		return err
 	}
 
 	return nil
 }
 
+// GetCategoryAll repo
 func (categoryMongo CategoryRepositoryMongo) GetCategoryAll() ([]model.CategoryMaster, error) {
 	var category []model.CategoryMaster
 	cur, err := categoryMongo.ConnectionDB.Collection(categoryCollection).Find(context.TODO(), bson.D{{}})
@@ -74,6 +80,7 @@ func (categoryMongo CategoryRepositoryMongo) GetCategoryAll() ([]model.CategoryM
 	return category, err
 }
 
+// DeleteCategoryByID repo
 func (categoryMongo CategoryRepositoryMongo) DeleteCategoryByID(categoryID string) error {
 
 	id, err := primitive.ObjectIDFromHex(categoryID)

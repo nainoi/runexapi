@@ -27,6 +27,8 @@ import (
 var (
 	// RedisClient redis variable
 	RedisClient *redis.Client
+	// DB variable
+	DB *mongo.Database
 )
 
 // GetEnv accepts the ENV as key and a default string
@@ -62,8 +64,8 @@ func GetDBCollection() (*mongo.Database, error) {
 		log.Print("can't connect database!!!")
 		return nil, err
 	}
-	db := client.Database(dbName)
-	return db, nil
+	DB = client.Database(dbName)
+	return DB, nil
 }
 
 func connectDB(ctx context.Context) (*mongo.Database, error) {
@@ -80,8 +82,8 @@ func connectDB(ctx context.Context) (*mongo.Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mongo client couldn't connect with background context: %v", err)
 	}
-	db := client.Database(dbName)
-	return db, nil
+	DB = client.Database(dbName)
+	return DB, nil
 }
 
 // ConnectRedisDB connect to redis

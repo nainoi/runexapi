@@ -4,15 +4,15 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/omise/omise-go"
 	"github.com/omise/omise-go/operations"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/mail"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
-	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
@@ -21,20 +21,11 @@ import (
 	"thinkdev.app/think/runex/runexapi/utils"
 )
 
-const (
-	//TEST pkey_test_5i6ivm4cotoab601bfr
-	//skey_test_5h9vov2hqe9iv55o8tu
-	// Read these from environment variables or configuration files!
-	//PD pkey_5i1p3nkjgq6vrrrfhkp
-	// skey_5i6wunbg5thk3eqd5kk
-	//product
-	OmisePublicKey = "pkey_5i1p3nkjgq6vrrrfhkp"
-	OmiseSecretKey = "skey_5i6wunbg5thk3eqd5kk"
+// const (
 
-	//test
-	// OmisePublicKey = "pkey_test_5i6ivm4cotoab601bfr"
-	// OmiseSecretKey = "skey_test_5h9vov2hqe9iv55o8tu"
-)
+// 	OmisePublicKey = "pkey_test_5i6ivm4cotoab601bfr"
+// 	OmiseSecretKey = "skey_test_5h9vov2hqe9iv55o8tu"
+// )
 
 //RegisterAPI repo struct
 type RegisterAPI struct {
@@ -61,7 +52,7 @@ func (api RegisterAPI) GetByEvent(c *gin.Context) {
 	register, err := api.RegisterRepository.GetRegisterByEvent(eventID)
 	if err != nil {
 		log.Println("error GetAll", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -95,9 +86,10 @@ func (api RegisterAPI) GetByUserID(c *gin.Context) {
 	res.Response(http.StatusOK, "success", register)
 }
 
+//ChargeRegEvent api doc
 func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	userID, _, _ := utils.GetTokenValue(c)
 	token := c.PostForm("token")
@@ -109,14 +101,17 @@ func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 	// log.Printf("created eventid: %s\n", eventID)
 	if amount, err := strconv.ParseInt(price, 10, 64); err == nil {
 		if token == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "Token is null"})
+			appG.Response(http.StatusBadRequest, "", gin.H{"message": err.Error()})
 			return
 		}
+
+		OmisePublicKey := viper.GetString("omise.OmisePublicKey")
+		OmiseSecretKey := viper.GetString("omise.OmiseSecretKey")
 
 		client, err := omise.NewClient(OmisePublicKey, OmiseSecretKey)
 		if err != nil {
 			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Token is null"})
+			appG.Response(http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		charge, create := &omise.Charge{}, &operations.CreateCharge{
@@ -127,43 +122,44 @@ func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 
 		if err := client.Do(charge, create); err != nil {
 			log.Println(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Token is null"})
+			appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 			return
 		}
 
-		err = api.RegisterRepository.AddMerChant(userID, eventID, *charge)
+		err = api.RegisterRepository.AddMerChant(userID, eventID, regID, *charge)
 		if err != nil {
 			log.Println("error add merchant", err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+			appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 			return
 		}
-		if regID != "" {
-			register, err := api.RegisterRepository.GetRegEventByID(regID)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-				return
-			}
-			register.TotalPrice = float64(charge.Amount / 100)
-			register.PaymentType = config.PAYMENT_CREDIT_CARD
-			register.Status = config.PAYMENT_SUCCESS
-			register.OrderID = charge.ID
-			register.UpdatedAt = time.Now()
+		// if regID != "" {
+		// 	register, err := api.RegisterRepository.GetRegEventByID(regID)
+		// 	if err != nil {
+		// 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		// 		return
+		// 	}
+		// register.TotalPrice = float64(charge.Amount / 100)
+		// register.PaymentType = config.PAYMENT_CREDIT_CARD
+		// register.Status = config.PAYMENT_SUCCESS
+		// register.OrderID = charge.ID
+		// register.UpdatedAt = time.Now()
 
-			// err = api.RegisterRepository.EditRegister(regID, register)
-			// if err != nil {
-			// 	log.Println("error update register payment success", err.Error())
-			// 	c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-			// 	return
-			// }
-		}
+		// err = api.RegisterRepository.EditRegister(regID, register)
+		// if err != nil {
+		// 	log.Println("error update register payment success", err.Error())
+		// 	c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		// 	return
+		// }
+		//}
 
-		appG.Response(http.StatusOK, e.SUCCESS, charge)
+		appG.Response(http.StatusOK, "success", charge)
 	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Token or price is null"})
+		appG.Response(http.StatusBadRequest, "Token or price is null", gin.H{"message": "Token or price is null"})
 	}
 
 }
 
+// GetRegEvent api doc
 func (api RegisterAPI) GetRegEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -180,18 +176,29 @@ func (api RegisterAPI) GetRegEvent(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, register)
 }
 
+// GetAll api godoc
+// @Summary Get register all
+// @Description get register all API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/myRegEvent [get]
 func (api RegisterAPI) GetAll(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	register, err := api.RegisterRepository.GetRegisterAll()
 	if err != nil {
-		log.Println("error GetAll", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, register)
+	appG.Response(http.StatusOK, "success", register)
 }
 
 // AddRegister api godoc
@@ -232,13 +239,14 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 	registerID, err := api.RegisterRepository.AddRegister(json)
 	if err != nil {
 		log.Println("error AddRegister", err.Error())
-		res.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
 	res.Response(http.StatusOK, "ลงทะเบียนสำเร็จ", registerID)
 }
 
+//AddRaceRegister api doc
 func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -264,13 +272,14 @@ func (api RegisterAPI) AddRaceRegister(c *gin.Context) {
 	registerID, err := api.RegisterRepository.AddRaceRegister(json)
 	if err != nil {
 		log.Println("error AddRegister", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, registerID)
 }
 
+//EditRegister api doc
 func (api RegisterAPI) EditRegister(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -297,6 +306,7 @@ func (api RegisterAPI) EditRegister(c *gin.Context) {
 
 }
 
+//SendSlipTransfer api doc
 func (api RegisterAPI) SendSlipTransfer(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -369,17 +379,17 @@ func (api RegisterAPI) SendMailRegister(c *gin.Context) {
 
 func (api RegisterAPI) CountRegisterEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
 	eventID := c.Param("eventID")
 	count, err := api.RegisterRepository.CountByEvent(eventID)
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, count)
+	appG.Response(http.StatusOK, "success", count)
 }
 
 // CheckUserRegisterEvent api godoc
@@ -407,7 +417,7 @@ func (api RegisterAPI) CheckUserRegisterEvent(c *gin.Context) {
 		return
 	}
 
-	res.Response(http.StatusOK, "success", gin.H{"is_reg" :check})
+	res.Response(http.StatusOK, "success", gin.H{"is_reg": check})
 }
 
 func (api RegisterAPI) SendMailRegister2(c *gin.Context) {
@@ -445,11 +455,46 @@ func (api RegisterAPI) GetMyRegEventActivate(c *gin.Context) {
 	events, err := api.RegisterRepository.GetRegisterActivateEvent(userID)
 	if err != nil {
 		log.Println("error GetAll activate", err.Error())
-		appG.Response(http.StatusInternalServerError,err.Error(), gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
 	appG.Response(http.StatusOK, "success", events)
+}
+
+// GetRegEventFromEventer api godoc
+// @Summary get register datas 's eventer and admin
+// @Description get register datas 's eventer and admin
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/regsEvent/:{eventID}  [get]
+func (api RegisterAPI) GetRegEventFromEventer(c *gin.Context) {
+	var res = response.Gin{C: c}
+	userID, role := oauth.GetValuesToken(c)
+	eventID := c.Param("eventID")
+
+	eventRepository := repository.EventRepositoryMongo{
+		ConnectionDB: db.DB,
+	}
+
+	if !eventRepository.IsOwner(eventID, userID) && role != "ADMIN" {
+		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+		return
+	}
+
+	datas, err := api.RegisterRepository.GetRegisterByEvent(eventID)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", datas)
 }
 
 func (api RegisterAPI) GetReport(c *gin.Context) {
@@ -459,7 +504,7 @@ func (api RegisterAPI) GetReport(c *gin.Context) {
 
 	var form model.DataRegisterRequest
 	if err := c.ShouldBindJSON(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -467,7 +512,7 @@ func (api RegisterAPI) GetReport(c *gin.Context) {
 
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -481,7 +526,7 @@ func (api RegisterAPI) GetReportAll(c *gin.Context) {
 
 	var form model.DataRegisterRequest
 	if err := c.ShouldBindJSON(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -489,7 +534,7 @@ func (api RegisterAPI) GetReportAll(c *gin.Context) {
 
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
 
@@ -503,7 +548,7 @@ func (api RegisterAPI) FindPersonRegEvent(c *gin.Context) {
 
 	var form model.DataRegisterRequest
 	if err := c.ShouldBindJSON(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appG.Response(http.StatusBadRequest, http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -511,7 +556,7 @@ func (api RegisterAPI) FindPersonRegEvent(c *gin.Context) {
 
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 

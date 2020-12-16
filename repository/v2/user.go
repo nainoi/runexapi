@@ -53,6 +53,7 @@ func (db RepoUserDB) Signin(u model.UserProviderRequest) (model.User, error) {
 	}
 	count, err := db.ConnectionDB.Collection(userConlection).CountDocuments(context.TODO(), filter)
 	if count == 0 {
+		log.Println("***************** create new user ***********************")
 		user, err = db.AddUser(u)
 	}else {
 		err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
@@ -174,7 +175,16 @@ func (db RepoUserDB) UpdateUser(u model.User, userID string) (model.User, error)
 	u.UpdatedAt = time.Now()
 	isUpsert := true
 	clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
+	
+	var user model.User
+	err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		return u, err
+	}
+	u.Provider = user.Provider
+	u.ProviderID = user.ProviderID
 	update := bson.M{"$set": u}
+	
 	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
 	if result.Err() == nil {
 		u.UserID = id
