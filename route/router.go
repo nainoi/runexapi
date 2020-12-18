@@ -12,6 +12,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
+	"thinkdev.app/think/runex/runexapi/api/v2/report"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
@@ -35,6 +36,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		kaoGroup(*api, connectionDB)
 		eventGroup(*api, connectionDB)
 		registerGroup(*api, connectionDB)
+		reportGroup(*api, connectionDB)
 	}
 }
 
@@ -230,6 +232,22 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.GET("/myRegEventActivate", registerAPI.GetMyRegEventActivate)
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 		}
+	}
+
+}
+
+func reportGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
+	reportRepo := repo.ReportRepositoryMongo{
+		ConnectionDB: connectionDB,
+	}
+
+	reportAPI := report.ReportAPI{
+		ReportRepository: reportRepo,
+	}
+
+	group := g.Group("/report")
+	{
+		group.GET("/dashboard/:eventID", reportAPI.GetDashboardByEvent)
 	}
 
 }
