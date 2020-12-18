@@ -4,8 +4,7 @@ app:
     debug: true
 
 mongodb:
-    # connection: "mongodb://128.199.163.81:27017"
-    connection: "mongodb://188.166.219.22:27017"
+    connection: "mongodb://128.199.163.81:27017"
     db: "Runex"
     user: "idever"
     pass: "idever@987"

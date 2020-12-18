@@ -3,11 +3,13 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"math"
 	"path"
 	"regexp"
 	"strings"
+	"time"
 
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
@@ -135,4 +137,12 @@ func StringToSlug(s string) string {
 	//}
 
 	return strings.TrimSpace(strReplaced)
+}
+
+//OrderIDGenerate to generate order id string from datetime
+func OrderIDGenerate() string {
+	currentTime := time.Now()
+	fmt.Println("Current Time in String: ", currentTime.String())
+	fmt.Println("MMDDYYHHMMSS : ", currentTime.Format("020106150405"))
+	return fmt.Sprintf("RX%s",currentTime.Format("020106150405"))
 }

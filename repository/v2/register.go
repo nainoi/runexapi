@@ -18,6 +18,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/request"
+	"thinkdev.app/think/runex/runexapi/utils"
 
 	"thinkdev.app/think/runex/runexapi/api/mail"
 )
@@ -131,6 +132,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.CreatedAt = time.Now()
 		dataInfo.UpdatedAt = time.Now()
 		dataInfo.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+		dataInfo.OrderID = utils.OrderIDGenerate()
 		update := bson.M{"$push": bson.M{"regs": dataInfo}}
 		filter = bson.D{primitive.E{Key: "event_id", Value: register.EventID}}
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
@@ -145,6 +147,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.ID = primitive.NewObjectID()
 		dataInfo.CreatedAt = time.Now()
 		dataInfo.UpdatedAt = time.Now()
+		dataInfo.OrderID = utils.OrderIDGenerate()
 		dataInfo.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
 		arrRegs = append(arrRegs, dataInfo)
 		registerModel := model.RegisterV2{
