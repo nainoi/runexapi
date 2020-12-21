@@ -35,12 +35,89 @@ type PaymentSumState struct {
 
 //GetDashboardByEvent repo for dashboard event
 func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (model.ReportDashboard, error) {
-
+	log.Println(eventID)
 	var dashboard model.ReportDashboard
+	var registerEvent model.RegisterV2
+	var register []model.Regs
+	var ticketSummary []model.TicketSummary
+	var amountSummary []model.AmountSummary
 	objectID, err := primitive.ObjectIDFromHex(eventID)
 	if err != nil {
 		return dashboard, err
 	}
+	dashboard.EventID = objectID
+
+	var event model.EventV2
+	filterEvent := bson.M{"_id": objectID}
+	err = reportMongo.ConnectionDB.Collection("event_v2").FindOne(context.TODO(), filterEvent).Decode(&event)
+	if err != nil {
+		log.Println(err)
+		return dashboard, err
+	}
+	var ticket []model.TicketEventV2
+	ticket = event.Ticket
+	var ticketTemp model.TicketSummary
+	var amountTemp model.AmountSummary
+	for _, item := range ticket {
+		ticketTemp = model.TicketSummary{
+			TicketID:                item.TicketID,
+			Title:                   item.Title,
+			RegisterCount:           0,
+			PaidCount:               0,
+			PaidWaitingApproveCount: 0,
+		}
+		ticketSummary = append(ticketSummary, ticketTemp)
+
+		amountTemp = model.AmountSummary{
+			TicketID:           item.TicketID,
+			Title:              item.Title,
+			PaidSuccess:        0.0,
+			PaidWaiting:        0.0,
+			PaidWaitingApprove: 0.0,
+		}
+		amountSummary = append(amountSummary, amountTemp)
+	}
+
+	dashboard.TicketSummary = ticketSummary
+	dashboard.AmountSummary = amountSummary
+
+	//filter := bson.D{bson.E{Key: "event_id", Value: objectID}}
+	filter := bson.M{"event_id": objectID}
+	err = reportMongo.ConnectionDB.Collection("register_v2").FindOne(context.TODO(), filter).Decode(&registerEvent)
+
+	if err != nil {
+		log.Println(err)
+		return dashboard, err
+	}
+	register = registerEvent.Regs
+	paid := 0.0
+	waitToPay := 0.0
+	waitToApprove := 0.0
+	registerCount := 0
+	registerPaid := 0
+	productCount := 0
+	for _, item := range register {
+		if item.Status == "PAYMENT_SUCCESS" {
+			paid = paid + item.TotalPrice
+			registerPaid = registerPaid + 1
+		}
+		if item.Status == "PAYMENT_WAITING" {
+			waitToPay = waitToPay + item.TotalPrice
+		}
+		if item.Status == "PAYMENT_WAITING_APPROVE" {
+			waitToApprove = waitToApprove + item.TotalPrice
+		}
+		registerCount = registerCount + 1
+	}
+	dashboard.Paid = paid
+	dashboard.WaitToPay = waitToPay
+	dashboard.RegisterCount = registerCount
+	dashboard.RegisterPaid = registerPaid
+	dashboard.ProductCount = productCount
+
+	return dashboard, nil
+
+	//Old algorithm
 	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_id": objectID}}}
 	//unwindStage := bson.D{{"$unwind", "$regs"}}
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}

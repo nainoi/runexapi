@@ -95,7 +95,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Register) (model.Register, error) {
 	register.CreatedAt = time.Now()
 	register.UpdatedAt = time.Now()
-	filterBib := bson.D{bson.E{Key: "event_id",Value: register.EventID}}
+	filterBib := bson.D{bson.E{Key: "event_id", Value: register.EventID}}
 	var ebibEvent model.EbibEvent
 	err := registerMongo.ConnectionDB.Collection(ebibCollection).FindOne(context.TODO(), filterBib).Decode(&ebibEvent)
 	if err != nil {
