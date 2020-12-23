@@ -200,12 +200,14 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 	if err != nil {
 		log.Println("find ebib in AddRaceRegister", err)
 	}
-	dataInfo.TicketOptions.RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + 1))
-	// for index, _ := range register.TicketOptions {
-	// 	log.Println(fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index+1))))
-	// 	// element.RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index + 1)))
-	// 	register.TicketOptions[index].RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index+1)))
-	// }
+	//dataInfo.TicketOptions.RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + 1))
+
+	for index, _ := range dataInfo.TicketOptions {
+		log.Println(fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index+1))))
+		// element.RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index + 1)))
+		dataInfo.TicketOptions[index].RegisterNumber = fmt.Sprintf("%05d", (ebibEvent.LastNo + int64(index+1)))
+	}
+
 	if count > 0 {
 		dataInfo.ID = primitive.NewObjectID()
 		dataInfo.CreatedAt = time.Now()
@@ -710,8 +712,8 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 	fmt.Println("First Length:", count)
 	registerNumber := fmt.Sprintf("%05d", count)
 	address := ""
-	if register.TicketOptions.UserOption.Address != nil {
-		shipingAddress := register.TicketOptions.UserOption.Address[0]
+	if register.TicketOptions[0].UserOption.Address != nil {
+		shipingAddress := register.TicketOptions[0].UserOption.Address[0]
 		address = shipingAddress.Address + " City " + shipingAddress.City + " District " + shipingAddress.District + " Province " + shipingAddress.Province + " " + shipingAddress.Zipcode
 
 	}
@@ -730,9 +732,9 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 	mailTemplate.Phone = user.Phone
 	mailTemplate.IdentificationNumber = user.CitycenID
 	mailTemplate.ContactPhone = user.Phone
-	mailTemplate.CompetitionType = register.TicketOptions.Tickets[0].TicketName
+	mailTemplate.CompetitionType = register.TicketOptions[0].Tickets.TicketName
 	mailTemplate.RegisterNumber = registerNumber
-	mailTemplate.TicketName = register.TicketOptions.Tickets[0].TicketName
+	mailTemplate.TicketName = register.TicketOptions[0].Tickets.TicketName
 	mailTemplate.Status = register.Status
 	mailTemplate.PaymentType = register.PaymentType
 	mailTemplate.ShipingAddress = address

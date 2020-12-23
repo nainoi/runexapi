@@ -35,7 +35,7 @@ type Regs struct {
 	PaymentDate    time.Time          `json:"payment_date" bson:"payment_date"`
 	RegisterNumber string             `json:"register_number" bson:"register_number"`
 	Coupon         Coupon             `json:"coupon" bson:"coupon"`
-	TicketOptions  TicketOptionV2     `json:"ticket_options" bson:"ticket_options"`
+	TicketOptions  []TicketOptionV2   `json:"ticket_options" bson:"ticket_options"`
 	Partner        PartnerEvent       `json:"partner" bson:"partner"`
 	Event          EventRegV2         `json:"event" bson:"event"`
 	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
@@ -44,11 +44,11 @@ type Regs struct {
 
 //TicketOptionV2 struct
 type TicketOptionV2 struct {
-	UserOption     UserOption         `json:"user_option" bson:"user_option"`
-	TotalPrice     float64            `json:"total_price" bson:"total_price"`
-	RegisterNumber string             `json:"register_number" bson:"register_number"`
-	RecieptType    string             `json:"reciept_type" bson:"reciept_type"`
-	Tickets        []RegisterTicketV2 `json:"tickets" bson:"tickets"`
+	UserOption     UserOption       `json:"user_option" bson:"user_option"`
+	TotalPrice     float64          `json:"total_price" bson:"total_price"`
+	RegisterNumber string           `json:"register_number" bson:"register_number"`
+	RecieptType    string           `json:"reciept_type" bson:"reciept_type"`
+	Tickets        RegisterTicketV2 `json:"tickets" bson:"tickets"`
 }
 
 //RegisterTicketV2 struct
