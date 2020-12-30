@@ -196,7 +196,7 @@ var doc = `{
                         "name": "payload",
                         "in": "body",
                         "required": true,
-                        "schema": {
+                        "schema": {π
                             "$ref": "#/definitions/model.GetKaoActivityRequest"
                         }
                     }
