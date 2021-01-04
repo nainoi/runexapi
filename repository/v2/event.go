@@ -42,7 +42,7 @@ type EventRepository interface {
 	SearchEvent(term string) ([]model.EventV2, error)
 	ValidateBySlug(slug string) (bool, error)
 	GetEventBySlug(slug string) (model.EventV2, error)
-	IsOwner(eventID string, userID string) bool 
+	IsOwner(eventID string, userID string) bool
 }
 type EventRepositoryMongo struct {
 	ConnectionDB *mongo.Database
@@ -471,7 +471,7 @@ func (eventMongo EventRepositoryMongo) GetEventByUser(userID string) ([]model.Ev
 //SearchEvent re
 func (eventMongo EventRepositoryMongo) SearchEvent(term string) ([]model.EventV2, error) {
 
-	filter := bson.D{primitive.E{Key:"name", Value: bson.D{ primitive.E{Key: "$regex", Value: strings.TrimSpace(term)}}}}
+	filter := bson.D{primitive.E{Key: "name", Value: bson.D{primitive.E{Key: "$regex", Value: strings.TrimSpace(term)}}}}
 	//filter := bson.D{{"$text", bson.D{{"$search", strings.TrimSpace(term)}}}}
 	//index := bson.D{{"name", "text"}, {"description", "text"}}
 	var events []model.EventV2

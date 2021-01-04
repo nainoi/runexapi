@@ -18,8 +18,8 @@ func (api ReportAPI) GetDashboardByEvent(c *gin.Context) {
 		res = response.Gin{C: c}
 	)
 
-	eventID := c.Param("event")
-
+	eventID := c.Param("eventID")
+	log.Println("eventID :", eventID)
 	dashboard, err := api.ReportRepository.GetDashboardByEvent(eventID)
 
 	if err != nil {
