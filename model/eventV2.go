@@ -6,6 +6,91 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// EventLists for event data list
+type EventLists struct {
+	Events []EventList `json:"events"`
+}
+
+// EventList for event data list
+type EventList struct {
+	Code           string    `json:"code"`
+	Content        string    `json:"content"`
+	Cover          string    `json:"cover"`
+	EventDate      time.Time `json:"event_date"`
+	EventEndDate   time.Time `json:"event_end_date"`
+	EventStartDate time.Time `json:"event_start_date"`
+	Title          string    `json:"title"`
+}
+
+// EventData for event data list
+type EventData struct {
+	Event struct {
+		Agreement           string    `json:"agreement"`
+		Category            string    `json:"category"`
+		Code                string    `json:"code"`
+		Contact             string    `json:"contact"`
+		ContactFacebook     string    `json:"contactFacebook"`
+		ContactLine         string    `json:"contactLine"`
+		Content             string    `json:"content"`
+		Cover               string    `json:"cover"`
+		CoverThumbnail      string    `json:"coverThumbnail"`
+		EventDate           string    `json:"eventDate"`
+		EventEndDate        time.Time `json:"eventEndDate"`
+		EventEndDateText    string    `json:"eventEndDateText"`
+		EventStartDate      time.Time `json:"eventStartDate"`
+		EventStartDateText  string    `json:"eventStartDateText"`
+		ID                  int       `json:"id"`
+		IsFreeEvent         bool      `json:"isFreeEvent"`
+		IsRunexOnly         bool      `json:"isRunexOnly"`
+		IsSendShirtByPost   bool      `json:"isSendShirtByPost"`
+		Organizer           string    `json:"organizer"`
+		PhotoBib            string    `json:"photoBib"`
+		PhotoBibThumbnail   string    `json:"photoBibThumbnail"`
+		PhotoCert           string    `json:"photoCert"`
+		PhotoCertThumbnail  string    `json:"photoCertThumbnail"`
+		PhotoMedal          string    `json:"photoMedal"`
+		PhotoMedalThumbnail string    `json:"photoMedalThumbnail"`
+		PhotoShirt          string    `json:"photoShirt"`
+		PhotoShirtThumbnail string    `json:"photoShirtThumbnail"`
+		Place               string    `json:"place"`
+		Prizes              []struct {
+			Description string `json:"description"`
+			ID          int    `json:"id"`
+			Name        string `json:"name"`
+			Photo       string `json:"photo"`
+		} `json:"prizes"`
+		RegisterEndDate       time.Time `json:"registerEndDate"`
+		RegisterEndDateText   string    `json:"registerEndDateText"`
+		RegisterStartDate     time.Time `json:"registerStartDate"`
+		RegisterStartDateText string    `json:"registerStartDateText"`
+		Schedules             []struct {
+			Description string `json:"description"`
+			ID          int    `json:"id"`
+			Name        string `json:"name"`
+		} `json:"schedules"`
+		Shirts []interface{} `json:"shirts"`
+		Title  string        `json:"title"`
+		UserID string        `json:"userId"`
+	} `json:"event"`
+	Tickets []struct {
+		Category   string      `json:"category"`
+		CreatedAt  time.Time   `json:"created_at"`
+		Detail     interface{} `json:"detail"`
+		Distance   int         `json:"distance"`
+		EventID    string      `json:"event_id"`
+		ID         string      `json:"id"`
+		Items      interface{} `json:"items"`
+		Limit      int         `json:"limit"`
+		PhotoMap   string      `json:"photo_map"`
+		PhotoMedal string      `json:"photo_medal"`
+		PhotoShirt string      `json:"photo_shirt"`
+		Price      int         `json:"price"`
+		Title      string      `json:"title"`
+		UpdatedAt  time.Time   `json:"updated_at"`
+	} `json:"tickets"`
+}
+
+// EventV2 for event data
 type EventV2 struct {
 	ID              primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	Name            string             `json:"name" bson:"name"`
