@@ -1,13 +1,12 @@
 package eventV2
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
-
-	guuid "github.com/google/uuid"
+	"time"
 
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -54,8 +53,6 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
 
 	var json model.EventV2
-
-	
 
 	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
 
@@ -109,10 +106,9 @@ func (api EventAPI) MyEvent(c *gin.Context) {
 	event, err := api.EventRepository.GetEventByUser(userID)
 	if err != nil {
 		log.Println("error get my event", err.Error())
-		res.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
-	
 
 	res.Response(http.StatusOK, "success", event)
 
@@ -126,7 +122,7 @@ func (api EventAPI) MyEvent(c *gin.Context) {
 // @Tags event
 // @Accept  application/json
 // @Produce application/json
-// @Success 200 {object} response.Response{data=[]model.EventV2}
+// @Success 200 {object} response.Response{data=[]model.EventList}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /event/all [get]
@@ -134,15 +130,55 @@ func (api EventAPI) GetAll(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
+	urlS := fmt.Sprintf("https://events-api.thinkdev.app/events")
+	var bearer = "Bearer olcgZVpqDXQikRDG"
+	//reqURL, _ := url.Parse(urlS)
+	req, err := http.NewRequest("GET", urlS, nil)
+	req.Header.Add("Authorization", bearer)
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
 
-	event, err := api.EventRepository.GetEventAll()
+	timeout := time.Duration(6 * time.Second)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	client.CheckRedirect = checkRedirectFunc
+
+	resp, err := client.Do(req)
+
 	if err != nil {
-		log.Println("error get all", err.Error())
-		appG.Response(http.StatusInternalServerError,err.Error(), gin.H{"message": err.Error()})
+		log.Println(err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			//log.Println(err)
+			appG.Response(http.StatusOK, err.Error(), model.EventList{})
+			c.Abort()
+			return
+		}
+		var events model.EventLists
+		err = json.Unmarshal(body, &events)
+		if err != nil {
+			//log.Println(err)
+			appG.Response(http.StatusOK, err.Error(), model.EventList{})
+			c.Abort()
+			return
+		}
+		if events.Events != nil {
+			appG.Response(http.StatusOK, "success", events.Events)
+			c.Abort()
+			return
+		}
+		appG.Response(http.StatusOK, "success", model.EventList{})
+		c.Abort()
 		return
 	}
 
-	appG.Response(http.StatusOK, "success", event)
+	appG.Response(http.StatusInternalServerError, err.Error(), nil)
 
 }
 
@@ -162,15 +198,115 @@ func (api EventAPI) GetAllActive(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
+	urlS := fmt.Sprintf("https://events-api.thinkdev.app/events")
+	var bearer = "Bearer olcgZVpqDXQikRDG"
+	//reqURL, _ := url.Parse(urlS)
+	req, err := http.NewRequest("GET", urlS, nil)
+	req.Header.Add("Authorization", bearer)
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
 
+	timeout := time.Duration(6 * time.Second)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	client.CheckRedirect = checkRedirectFunc
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Println(err)
+		}
+		var koaObject model.KaoObject
+		err = json.Unmarshal(body, &koaObject)
+		if err != nil {
+			log.Println(err)
+		}
+		appG.Response(http.StatusOK, "success", koaObject)
+		c.Abort()
+		return
+	}
+
+	appG.Response(http.StatusInternalServerError, err.Error(), nil)
 	event, err := api.EventRepository.GetEventActive()
 	if err != nil {
 		log.Println("error AddEvent", err.Error())
-		appG.Response(http.StatusInternalServerError, err.Error(),gin.H{"message": err.Error()})
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
 	appG.Response(http.StatusOK, "success", event)
+
+}
+
+// GetDetail api godoc
+// @Summary Get event detail
+// @Description get Get event detail API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags event
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=[]model.EventList}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /event/detail/{code} [get]
+func (api EventAPI) GetDetail(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	code := c.Param("code")
+	urlS := fmt.Sprintf("https://events-api.thinkdev.app/event/%s", code)
+	var bearer = "Bearer olcgZVpqDXQikRDG"
+	//reqURL, _ := url.Parse(urlS)
+	req, err := http.NewRequest("GET", urlS, nil)
+	req.Header.Add("Authorization", bearer)
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
+
+	timeout := time.Duration(6 * time.Second)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	client.CheckRedirect = checkRedirectFunc
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			//log.Println(err)
+			appG.Response(http.StatusInternalServerError, err.Error(), nil)
+			c.Abort()
+			return
+		}
+		var event model.EventData
+		err = json.Unmarshal(body, &event)
+		if err != nil {
+			//log.Println(err)
+			appG.Response(http.StatusInternalServerError, err.Error(), nil)
+			c.Abort()
+			return
+		}
+		appG.Response(http.StatusOK, "success", event)
+		c.Abort()
+		return
+	}
+
+	appG.Response(http.StatusInternalServerError, err.Error(), nil)
 
 }
 
@@ -192,6 +328,7 @@ func (api EventAPI) GetByStatus(c *gin.Context) {
 
 }
 
+/*
 func (api EventAPI) GetByID(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -455,6 +592,7 @@ func (api EventAPI) DeleteTicketEvent(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 }
+*/
 
 func (api EventAPI) SearchEvent(c *gin.Context) {
 	var (
@@ -550,4 +688,9 @@ func (api EventAPI) GetBySlug(c *gin.Context) {
 	//data := EventRes{event, user}
 	appG.Response(http.StatusOK, "success", gin.H{"event": event, "user": user})
 
+}
+
+func checkRedirectFunc(req *http.Request, via []*http.Request) error {
+	req.Header.Add("Authorization", via[0].Header.Get("Authorization"))
+	return nil
 }

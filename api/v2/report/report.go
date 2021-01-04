@@ -9,10 +9,23 @@ import (
 	"thinkdev.app/think/runex/runexapi/repository"
 )
 
+//ReportAPI struct
 type ReportAPI struct {
 	ReportRepository repository.ReportRepository
 }
 
+// GetDashboardByEvent godoc
+// @Summary Get report dashboard event
+// @Description get report dashboard event API calls
+// @Security bearerAuth
+// @Tags report
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=model.ReportDashboard}
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /report/dashboard/{eventID} [get]
 func (api ReportAPI) GetDashboardByEvent(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
