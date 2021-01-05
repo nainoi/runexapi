@@ -15,9 +15,11 @@ type RegisterRequest struct {
 
 // RegisterV2 struct for register v2 event data
 type RegisterV2 struct {
-	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
-	OwnerID primitive.ObjectID `json:"owner_id" bson:"owner_id"`
-	Regs    []Regs             `json:"regs" bson:"regs"`
+	EventID   primitive.ObjectID `json:"event_id" bson:"event_id"`
+	OwnerID   primitive.ObjectID `json:"owner_id" bson:"owner_id"`
+	UserID    string             `json:"user_id" bson:"user_id"`
+	EventCode string             `json:"event_code" bson:"event_code"`
+	Regs      []Regs             `json:"regs" bson:"regs"`
 }
 
 // Regs struct for register v2 event data

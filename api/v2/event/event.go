@@ -126,7 +126,7 @@ func (api EventAPI) MyEvent(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /event/all [get]
-func (api EventAPI) GetAll(c *gin.Context) {
+func GetAll(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
@@ -258,11 +258,34 @@ func (api EventAPI) GetAllActive(c *gin.Context) {
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /event/detail/{code} [get]
-func (api EventAPI) GetDetail(c *gin.Context) {
+func GetDetail(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
 	code := c.Param("code")
+	if code == "" {
+		appG.Response(http.StatusInternalServerError, "code not found", nil)
+		c.Abort()
+		return
+	}
+	event, err := DetailEventByCode(code)
+
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, err.Error(), nil)
+		c.Abort()
+		return
+
+	}
+
+	appG.Response(http.StatusOK, "success", event)
+	c.Abort()
+	return
+
+}
+
+//DetailEventByCode go doc
+//Description get Get event detail API calls to event runex
+func DetailEventByCode(code string) (model.EventData, error) {
 	urlS := fmt.Sprintf("https://events-api.thinkdev.app/event/%s", code)
 	var bearer = "Bearer olcgZVpqDXQikRDG"
 	//reqURL, _ := url.Parse(urlS)
@@ -284,32 +307,29 @@ func (api EventAPI) GetDetail(c *gin.Context) {
 
 	defer resp.Body.Close()
 
+	var event model.EventData
+
 	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
 
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			//log.Println(err)
-			appG.Response(http.StatusInternalServerError, err.Error(), nil)
-			c.Abort()
-			return
+			return event, err
 		}
-		var event model.EventData
+
 		err = json.Unmarshal(body, &event)
 		if err != nil {
 			//log.Println(err)
-			appG.Response(http.StatusInternalServerError, err.Error(), nil)
-			c.Abort()
-			return
+			return event, err
 		}
-		appG.Response(http.StatusOK, "success", event)
-		c.Abort()
-		return
+		return event, err
 	}
 
-	appG.Response(http.StatusInternalServerError, err.Error(), nil)
+	return event, err
 
 }
 
+//GetByStatus go doc
 func (api EventAPI) GetByStatus(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
