@@ -74,3 +74,33 @@ type Location struct {
 	HarthRate     float64   `form:"harth_rate" json:"harth_rate" bson:"harth_rate"`
 	ElevationGain float64   `form:"elevation_gain" json:"elevation_gain" bson:"elevation_gain"`
 }
+
+type WorkoutHistoryDayFilter struct {
+	Year  int `json:"year" bson:"year"`
+	Month int `json:"month" bson:"month"`
+}
+
+type WorkoutHistoryMonthFilter struct {
+	Year int `form:"year" json:"year" bson:"year"`
+}
+
+type WorkoutHistoryMonthInfo struct {
+	Month         int                      `form:"month" json:"month"`
+	MonthName     string                   `form:"month_name" json:"month_name"`
+	TotalDistance float64                  `form:"total_distance" json:"total_distance"`
+	TimeString    string                   `json:"time_string" json:"time_string"`
+	Calory        float64                  `json:"calory" bson:"calory"`
+	HistoryDay    []WorkoutDistanceDayInfo `json:"workout_day" bson:"workout_day"`
+}
+
+type WorkoutHistoryDayInfo struct {
+	Year            int                      `form:"year" json:"year"`
+	Month           int                      `form:"month" json:"month"`
+	DistanceDayInfo []WorkoutDistanceDayInfo `form:"distance_info" json:"distance_info"`
+}
+
+type WorkoutDistanceDayInfo struct {
+	Distance    float64 `json:"distance" bson:"distance"`
+	WorkoutDate string  `json:"workout_date" bson:"workout_date"`
+	WorkoutTime string  `json:"workout_time" json:"workout_time"`
+}

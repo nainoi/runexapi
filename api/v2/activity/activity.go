@@ -480,6 +480,7 @@ func (api ActivityV2API) GetHistoryDayByEvent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Println("form ", form)
 	userID, _, _ := utils.GetTokenValue(c)
 	eventID := form.EventID
 
