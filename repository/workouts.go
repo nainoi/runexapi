@@ -229,7 +229,8 @@ func (workoutsMongo WorkoutsRepositoryMongo) HistoryMonth(userID primitive.Objec
 	}
 
 	for m := 1; m <= count_month; m++ {
-
+		historyDayInfo = nil
+		workoutInfo = nil
 		// firstday := time.Date(year, time.Month(m), 1, 0, 0, 0, 0, time.Local)
 		// lastday := firstday.AddDate(0, 1, 0).Add(time.Nanosecond * -1)
 		log.Printf("[info] year %d", year)
