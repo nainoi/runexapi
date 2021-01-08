@@ -228,9 +228,13 @@ func (api WorkoutsAPI) GetWorkoutsHistoryMonth(c *gin.Context) {
 	var (
 		res = response.Gin{C: c}
 	)
+	log.Println("workout")
+	fmt.Println("cccccc")
 	var form model.WorkoutHistoryMonthFilter
 	if err := c.ShouldBind(&form); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		log.Println(err.Error())
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
 		return
 	}
 	userID, _ := oauth.GetValuesToken(c)

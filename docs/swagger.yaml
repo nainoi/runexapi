@@ -1,4 +1,40 @@
 definitions:
+  board.BoardResponse:
+    properties:
+      event:
+        $ref: '#/definitions/model.EventV2'
+      myrank:
+        items:
+          $ref: '#/definitions/model.Ranking'
+        type: array
+      ranks:
+        items:
+          $ref: '#/definitions/model.Ranking'
+        type: array
+      total_activity:
+        type: integer
+    type: object
+  model.ActivityInfo:
+    properties:
+      activity_date:
+        type: string
+      app:
+        type: string
+      caption:
+        type: string
+      created_at:
+        type: string
+      distance:
+        type: number
+      id:
+        type: string
+      img_url:
+        type: string
+      time:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   model.AddActivityForm:
     properties:
       activity_date:
@@ -36,6 +72,13 @@ definitions:
         $ref: '#/definitions/model.WorkoutActivityInfo'
     required:
     - event_activity
+    type: object
+  model.AddMultiWorkout:
+    properties:
+      workouts:
+        items:
+          $ref: '#/definitions/model.WorkoutActivityInfo'
+        type: array
     type: object
   model.AddWorkoutForm:
     properties:
@@ -97,6 +140,21 @@ definitions:
     - province
     - zipcode
     type: object
+  model.AmountSummary:
+    properties:
+      id:
+        type: string
+      paid_success:
+        type: number
+      paid_waiting:
+        type: number
+      paid_waiting_approve:
+        type: number
+      ticket_id:
+        type: string
+      title:
+        type: string
+    type: object
   model.Athlete:
     properties:
       id:
@@ -120,6 +178,17 @@ definitions:
       id:
         type: string
       name:
+        type: string
+    type: object
+  model.ConfigModel:
+    properties:
+      authen_token:
+        type: string
+      authen_url:
+        type: string
+      leader_board_url:
+        type: string
+      preview_url:
         type: string
     type: object
   model.Coupon:
@@ -158,6 +227,23 @@ definitions:
         type: string
       partner:
         $ref: '#/definitions/model.PartnerEvent'
+    type: object
+  model.EventList:
+    properties:
+      code:
+        type: string
+      content:
+        type: string
+      cover:
+        type: string
+      event_date:
+        type: string
+      event_end_date:
+        type: string
+      event_start_date:
+        type: string
+      title:
+        type: string
     type: object
   model.EventReg:
     properties:
@@ -239,6 +325,63 @@ definitions:
         type: string
       status:
         type: string
+      updated_time:
+        type: string
+    type: object
+  model.EventV2:
+    properties:
+      body:
+        type: string
+      category:
+        type: string
+      cover:
+        type: string
+      cover_thumb:
+        items:
+          $ref: '#/definitions/model.CoverThumb'
+        type: array
+      created_time:
+        type: string
+      description:
+        type: string
+      end_event:
+        type: string
+      end_reg:
+        type: string
+      id:
+        type: string
+      inapp:
+        type: boolean
+      is_active:
+        type: boolean
+      is_free:
+        type: boolean
+      is_post:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+      owner_id:
+        type: string
+      partner:
+        $ref: '#/definitions/model.PartnerEvent'
+      post_end_date:
+        type: string
+      receive_location:
+        type: string
+      slug:
+        type: string
+      start_event:
+        type: string
+      start_reg:
+        type: string
+      status:
+        type: string
+      ticket:
+        items:
+          $ref: '#/definitions/model.TicketEventV2'
+        type: array
       updated_time:
         type: string
     type: object
@@ -354,6 +497,8 @@ definitions:
         type: string
       ref_event_value:
         type: string
+      ref_phone_value:
+        type: string
       slug:
         type: string
     type: object
@@ -432,6 +577,27 @@ definitions:
         type: boolean
       show:
         type: boolean
+    type: object
+  model.Ranking:
+    properties:
+      activity_info:
+        items:
+          $ref: '#/definitions/model.ActivityInfo'
+        type: array
+      event_id:
+        type: string
+      event_user:
+        type: string
+      id:
+        type: string
+      rank_no:
+        type: integer
+      total_distance:
+        type: number
+      user_id:
+        type: string
+      user_info:
+        $ref: '#/definitions/model.UserEvent'
     type: object
   model.Register:
     properties:
@@ -582,12 +748,18 @@ definitions:
     type: object
   model.RegisterV2:
     properties:
+      event_code:
+        type: string
       event_id:
+        type: string
+      owner_id:
         type: string
       regs:
         items:
           $ref: '#/definitions/model.Regs'
         type: array
+      user_id:
+        type: string
     type: object
   model.Regs:
     properties:
@@ -599,6 +771,8 @@ definitions:
         type: number
       event:
         $ref: '#/definitions/model.EventRegV2'
+      event_id:
+        type: string
       id:
         type: string
       order_id:
@@ -618,13 +792,42 @@ definitions:
       status:
         type: string
       ticket_options:
-        $ref: '#/definitions/model.TicketOptionV2'
+        items:
+          $ref: '#/definitions/model.TicketOptionV2'
+        type: array
       total_price:
         type: number
       updated_at:
         type: string
       user_id:
         type: string
+    type: object
+  model.ReportDashboard:
+    properties:
+      amount_summary:
+        items:
+          $ref: '#/definitions/model.AmountSummary'
+        type: array
+      code:
+        type: string
+      event_id:
+        type: string
+      paid:
+        type: number
+      product_count:
+        type: integer
+      register_count:
+        type: integer
+      register_paid:
+        type: integer
+      ticket_summary:
+        items:
+          $ref: '#/definitions/model.TicketSummary'
+        type: array
+      wait_to_approve:
+        type: number
+      wait_to_pay:
+        type: number
     type: object
   model.ShipingAddress:
     properties:
@@ -910,6 +1113,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  model.TicketEventV2:
+    properties:
+      created_at:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      distance:
+        type: number
+      id:
+        type: string
+      price:
+        type: number
+      products:
+        $ref: '#/definitions/model.ProduceEventV2'
+      quantity:
+        type: integer
+      team:
+        type: integer
+      ticket_type:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
   model.TicketOption:
     properties:
       product:
@@ -936,13 +1166,26 @@ definitions:
       register_number:
         type: string
       tickets:
-        items:
-          $ref: '#/definitions/model.RegisterTicketV2'
-        type: array
+        $ref: '#/definitions/model.RegisterTicketV2'
       total_price:
         type: number
       user_option:
         $ref: '#/definitions/model.UserOption'
+    type: object
+  model.TicketSummary:
+    properties:
+      id:
+        type: string
+      paid_count:
+        type: integer
+      paid_waiting_approve_count:
+        type: integer
+      register_count:
+        type: integer
+      ticket_id:
+        type: string
+      title:
+        type: string
     type: object
   model.Trend:
     properties:
@@ -1020,6 +1263,23 @@ definitions:
       strava_latname:
         type: string
       updated_at:
+        type: string
+    type: object
+  model.UserEvent:
+    properties:
+      avatar:
+        type: string
+      email:
+        type: string
+      firstname:
+        type: string
+      fullname:
+        type: string
+      lastname:
+        type: string
+      phone:
+        type: string
+      user_id:
         type: string
     type: object
   model.UserOption:
@@ -1276,6 +1536,258 @@ paths:
       summary: Add activity from workout
       tags:
       - activity
+  /api/v1/board/ranking/:{eventID}:
+    get:
+      consumes:
+      - application/json
+      description: get leader board activty API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/board.BoardResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: get leader board activty
+      tags:
+      - board
+  /config:
+    get:
+      consumes:
+      - application/json
+      description: get config info API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.ConfigModel'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Get config app
+      tags:
+      - config
+  /event:
+    post:
+      consumes:
+      - application/json
+      description: add new event API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.EventV2'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: add new event
+      tags:
+      - event
+  /event/GetBySlug/{slug}:
+    get:
+      consumes:
+      - application/json
+      description: get event owner API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.EventV2'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get my event
+      tags:
+      - event
+  /event/active:
+    get:
+      consumes:
+      - application/json
+      description: get Get event active status API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.EventV2'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get event active status
+      tags:
+      - event
+  /event/all:
+    get:
+      consumes:
+      - application/json
+      description: get Get event all API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.EventList'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get event all
+      tags:
+      - event
+  /event/detail/{code}:
+    get:
+      consumes:
+      - application/json
+      description: get Get event detail API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.EventList'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get event detail
+      tags:
+      - event
+  /event/myEvent:
+    get:
+      consumes:
+      - application/json
+      description: get event owner API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.EventV2'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get my event
+      tags:
+      - event
   /kao:
     post:
       consumes:
@@ -1337,6 +1849,30 @@ paths:
       tags:
       - user
   /logout:
+    get:
+      consumes:
+      - application/json
+      description: user logout system API calls
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: user logout
+      tags:
+      - user
     post:
       consumes:
       - application/json
@@ -1393,7 +1929,8 @@ paths:
       - notification
   /refreshAccessToken:
     post:
-      description: Authenticates a user and provides a JWT to refresh Authorize API calls
+      description: Authenticates a user and provides a JWT to refresh Authorize API
+        calls
       operationId: Authentication
       parameters:
       - description: RefreshToken
@@ -1488,11 +2025,36 @@ paths:
       summary: add register event
       tags:
       - register
+  /register/checkUserRegisterEvent/:{eventID}:
+    get:
+      consumes:
+      - application/json
+      description: check register API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: check register by user id
+      tags:
+      - register
   /register/myRegEvent:
     get:
       consumes:
       - application/json
-      description: get register API calls
+      description: get register all API calls
       produces:
       - application/json
       responses:
@@ -1517,7 +2079,71 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - bearerAuth: []
-      summary: Get register by user id
+      summary: Get register all
+      tags:
+      - register
+  /register/myRegEventActivate:
+    get:
+      consumes:
+      - application/json
+      description: get register payment success API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.RegisterV2'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: get register payment success by user id
+      tags:
+      - register
+  /register/regsEvent/:{eventID}:
+    get:
+      consumes:
+      - application/json
+      description: get register datas 's eventer and admin
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.RegisterV2'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: get register datas 's eventer and admin
       tags:
       - register
   /registerFirebase:
@@ -1550,6 +2176,40 @@ paths:
       summary: user firebase register
       tags:
       - user
+  /report/dashboard/{eventID}:
+    get:
+      consumes:
+      - application/json
+      description: get report dashboard event API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.ReportDashboard'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get report dashboard event
+      tags:
+      - report
   /searchPreOrder:
     post:
       consumes:
@@ -1863,6 +2523,67 @@ paths:
       security:
       - bearerAuth: []
       summary: Get workouts list
+      tags:
+      - workouts
+    post:
+      consumes:
+      - application/json
+      description: save workout API calls
+      parameters:
+      - description: payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/model.AddMultiWorkout'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Add workouts multiple
+      tags:
+      - workouts
+  /workouts/history:
+    post:
+      consumes:
+      - application/json
+      description: list workouts API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Workouts'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get workouts history list by month
       tags:
       - workouts
 swagger: "2.0"

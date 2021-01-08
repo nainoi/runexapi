@@ -109,9 +109,14 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	g.Use(oauth.AuthMiddleware())
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
-		g.POST("/workouts", workoutsAPI.AddMultiWorkout)
-		g.GET("/workouts", workoutsAPI.GetWorkouts)
-		g.POST("/workouts/history", workoutsAPI.GetWorkoutsHistoryMonth)
+		group := g.Group("/workouts")
+		{
+			group.POST("", workoutsAPI.AddMultiWorkout)
+			group.GET("", workoutsAPI.GetWorkouts)
+			group.POST("/history", workoutsAPI.GetWorkoutsHistoryMonth)
+		}
+		
+		
 	}
 
 }

@@ -177,6 +177,434 @@ var doc = `{
                 }
             }
         },
+        "/api/v1/board/ranking/:{eventID}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get leader board activty API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "board"
+                ],
+                "summary": "get leader board activty",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/board.BoardResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/config": {
+            "get": {
+                "description": "get config info API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "Get config app",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ConfigModel"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "add new event API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "add new event",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.EventV2"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/GetBySlug/{slug}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get event owner API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Get my event",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.EventV2"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/active": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get Get event active status API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Get event active status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.EventV2"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/all": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get Get event all API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Get event all",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.EventList"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/detail/{code}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get Get event detail API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Get event detail",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.EventList"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/event/myEvent": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get event owner API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "event"
+                ],
+                "summary": "Get my event",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.EventV2"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/kao": {
             "post": {
                 "description": "GetKaoActivity get Kao event detail open id API calls",
@@ -196,7 +624,7 @@ var doc = `{
                         "name": "payload",
                         "in": "body",
                         "required": true,
-                        "schema": {π
+                        "schema": {
                             "$ref": "#/definitions/model.GetKaoActivityRequest"
                         }
                     }
@@ -270,6 +698,44 @@ var doc = `{
             }
         },
         "/logout": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "user logout system API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user logout",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -515,14 +981,14 @@ var doc = `{
                 }
             }
         },
-        "/register/myRegEvent": {
+        "/register/checkUserRegisterEvent/:{eventID}": {
             "get": {
                 "security": [
                     {
                         "bearerAuth": []
                     }
                 ],
-                "description": "get register API calls",
+                "description": "check register API calls",
                 "consumes": [
                     "application/json"
                 ],
@@ -532,7 +998,157 @@ var doc = `{
                 "tags": [
                     "register"
                 ],
-                "summary": "Get register by user id",
+                "summary": "check register by user id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/myRegEvent": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get register all API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "Get register all",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RegisterV2"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/myRegEventActivate": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get register payment success API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "get register payment success by user id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.RegisterV2"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/regsEvent/:{eventID}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get register datas 's eventer and admin",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "get register datas 's eventer and admin",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -603,6 +1219,64 @@ var doc = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/report/dashboard/{eventID}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "get report dashboard event API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "report"
+                ],
+                "summary": "Get report dashboard event",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.ReportDashboard"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/response.Response"
                         }
@@ -1137,10 +1811,166 @@ var doc = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "save workout API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Add workouts multiple",
+                "parameters": [
+                    {
+                        "description": "payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.AddMultiWorkout"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/workouts/history": {
+            "post": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "list workouts API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Get workouts history list by month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Workouts"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
             }
         }
     },
     "definitions": {
+        "board.BoardResponse": {
+            "type": "object",
+            "properties": {
+                "event": {
+                    "$ref": "#/definitions/model.EventV2"
+                },
+                "myrank": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Ranking"
+                    }
+                },
+                "ranks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Ranking"
+                    }
+                },
+                "total_activity": {
+                    "type": "integer"
+                }
+            }
+        },
+        "model.ActivityInfo": {
+            "type": "object",
+            "properties": {
+                "activity_date": {
+                    "type": "string"
+                },
+                "app": {
+                    "type": "string"
+                },
+                "caption": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "img_url": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "model.AddActivityForm": {
             "type": "object",
             "required": [
@@ -1196,6 +2026,17 @@ var doc = `{
                 },
                 "workout_info": {
                     "$ref": "#/definitions/model.WorkoutActivityInfo"
+                }
+            }
+        },
+        "model.AddMultiWorkout": {
+            "type": "object",
+            "properties": {
+                "workouts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.WorkoutActivityInfo"
+                    }
                 }
             }
         },
@@ -1288,6 +2129,29 @@ var doc = `{
                 }
             }
         },
+        "model.AmountSummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "paid_success": {
+                    "type": "number"
+                },
+                "paid_waiting": {
+                    "type": "number"
+                },
+                "paid_waiting_approve": {
+                    "type": "number"
+                },
+                "ticket_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "model.Athlete": {
             "type": "object",
             "properties": {
@@ -1323,6 +2187,23 @@ var doc = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.ConfigModel": {
+            "type": "object",
+            "properties": {
+                "authen_token": {
+                    "type": "string"
+                },
+                "authen_url": {
+                    "type": "string"
+                },
+                "leader_board_url": {
+                    "type": "string"
+                },
+                "preview_url": {
                     "type": "string"
                 }
             }
@@ -1381,6 +2262,32 @@ var doc = `{
                 },
                 "partner": {
                     "$ref": "#/definitions/model.PartnerEvent"
+                }
+            }
+        },
+        "model.EventList": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "event_date": {
+                    "type": "string"
+                },
+                "event_end_date": {
+                    "type": "string"
+                },
+                "event_start_date": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -1500,6 +2407,92 @@ var doc = `{
                 },
                 "status": {
                     "type": "string"
+                },
+                "updated_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.EventV2": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "cover_thumb": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.CoverThumb"
+                    }
+                },
+                "created_time": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_event": {
+                    "type": "string"
+                },
+                "end_reg": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "inapp": {
+                    "type": "boolean"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_free": {
+                    "type": "boolean"
+                },
+                "is_post": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owner_id": {
+                    "type": "string"
+                },
+                "partner": {
+                    "$ref": "#/definitions/model.PartnerEvent"
+                },
+                "post_end_date": {
+                    "type": "string"
+                },
+                "receive_location": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "start_event": {
+                    "type": "string"
+                },
+                "start_reg": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "ticket": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketEventV2"
+                    }
                 },
                 "updated_time": {
                     "type": "string"
@@ -1678,6 +2671,9 @@ var doc = `{
                 "ref_event_value": {
                     "type": "string"
                 },
+                "ref_phone_value": {
+                    "type": "string"
+                },
                 "slug": {
                     "type": "string"
                 }
@@ -1797,6 +2793,38 @@ var doc = `{
                 },
                 "show": {
                     "type": "boolean"
+                }
+            }
+        },
+        "model.Ranking": {
+            "type": "object",
+            "properties": {
+                "activity_info": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.ActivityInfo"
+                    }
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "event_user": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "rank_no": {
+                    "type": "integer"
+                },
+                "total_distance": {
+                    "type": "number"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_info": {
+                    "$ref": "#/definitions/model.UserEvent"
                 }
             }
         },
@@ -2027,7 +3055,13 @@ var doc = `{
         "model.RegisterV2": {
             "type": "object",
             "properties": {
+                "event_code": {
+                    "type": "string"
+                },
                 "event_id": {
+                    "type": "string"
+                },
+                "owner_id": {
                     "type": "string"
                 },
                 "regs": {
@@ -2035,6 +3069,9 @@ var doc = `{
                     "items": {
                         "$ref": "#/definitions/model.Regs"
                     }
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -2052,6 +3089,9 @@ var doc = `{
                 },
                 "event": {
                     "$ref": "#/definitions/model.EventRegV2"
+                },
+                "event_id": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
@@ -2081,7 +3121,10 @@ var doc = `{
                     "type": "string"
                 },
                 "ticket_options": {
-                    "$ref": "#/definitions/model.TicketOptionV2"
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketOptionV2"
+                    }
                 },
                 "total_price": {
                     "type": "number"
@@ -2091,6 +3134,47 @@ var doc = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "model.ReportDashboard": {
+            "type": "object",
+            "properties": {
+                "amount_summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.AmountSummary"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "paid": {
+                    "type": "number"
+                },
+                "product_count": {
+                    "type": "integer"
+                },
+                "register_count": {
+                    "type": "integer"
+                },
+                "register_paid": {
+                    "type": "integer"
+                },
+                "ticket_summary": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.TicketSummary"
+                    }
+                },
+                "wait_to_approve": {
+                    "type": "number"
+                },
+                "wait_to_pay": {
+                    "type": "number"
                 }
             }
         },
@@ -2524,6 +3608,47 @@ var doc = `{
                 }
             }
         },
+        "model.TicketEventV2": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "distance": {
+                    "type": "number"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "products": {
+                    "$ref": "#/definitions/model.ProduceEventV2"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "team": {
+                    "type": "integer"
+                },
+                "ticket_type": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "model.TicketOption": {
             "type": "object",
             "properties": {
@@ -2563,16 +3688,36 @@ var doc = `{
                     "type": "string"
                 },
                 "tickets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.RegisterTicketV2"
-                    }
+                    "$ref": "#/definitions/model.RegisterTicketV2"
                 },
                 "total_price": {
                     "type": "number"
                 },
                 "user_option": {
                     "$ref": "#/definitions/model.UserOption"
+                }
+            }
+        },
+        "model.TicketSummary": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "paid_count": {
+                    "type": "integer"
+                },
+                "paid_waiting_approve_count": {
+                    "type": "integer"
+                },
+                "register_count": {
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -2690,6 +3835,32 @@ var doc = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.UserEvent": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "fullname": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }
