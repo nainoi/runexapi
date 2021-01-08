@@ -211,3 +211,42 @@ func (api WorkoutsAPI) GetWorkouts(c *gin.Context) {
 	res.Response(http.StatusOK, "success", workout)
 	c.Abort()
 }
+
+// GetWorkoutsHistoryMonth api godoc
+// @Summary Get workouts history list by month
+// @Description list workouts API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags workouts
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=model.Workouts}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /workouts/history [post]
+func (api WorkoutsAPI) GetWorkoutsHistoryMonth(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var form model.WorkoutHistoryMonthFilter
+	if err := c.ShouldBind(&form); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	userID, _ := oauth.GetValuesToken(c)
+	//userID := "5d8820749c3f42e4088c980f"
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	isNotHas, workout, err := api.WorkoutsRepository.HistoryMonth(userObjectID, form.Year)
+	if isNotHas {
+		res.Response(http.StatusNoContent, "status no content", workout)
+		c.Abort()
+		return
+	} else if err != nil {
+		log.Println("error get work", err.Error())
+		res.Response(http.StatusInternalServerError, "get workout fail", workout)
+		c.Abort()
+		return
+	}
+	res.Response(http.StatusOK, "success", workout)
+	c.Abort()
+}

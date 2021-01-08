@@ -38,7 +38,7 @@ const (
 func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddActivityV2) error {
 	//model := activity.
 	//filter := bson.D{"event_id": activity.EventID}
-	filter := bson.D{primitive.E{Key: "event_id",Value: activity.EventID}, primitive.E{Key: "activities.user_id",Value: activity.UserID}}
+	filter := bson.D{primitive.E{Key: "event_id", Value: activity.EventID}, primitive.E{Key: "activities.user_id", Value: activity.UserID}}
 	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	log.Printf("[info] count %d", count)
 	if err != nil {
