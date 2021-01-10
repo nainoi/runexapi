@@ -268,8 +268,8 @@ func (api WorkoutsAPI) GetWorkoutsHistoryAll(c *gin.Context) {
 		res = response.Gin{C: c}
 	)
 
-	//userID, _ := oauth.GetValuesToken(c)
-	userID := "5d8820749c3f42e4088c980f"
+	userID, _ := oauth.GetValuesToken(c)
+	//userID := "5d8820749c3f42e4088c980f"
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
 	isNotHas, workout, err := api.WorkoutsRepository.HistoryAll(userObjectID)
 	if isNotHas {
