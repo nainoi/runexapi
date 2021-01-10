@@ -19,6 +19,7 @@ type WorkoutsRepository interface {
 	GetWorkouts(userID primitive.ObjectID) (bool, model.Workouts, error)
 	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
 	HistoryMonth(userID primitive.ObjectID, year int) (bool, []model.WorkoutHistoryMonthInfo, error)
+	HistoryAll(userID primitive.ObjectID) (bool, []model.WorkoutHistoryAllInfo, error)
 }
 
 // WorkoutsRepositoryMongo struct mongo db
@@ -36,6 +37,19 @@ type HistoryState struct {
 	TotalDistance       float64                     `json:"totalDistance" bson:"totalDistance"`
 	TotalCalory         float64                     `json:"totalCalory" bson:"totalCalory"`
 	TotalDuration       int64                       `json:"totalDuration" bson:"totalDuration"`
+}
+
+type HistoryAllState struct {
+	ID                  HistoryDate                 `json:"id" bson:"_id"`
+	WorkoutActivityInfo []model.WorkoutActivityInfo `json:"activity_info" bson:"activity_info"`
+	TotalDistance       float64                     `json:"totalDistance" bson:"totalDistance"`
+	TotalCalory         float64                     `json:"totalCalory" bson:"totalCalory"`
+	TotalDuration       int64                       `json:"totalDuration" bson:"totalDuration"`
+}
+
+type HistoryDate struct {
+	Year  int `form:"year" json:"year" bson:"year"`
+	Month int `form:"month" json:"month" bson:"month"`
 }
 
 // AddWorkout repository for insert workouts
@@ -295,6 +309,90 @@ func (workoutsMongo WorkoutsRepositoryMongo) HistoryMonth(userID primitive.Objec
 		historyMonthInfo = append(historyMonthInfo, historyMonthInfoNew)
 	}
 	return false, historyMonthInfo, err
+}
+
+func (workoutsMongo WorkoutsRepositoryMongo) HistoryAll(userID primitive.ObjectID) (bool, []model.WorkoutHistoryAllInfo, error) {
+
+	var workoutInfo []model.WorkoutActivityInfo
+	var historyAllInfo []model.WorkoutHistoryAllInfo
+	var historyDayInfo []model.WorkoutDistanceDayInfo
+	filter := bson.M{"user_id": userID}
+	count, err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
+	log.Printf("[info] count %d", count)
+	if err != nil {
+		log.Println(err)
+		return true, historyAllInfo, err
+	}
+	if count == 0 {
+
+		return true, historyAllInfo, nil
+	}
+
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"user_id": userID}}}
+	unwindStage := bson.D{primitive.E{Key: "$unwind", Value: bson.M{"path": "$activity_info"}}}
+	projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"year": bson.M{"$year": "$activity_info.workout_date"}, "month": bson.M{"$month": "$activity_info.workout_date"}, "activity_info": 1}}}
+	groupStage := bson.D{bson.E{Key: "$group", Value: bson.M{"_id": bson.M{"year": bson.M{"$year": "$activity_info.workout_date"}, "month": bson.M{"$month": "$activity_info.workout_date"}}, "activity_info": bson.M{"$push": "$activity_info"}, "totalDistance": bson.M{"$sum": "$activity_info.distance"}, "totalCalory": bson.M{"$sum": "$activity_info.calory"}, "totalDuration": bson.M{"$sum": "$activity_info.duration"}}}}
+	sortStage := bson.D{primitive.E{Key: "$sort", Value: bson.M{"_id.year": -1, "_id.month": -1}}}
+	curHistory, err2 := workoutsMongo.ConnectionDB.Collection(workoutsCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, unwindStage, projectStage, groupStage, sortStage})
+	if err2 != nil {
+		log.Println("[error] curHistory %d", err2.Error())
+		return true, historyAllInfo, err2
+	}
+	totalDistance := float64(0.00)
+	calory := float64(0.00)
+	duration := int64(0)
+	year := int(0)
+	month := int(0)
+	for curHistory.Next(context.TODO()) {
+		historyDayInfo = nil
+		workoutInfo = nil
+		var p HistoryAllState
+
+		// decode the document
+		if err := curHistory.Decode(&p); err != nil {
+			log.Print(err)
+		}
+		//log.Println("[info] p %s", p)
+		year = p.ID.Year
+		month = p.ID.Month
+		workoutInfo = p.WorkoutActivityInfo
+		totalDistance = p.TotalDistance
+		calory = p.TotalCalory
+		duration = p.TotalDuration
+
+		// log.Println("[info] totalDistance %s", p.TotalDistance)
+		// log.Println("[info] calory %s", p.TotalCalory)
+		// log.Println("[info] duration %s", p.TotalDuration)
+
+		for _, item := range workoutInfo {
+
+			historyDayInfoNew := model.WorkoutDistanceDayInfo{
+				Distance:    item.Distance,
+				WorkoutDate: item.WorkoutDate.Format("2006-01-02"),
+				WorkoutTime: item.TimeString,
+			}
+			historyDayInfo = append(historyDayInfo, historyDayInfoNew)
+		}
+
+		durTime := time.Duration(duration) * time.Second
+		modTime := time.Now().Round(0).Add(-(durTime))
+		since := time.Since(modTime)
+		durStr := fmtDuration(since)
+
+		historyAllInfoNew := model.WorkoutHistoryAllInfo{
+			Year:          year,
+			Month:         month,
+			MonthName:     time.Month(month).String(),
+			TotalDistance: totalDistance,
+			Calory:        calory,
+			TimeString:    durStr,
+			HistoryDay:    historyDayInfo,
+		}
+
+		historyAllInfo = append(historyAllInfo, historyAllInfoNew)
+	}
+
+	return false, historyAllInfo, err
 }
 
 // func fmtDuration(d time.Duration) string {
