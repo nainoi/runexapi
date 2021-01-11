@@ -109,14 +109,10 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	g.Use(oauth.AuthMiddleware())
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
-		group := g.Group("/workouts")
-		{
-			group.POST("/", workoutsAPI.AddMultiWorkout)
-			group.GET("/", workoutsAPI.GetWorkouts)
-			group.POST("/history", workoutsAPI.GetWorkoutsHistoryMonth)
-		}
-		
-		
+		g.POST("/workouts", workoutsAPI.AddMultiWorkout)
+		g.GET("/workouts", workoutsAPI.GetWorkouts)
+		g.POST("/workouts/history", workoutsAPI.GetWorkoutsHistoryMonth)
+		g.GET("/workouts/historyAll", workoutsAPI.GetWorkoutsHistoryAll)
 	}
 
 }
@@ -194,10 +190,10 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.GET("/findByStatus/:status", eventAPI.GetByStatus)
 		//group.GET("/eventInfo/:id", eventAPI.GetByID)
 		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
-		group.GET("/all", handle_event_v2.GetAll)
+		group.GET("/all", eventAPI.GetAll)
 		group.GET("/active", eventAPI.GetAllActive)
 		group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
-		group.GET("/detail/:code", handle_event_v2.GetDetail)
+		group.GET("/detail/:code", eventAPI.GetDetail)
 		group.Use(oauth.AuthMiddleware())
 		{
 			// group.POST("", eventAPI.AddEvent)

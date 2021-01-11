@@ -104,3 +104,13 @@ type WorkoutDistanceDayInfo struct {
 	WorkoutDate string  `json:"workout_date" bson:"workout_date"`
 	WorkoutTime string  `json:"workout_time" json:"workout_time"`
 }
+
+type WorkoutHistoryAllInfo struct {
+	Year          int                      `form:"year" json:"year" bson:"year"`
+	Month         int                      `form:"month" json:"month" bson:"month"`
+	MonthName     string                   `form:"month_name" json:"month_name" bson:"month_name"`
+	TotalDistance float64                  `form:"total_distance" json:"total_distance" bson:"total_distance"`
+	TimeString    string                   `json:"time_string" json:"time_string" bson:"time_string"`
+	Calory        float64                  `json:"calory" bson:"calory" bson:"calory"`
+	HistoryDay    []WorkoutDistanceDayInfo `json:"workout_day" bson:"workout_day" bson:"workout_day"`
+}
