@@ -111,8 +111,8 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.POST("/workout", workoutsAPI.AddWorkout)
 		group := g.Group("/workouts")
 		{
-			group.POST("", workoutsAPI.AddMultiWorkout)
-			group.GET("", workoutsAPI.GetWorkouts)
+			group.POST("/", workoutsAPI.AddMultiWorkout)
+			group.GET("/", workoutsAPI.GetWorkouts)
 			group.POST("/history", workoutsAPI.GetWorkoutsHistoryMonth)
 		}
 		

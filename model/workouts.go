@@ -81,7 +81,7 @@ type WorkoutHistoryDayFilter struct {
 }
 
 type WorkoutHistoryMonthFilter struct {
-	Year int `form:"year" json:"year" bson:"year"`
+	Year int `form:"year" json:"year"`
 }
 
 type WorkoutHistoryMonthInfo struct {

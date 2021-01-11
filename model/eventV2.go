@@ -16,7 +16,7 @@ type EventList struct {
 	Code           string    `json:"code"`
 	Content        string    `json:"content"`
 	Cover          string    `json:"cover"`
-	EventDate      time.Time `json:"event_date"`
+	EventDate      string    `json:"event_date"`
 	EventEndDate   time.Time `json:"event_end_date"`
 	EventStartDate time.Time `json:"event_start_date"`
 	Title          string    `json:"title"`
@@ -76,15 +76,15 @@ type EventData struct {
 		Category   string      `json:"category"`
 		CreatedAt  time.Time   `json:"created_at"`
 		Detail     interface{} `json:"detail"`
-		Distance   int         `json:"distance"`
+		Distance   string         `json:"distance"`
 		EventID    string      `json:"event_id"`
 		ID         string      `json:"id"`
 		Items      interface{} `json:"items"`
-		Limit      int         `json:"limit"`
+		Limit      string         `json:"limit"`
 		PhotoMap   string      `json:"photo_map"`
 		PhotoMedal string      `json:"photo_medal"`
 		PhotoShirt string      `json:"photo_shirt"`
-		Price      int         `json:"price"`
+		Price      string         `json:"price"`
 		Title      string      `json:"title"`
 		UpdatedAt  time.Time   `json:"updated_at"`
 	} `json:"tickets"`
