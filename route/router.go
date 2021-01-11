@@ -6,6 +6,7 @@ import (
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
 	"thinkdev.app/think/runex/runexapi/api/v2/config"
+	eventV2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	handle_event_v2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
@@ -190,10 +191,10 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.GET("/findByStatus/:status", eventAPI.GetByStatus)
 		//group.GET("/eventInfo/:id", eventAPI.GetByID)
 		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
-		group.GET("/all", eventAPI.GetAll)
+		group.GET("/all", eventV2.GetAll)
 		group.GET("/active", eventAPI.GetAllActive)
 		group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
-		group.GET("/detail/:code", eventAPI.GetDetail)
+		group.GET("/detail/:code", eventV2.GetDetail)
 		group.Use(oauth.AuthMiddleware())
 		{
 			// group.POST("", eventAPI.AddEvent)
