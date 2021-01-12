@@ -8,6 +8,7 @@ import (
 type ActivityV2 struct {
 	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	EventID    primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode  primitive.ObjectID `json:"event_code" bson:"event_code"`
 	Activities Activities         `json:"activities" bson:"activities,omitempty"`
 }
 
@@ -23,6 +24,7 @@ type AddActivityV2 struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID       primitive.ObjectID `json:"user_id" bson:"user_id"`
 	EventID      primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode    primitive.ObjectID `json:"event_code" bson:"event_code"`
 	ActivityInfo ActivityInfo       `json:"activity_info" bson:"activity_info"`
 }
 
@@ -38,7 +40,8 @@ type AddActivityV2 struct {
 //AddActivityFormWorkout model request
 type AddActivityFormWorkout struct {
 	WorkoutActivityInfo WorkoutActivityInfo `form:"workout_info" json:"workout_info"`
-	EventID             string              `form:"event_id" json:"event_id" binding:"required"`
+	EventID             string              `form:"event_id" json:"event_id"`
+	EventCode           primitive.ObjectID  `json:"event_code" bson:"event_code"`
 }
 
 //AddMultiActivityFormWorkout model request

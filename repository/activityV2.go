@@ -53,7 +53,6 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 		updateDistance := bson.M{"$set": bson.M{"activities.total_distance": totalDistance}}
 		_, err2 := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, updateDistance)
 		if err2 != nil {
-			log.Fatal(err2)
 			log.Printf("[info] err %s", err2)
 			return err2
 		}
@@ -148,7 +147,7 @@ func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(eventID strin
 	var activity = model.ActivityV2{}
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
 	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{Key: "event_id", Value: eventObjectID}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: eventObjectID}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
 	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	if count > 0 {
 		err = activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
@@ -174,7 +173,7 @@ func (activityMongo ActivityV2RepositoryMongo) GetHistoryDayByEvent(event_id str
 	//{"activity_info.distance", bson.D{{"$gt", 15}}}
 	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
 	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
-	filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+	filter := bson.D{primitive.E{Key:"event_id",Value: eventObjectID}, primitive.E{Key: "activities.user_id",Value: userObjectID}}
 
 	err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
 

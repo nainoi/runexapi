@@ -9,10 +9,12 @@ import (
 	"time"
 
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
-	"thinkdev.app/think/runex/runexapi/repository/v2"
+
+	//"thinkdev.app/think/runex/runexapi/repository"
+	repo2 "thinkdev.app/think/runex/runexapi/repository/v2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
@@ -23,7 +25,7 @@ import (
 
 // EventAPI reference
 type EventAPI struct {
-	EventRepository repository.EventRepository
+	EventRepository repo2.EventRepository
 }
 
 // EventStatus struct
@@ -31,6 +33,7 @@ type EventStatus struct {
 	Status string `json:"status" bson:"status" binding:"required"`
 }
 
+/*
 // AddEvent api godoc
 // @Summary add new event
 // @Description add new event API calls
@@ -52,7 +55,7 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 	userID, _ := oauth.GetValuesToken(c)
 	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
 
-	var json model.EventV2
+	var json model.EventData
 
 	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
 
@@ -77,14 +80,14 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 
 	eventID, err := api.EventRepository.AddEvent(json)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
 	appG.Response(http.StatusOK, "success", eventID)
 
-}
+}*/
 
 // MyEvent api godoc
 // @Summary Get my event
@@ -237,7 +240,7 @@ func (api EventAPI) GetAllActive(c *gin.Context) {
 	appG.Response(http.StatusInternalServerError, err.Error(), nil)
 	event, err := api.EventRepository.GetEventActive()
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
@@ -268,7 +271,7 @@ func GetDetail(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	event, err := DetailEventByCode(code)
+	event, err := repo2.DetailEventByCode(code)
 
 	if err != nil {
 		appG.Response(http.StatusInternalServerError, err.Error(), nil)
@@ -283,52 +286,6 @@ func GetDetail(c *gin.Context) {
 
 }
 
-//DetailEventByCode go doc
-//Description get Get event detail API calls to event runex
-func DetailEventByCode(code string) (model.EventData, error) {
-	urlS := fmt.Sprintf("https://events-api.thinkdev.app/event/%s", code)
-	var bearer = "Bearer olcgZVpqDXQikRDG"
-	//reqURL, _ := url.Parse(urlS)
-	req, err := http.NewRequest("GET", urlS, nil)
-	req.Header.Add("Authorization", bearer)
-	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
-
-	timeout := time.Duration(6 * time.Second)
-	client := &http.Client{
-		Timeout: timeout,
-	}
-	client.CheckRedirect = checkRedirectFunc
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		log.Println(err)
-	}
-
-	defer resp.Body.Close()
-
-	var event model.EventData
-
-	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
-
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			//log.Println(err)
-			return event, err
-		}
-
-		err = json.Unmarshal(body, &event)
-		if err != nil {
-			//log.Println(err)
-			return event, err
-		}
-		return event, err
-	}
-
-	return event, err
-
-}
-
 //GetByStatus go doc
 func (api EventAPI) GetByStatus(c *gin.Context) {
 	var (
@@ -339,7 +296,7 @@ func (api EventAPI) GetByStatus(c *gin.Context) {
 
 	event, err := api.EventRepository.GetEventByStatus(status)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -398,7 +355,7 @@ func (api EventAPI) EditEvent(c *gin.Context) {
 
 	err := api.EventRepository.EditEvent(id, json)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}

@@ -67,7 +67,7 @@ func (api ActivityAPI) GetActivityByEvent2(c *gin.Context) {
 	activity, err := api.ActivityRepository.GetActivityByEvent2(eventUser)
 
 	if err != nil {
-		log.Println("error AddEvent Get Event info2", err.Error())
+		log.Println("error Get Event info2", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -299,7 +299,7 @@ func (api ActivityAPI) GetHistoryDayByEvent(c *gin.Context) {
 	activity, err := api.ActivityRepository.GetHistoryDayByEvent(eventUser, form.Year, form.Month)
 
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -324,7 +324,7 @@ func (api ActivityAPI) GetHistoryMonthByEvent(c *gin.Context) {
 	activity, err := api.ActivityRepository.HistoryMonthByEvent(eventUser, form.Year)
 
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}

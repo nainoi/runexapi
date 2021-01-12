@@ -2,8 +2,11 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -17,26 +20,26 @@ import (
 
 // EventRepository interface
 type EventRepository interface {
-	AddEvent(event model.EventV2) (string, error)
+	// AddEvent(event model.EventV2) (string, error)
 	GetEventByStatus(status string) ([]model.EventV2, error)
 	GetEventAll() ([]model.EventV2, error)
 	GetEventActive() ([]model.EventV2, error)
 	ExistByName(name string) (bool, error)
 	ExistByNameForEdit(name string, eventID string) (bool, error)
 	GetEventByID(eventID string) (model.EventV2, error)
-	EditEvent(eventID string, event model.EventV2) error
+	// EditEvent(eventID string, event model.EventV2) error
 	DeleteEventByID(eventID string) error
 	UploadCoverEvent(eventID string, path string) error
 
-	AddProductEvent(eventID string, product model.ProduceEvent) (string, error)
-	EditProductEvent(eventID string, product model.ProduceEvent) error
-	GetProductByEventID(eventID string) ([]model.ProduceEvent, error)
-	DeleteProductEvent(eventID string, productID string) error
+	// AddProductEvent(eventID string, product model.ProduceEvent) (string, error)
+	// EditProductEvent(eventID string, product model.ProduceEvent) error
+	// GetProductByEventID(eventID string) ([]model.ProduceEvent, error)
+	// DeleteProductEvent(eventID string, productID string) error
 
-	AddTicketEvent(eventID string, ticket model.TicketEventV2) (string, error)
-	EditTicketEvent(eventID string, ticket model.TicketEventV2) error
-	GetTicketByEventID(eventID string) ([]model.TicketEventV2, error)
-	DeleteTicketEvent(eventID string, ticketID string) error
+	// AddTicketEvent(eventID string, ticket model.TicketEventV2) (string, error)
+	// EditTicketEvent(eventID string, ticket model.TicketEventV2) error
+	// GetTicketByEventID(eventID string) ([]model.TicketEventV2, error)
+	// DeleteTicketEvent(eventID string, ticketID string) error
 	GetUserEvent(userID string) (model.UserEvent, error)
 	GetEventByUser(userID string) ([]model.EventV2, error)
 	SearchEvent(term string) ([]model.EventV2, error)
@@ -52,6 +55,52 @@ const (
 	eventCollection = "event_v2"
 	ebibCollection  = "ebib"
 )
+
+//DetailEventByCode go doc
+//Description get Get event detail API calls to event runex
+func DetailEventByCode(code string) (model.EventData, error) {
+	urlS := fmt.Sprintf("https://events-api.thinkdev.app/event/%s", code)
+	var bearer = "Bearer olcgZVpqDXQikRDG"
+	//reqURL, _ := url.Parse(urlS)
+	req, err := http.NewRequest("GET", urlS, nil)
+	req.Header.Add("Authorization", bearer)
+	//req.Header.Add("Content-Type", "application/x-www-form-urlencoded, charset=UTF-8")
+
+	timeout := time.Duration(6 * time.Second)
+	client := &http.Client{
+		Timeout: timeout,
+	}
+	client.CheckRedirect = checkRedirectFunc
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer resp.Body.Close()
+
+	var event model.EventData
+
+	if resp.StatusCode >= 200 || resp.StatusCode < 300 {
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			//log.Println(err)
+			return event, err
+		}
+
+		err = json.Unmarshal(body, &event)
+		if err != nil {
+			//log.Println(err)
+			return event, err
+		}
+		return event, err
+	}
+
+	return event, err
+
+}
 
 // AddEvent repository
 func (eventMongo EventRepositoryMongo) AddEvent(event model.EventV2) (string, error) {
@@ -542,4 +591,9 @@ func (eventMongo EventRepositoryMongo) IsOwner(eventID string, userID string) bo
 	}
 
 	return false
+}
+
+func checkRedirectFunc(req *http.Request, via []*http.Request) error {
+	req.Header.Add("Authorization", via[0].Header.Get("Authorization"))
+	return nil
 }

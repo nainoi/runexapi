@@ -27,7 +27,6 @@ import (
 	// handle_banner "thinkdev.app/think/runex/runexapi/api/v1/banner"
 	handle_category "thinkdev.app/think/runex/runexapi/api/v1/category"
 	handle_coupon "thinkdev.app/think/runex/runexapi/api/v1/coupon"
-	handle_event "thinkdev.app/think/runex/runexapi/api/v1/event"
 	handle_runHistory "thinkdev.app/think/runex/runexapi/api/v1/runHistory"
 
 	//handle_importData "thinkdev.app/think/runex/runexapi/api/v1/importdata"
@@ -100,7 +99,6 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 
 	//api.Use(static.Serve("/img", static.LocalFile("./img", true)))
 
-	EventRoute(route, connectionDB, middleware)
 	ActivityRoute(route, connectionDB, middleware)
 	CategoryRoute(route, connectionDB, middleware)
 	RegisterRoute(route, connectionDB, middleware)
@@ -113,49 +111,6 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 	//ActivityV2Route(route, connectionDB, middleware)
 	//WorkoutsRoute(route, connectionDB, middleware)
 	//ImportDataRoute(route, connectionDB, middleware)
-}
-
-// EventRoute for manage Event
-func EventRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
-	eventRepository := repository.EventRepositoryMongo{
-		ConnectionDB: connectionDB,
-	}
-	eventAPI := handle_event.EventAPI{
-		EventRepository: &eventRepository,
-	}
-
-	api := route.Group("/api/v1/event")
-	{
-		api.GET("/findByStatus/:status", eventAPI.GetByStatus)
-		api.GET("/eventInfo/:id", eventAPI.GetByID)
-		api.GET("/eventDetail/:slug", eventAPI.GetBySlug)
-		api.GET("/all", eventAPI.GetAll)
-		api.GET("/active", eventAPI.GetAllActive)
-
-		api.Use(middleware.MiddlewareFunc())
-		{
-
-			api.GET("/myEvent", eventAPI.MyEvent)
-			api.POST("", eventAPI.AddEvent)
-			api.PUT("/edit/:id", eventAPI.EditEvent)
-			api.DELETE("/delete/:id", eventAPI.DeleteEvent)
-			api.POST("/:id/uploadImage", eventAPI.UploadImage)
-			api.POST("/:id/addProduct", eventAPI.AddProduct)
-			api.POST("/:id/editProduct", eventAPI.EditProduct)
-			api.GET("/getProduct/:id", eventAPI.GetProductEvent)
-
-			api.DELETE("/deleteProduct/:id/:productID", eventAPI.DeleteProductEvent)
-			api.POST("/:id/addTicket", eventAPI.AddTicket)
-			api.POST("/:id/editTicket", eventAPI.EditTicket)
-			api.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
-			api.PUT("/validateSlug", eventAPI.ValidateSlug)
-		}
-	}
-	api2 := route.Group("/api/v1")
-	{
-		api2.POST("/search/event", eventAPI.SearchEvent)
-	}
-
 }
 
 // ActivityRoute for manage activity

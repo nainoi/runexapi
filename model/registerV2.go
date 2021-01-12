@@ -16,7 +16,7 @@ type RegisterRequest struct {
 // RegisterV2 struct for register v2 event data
 type RegisterV2 struct {
 	EventID   primitive.ObjectID `json:"event_id" bson:"event_id"`
-	OwnerID   primitive.ObjectID `json:"owner_id" bson:"owner_id"`
+	OwnerID   string             `json:"owner_id" bson:"owner_id"`
 	UserID    string             `json:"user_id" bson:"user_id"`
 	EventCode string             `json:"event_code" bson:"event_code"`
 	Regs      []Regs             `json:"regs" bson:"regs"`
@@ -39,7 +39,7 @@ type Regs struct {
 	Coupon         Coupon             `json:"coupon" bson:"coupon"`
 	TicketOptions  []TicketOptionV2   `json:"ticket_options" bson:"ticket_options"`
 	Partner        PartnerEvent       `json:"partner" bson:"partner"`
-	Event          EventRegV2         `json:"event" bson:"event"`
+	Event          EventData          `json:"event" bson:"event"`
 	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
 }

@@ -192,7 +192,7 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		//group.GET("/eventInfo/:id", eventAPI.GetByID)
 		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
 		group.GET("/all", eventV2.GetAll)
-		group.GET("/active", eventAPI.GetAllActive)
+		// group.GET("/active", eventV2.GetAllActive)
 		group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
 		group.GET("/detail/:code", eventV2.GetDetail)
 		group.Use(oauth.AuthMiddleware())
@@ -233,6 +233,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.PUT("/edit/:id", registerAPI.EditRegister)
 			group.GET("/myRegEvent", registerAPI.GetByUserID)
 			group.GET("/checkUserRegisterEvent/:eventID", registerAPI.CheckUserRegisterEvent)
+			group.GET("/checkRegEventCode/:code", registerAPI.CheckUserRegisterEventCode)
 			group.GET("/myRegEventActivate", registerAPI.GetMyRegEventActivate)
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 		}

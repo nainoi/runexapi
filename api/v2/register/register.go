@@ -297,7 +297,7 @@ func (api RegisterAPI) EditRegister(c *gin.Context) {
 
 	err := api.RegisterRepository.EditRegister(id, json)
 	if err != nil {
-		log.Println("error AddEvent", err.Error())
+		log.Println("error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -411,6 +411,34 @@ func (api RegisterAPI) CheckUserRegisterEvent(c *gin.Context) {
 	userID, _ := oauth.GetValuesToken(c)
 	eventID := c.Param("eventID")
 	check, err := api.RegisterRepository.CheckUserRegisterEvent(eventID, userID)
+	if err != nil {
+		log.Println("error CountRegisterEvent", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	res.Response(http.StatusOK, "success", gin.H{"is_reg": check})
+}
+
+// CheckUserRegisterEventCode api godoc
+// @Summary check register by user id and event code
+// @Description check register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/checkRegEventCode/:{code} [get]
+func (api RegisterAPI) CheckUserRegisterEventCode(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	userID, _ := oauth.GetValuesToken(c)
+	code := c.Param("code")
+	check, err := api.RegisterRepository.CheckUserRegisterEventCode(code, userID)
 	if err != nil {
 		log.Println("error CountRegisterEvent", err.Error())
 		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})

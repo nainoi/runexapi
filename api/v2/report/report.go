@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	eventV2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/repository"
+	repo2 "thinkdev.app/think/runex/runexapi/repository/v2"
 )
 
 //ReportAPI struct
@@ -63,7 +63,7 @@ func (api ReportAPI) GetDashboardByEventCode(c *gin.Context) {
 	)
 
 	code := c.Param("code")
-	event, err := eventV2.DetailEventByCode(code)
+	event, err := repo2.DetailEventByCode(code)
 
 	dashboard, err := api.ReportRepository.GetDashboardByEventCode(event)
 

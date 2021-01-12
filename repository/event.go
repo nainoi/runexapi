@@ -15,29 +15,29 @@ import (
 )
 
 type EventRepository interface {
-	AddEvent(event model.Event) (string, error)
-	GetEventByStatus(status string) ([]model.Event, error)
-	GetEventAll() ([]model.Event, error)
-	GetEventActive() ([]model.Event, error)
-	ExistByName(name string) (bool, error)
-	ExistByNameForEdit(name string, eventID string) (bool, error)
-	GetEventByID(eventID string) (model.Event, error)
-	EditEvent(eventID string, event model.Event) error
-	DeleteEventByID(eventID string) error
-	UploadCoverEvent(eventID string, path string) error
-	AddProductEvent(eventID string, product model.ProduceEvent) (string, error)
-	EditProductEvent(eventID string, product model.ProduceEvent) error
-	GetProductByEventID(eventID string) ([]model.ProduceEvent, error)
-	DeleteProductEvent(eventID string, productID string) error
-	AddTicketEvent(eventID string, ticket model.TicketEvent) (string, error)
-	EditTicketEvent(eventID string, ticket model.TicketEvent) error
-	GetTicketByEventID(eventID string) ([]model.TicketEvent, error)
-	DeleteTicketEvent(eventID string, ticketID string) error
-	GetUserEvent(userID string) (model.UserEvent, error)
-	GetEventByUser(userID string) ([]model.Event, error)
-	SearchEvent(term string) ([]model.Event, error)
-	ValidateBySlug(slug string) (bool, error)
-	GetEventBySlug(slug string) (model.Event, error)
+	// AddEvent(event model.Event) (string, error)
+	// GetEventByStatus(status string) ([]model.Event, error)
+	// GetEventAll() ([]model.Event, error)
+	// GetEventActive() ([]model.Event, error)
+	// ExistByName(name string) (bool, error)
+	// ExistByNameForEdit(name string, eventID string) (bool, error)
+	// GetEventByID(eventID string) (model.Event, error)
+	// EditEvent(eventID string, event model.Event) error
+	// DeleteEventByID(eventID string) error
+	// UploadCoverEvent(eventID string, path string) error
+	// AddProductEvent(eventID string, product model.ProduceEvent) (string, error)
+	// EditProductEvent(eventID string, product model.ProduceEvent) error
+	// GetProductByEventID(eventID string) ([]model.ProduceEvent, error)
+	// DeleteProductEvent(eventID string, productID string) error
+	// AddTicketEvent(eventID string, ticket model.TicketEvent) (string, error)
+	// EditTicketEvent(eventID string, ticket model.TicketEvent) error
+	// GetTicketByEventID(eventID string) ([]model.TicketEvent, error)
+	// DeleteTicketEvent(eventID string, ticketID string) error
+	// GetUserEvent(userID string) (model.UserEvent, error)
+	// GetEventByUser(userID string) ([]model.Event, error)
+	// SearchEvent(term string) ([]model.Event, error)
+	// ValidateBySlug(slug string) (bool, error)
+	// GetEventBySlug(slug string) (model.Event, error)
 }
 type EventRepositoryMongo struct {
 	ConnectionDB *mongo.Database
