@@ -368,7 +368,7 @@ func (workoutsMongo WorkoutsRepositoryMongo) HistoryAll(userID primitive.ObjectI
 
 			historyDayInfoNew := model.WorkoutDistanceDayInfo{
 				Distance:    item.Distance,
-				WorkoutDate: item.WorkoutDate.Format("2006-01-02"),
+				WorkoutDate: item.WorkoutDate.Format("2006-01-02 15:04:05"),
 				WorkoutTime: item.TimeString,
 			}
 			historyDayInfo = append(historyDayInfo, historyDayInfoNew)
