@@ -113,6 +113,7 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.GET("/workouts", workoutsAPI.GetWorkouts)
 		g.POST("/workouts/history", workoutsAPI.GetWorkoutsHistoryMonth)
 		g.GET("/workouts/historyAll", workoutsAPI.GetWorkoutsHistoryAll)
+		g.GET("/workoutDetail/:id", workoutsAPI.GetWorkoutDetail)
 	}
 
 }
