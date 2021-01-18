@@ -287,3 +287,43 @@ func (api WorkoutsAPI) GetWorkoutsHistoryAll(c *gin.Context) {
 	res.Response(http.StatusOK, "success", workout)
 	c.Abort()
 }
+
+// GetWorkoutsDetail api godoc
+// @Summary Get workouts detail by id
+// @Description list workouts API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags workouts
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response{data=model.Workouts}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /workoutDetail [get]
+func (api WorkoutsAPI) GetWorkoutDetail(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+
+	userID, _ := oauth.GetValuesToken(c)
+	//userID := "5d8820749c3f42e4088c980f"
+	//userID := "5d8aca21d950a8181151aab9"
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+
+	id := c.Param("id")
+	workoutID, _ := primitive.ObjectIDFromHex(id)
+
+	isNotHas, workout, err := api.WorkoutsRepository.WorkoutInfo(userObjectID, workoutID)
+	if isNotHas {
+		res.Response(http.StatusNoContent, "status no content", workout)
+		c.Abort()
+		return
+	} else if err != nil {
+		log.Println("error get work", err.Error())
+		res.Response(http.StatusInternalServerError, "get workout fail", workout)
+		c.Abort()
+		return
+	}
+	res.Response(http.StatusOK, "success", workout)
+	c.Abort()
+}

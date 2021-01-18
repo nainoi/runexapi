@@ -100,9 +100,10 @@ type WorkoutHistoryDayInfo struct {
 }
 
 type WorkoutDistanceDayInfo struct {
-	Distance    float64 `json:"distance" bson:"distance"`
-	WorkoutDate string  `json:"workout_date" bson:"workout_date"`
-	WorkoutTime string  `json:"workout_time" json:"workout_time"`
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Distance    float64            `json:"distance" bson:"distance"`
+	WorkoutDate string             `json:"workout_date" bson:"workout_date"`
+	WorkoutTime string             `json:"workout_time" json:"workout_time"`
 }
 
 type WorkoutHistoryAllInfo struct {
