@@ -14,7 +14,7 @@ import (
 //ReportRepository interface
 type ReportRepository interface {
 	GetDashboardByEvent(eventID string) (model.ReportDashboard, error)
-	GetDashboardByEventCode(code model.EventData) (model.ReportDashboard, error)
+	GetDashboardByEventCode(code model.Event) (model.ReportDashboard, error)
 }
 
 //ReportRepositoryMongo mongo ref
@@ -46,19 +46,18 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 	// if err != nil {
 	// 	return dashboard, err
 	// }
-	
 
-	var event model.EventV2
+	var event model.Event
 	filterEvent := bson.M{"code": eventID}
 	err := reportMongo.ConnectionDB.Collection("event_v2").FindOne(context.TODO(), filterEvent).Decode(&event)
 	if err != nil {
 		log.Println(err)
 		return dashboard, err
 	}
-	dashboard.EventID = event.ID
+	//dashboard.EventID = event.Event.ID
 	dashboard.Code = eventID
-	var ticket []model.TicketEventV2
-	ticket = event.Ticket
+	var ticket []model.Tickets
+	ticket = event.Tickets
 	var ticketTemp model.TicketSummary
 	var amountTemp model.AmountSummary
 	for _, item := range ticket {
@@ -88,7 +87,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 		// }
 
 		ticketTemp = model.TicketSummary{
-			TicketID:                item.TicketID,
+			TicketID:                item.ID,
 			Title:                   item.Title,
 			RegisterCount:           0,
 			PaidCount:               0,
@@ -97,7 +96,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 		ticketSummary = append(ticketSummary, ticketTemp)
 
 		amountTemp = model.AmountSummary{
-			TicketID:           item.TicketID,
+			TicketID:           item.ID,
 			Title:              item.Title,
 			PaidSuccess:        0.0,
 			PaidWaiting:        0.0,
@@ -126,7 +125,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 	// 	}
 	// }
 
-	filter := bson.M{"event_id": event.ID}
+	filter := bson.M{"event_code": event.Code}
 	err = reportMongo.ConnectionDB.Collection("register_v2").FindOne(context.TODO(), filter).Decode(&registerEvent)
 
 	if err != nil {
@@ -154,10 +153,10 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.ID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
 						dashboard.TicketSummary[indexArr].PaidCount = dashboard.TicketSummary[indexArr].PaidCount + 1
-						dashboard.AmountSummary[indexArr].PaidSuccess = dashboard.AmountSummary[indexArr].PaidSuccess + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidSuccess = dashboard.AmountSummary[indexArr].PaidSuccess + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -172,9 +171,9 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.ID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
-						dashboard.AmountSummary[indexArr].PaidWaiting = dashboard.AmountSummary[indexArr].PaidWaiting + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidWaiting = dashboard.AmountSummary[indexArr].PaidWaiting + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -189,10 +188,10 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.ID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
 						dashboard.TicketSummary[indexArr].PaidWaitingApproveCount = dashboard.TicketSummary[indexArr].PaidWaitingApproveCount + 1
-						dashboard.AmountSummary[indexArr].PaidWaitingApprove = dashboard.AmountSummary[indexArr].PaidWaitingApprove + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidWaitingApprove = dashboard.AmountSummary[indexArr].PaidWaitingApprove + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -210,7 +209,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 	return dashboard, nil
 
 	//Old algorithm
-	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_id": event.ID}}}
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": event.Code}}}
 	//unwindStage := bson.D{{"$unwind", "$regs"}}
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
@@ -262,7 +261,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 }
 
 //GetDashboardByEventCode repo for dashboard event
-func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.EventData) (model.ReportDashboard, error) {
+func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Event) (model.ReportDashboard, error) {
 	var dashboard model.ReportDashboard
 	var registerEvent model.RegisterV2
 	var register []model.Regs
@@ -338,7 +337,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 	// 	}
 	// }
 
-	filter := bson.M{"event_code": event.Event.Code}
+	filter := bson.M{"event_code": event.Code}
 	err := reportMongo.ConnectionDB.Collection("register_v2").FindOne(context.TODO(), filter).Decode(&registerEvent)
 
 	if err != nil {
@@ -366,10 +365,10 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.TicketID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
 						dashboard.TicketSummary[indexArr].PaidCount = dashboard.TicketSummary[indexArr].PaidCount + 1
-						dashboard.AmountSummary[indexArr].PaidSuccess = dashboard.AmountSummary[indexArr].PaidSuccess + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidSuccess = dashboard.AmountSummary[indexArr].PaidSuccess + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -384,9 +383,9 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.ID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
-						dashboard.AmountSummary[indexArr].PaidWaiting = dashboard.AmountSummary[indexArr].PaidWaiting + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidWaiting = dashboard.AmountSummary[indexArr].PaidWaiting + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -401,10 +400,10 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 				indexArr := 0
 				for _, item3 := range ticketSummary {
 
-					if item2.Tickets.TicketID == item3.TicketID {
+					if item2.Tickets.ID == item3.ID {
 						dashboard.TicketSummary[indexArr].RegisterCount = dashboard.TicketSummary[indexArr].RegisterCount + 1
 						dashboard.TicketSummary[indexArr].PaidWaitingApproveCount = dashboard.TicketSummary[indexArr].PaidWaitingApproveCount + 1
-						dashboard.AmountSummary[indexArr].PaidWaitingApprove = dashboard.AmountSummary[indexArr].PaidWaitingApprove + item2.Tickets.TotalPrice
+						dashboard.AmountSummary[indexArr].PaidWaitingApprove = dashboard.AmountSummary[indexArr].PaidWaitingApprove + item2.TotalPrice
 						break
 					}
 					indexArr = indexArr + 1
@@ -421,9 +420,9 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 
 	return dashboard, nil
 
-	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": event.Event.Code}}}
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": event.Code}}}
 	//Old algorithm
-	
+
 	//unwindStage := bson.D{{"$unwind", "$regs"}}
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
@@ -442,7 +441,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEventCode(event model.Eve
 		if err := curPaid.Decode(&p); err != nil {
 			log.Print(err)
 		}
-		log.Println("[info] p %s", p)
+		//log.Println("[info] p %s", err.Error())
 		dashboard.RegisterPaid = len(p.Regs)
 	}
 	projectStage = bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.status", config.PAYMENT_WAITING}}}}}}}

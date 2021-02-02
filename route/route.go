@@ -1,7 +1,6 @@
 package route
 
 import (
-	_ "fmt"
 	"log"
 	"net/http"
 	"time"
@@ -33,7 +32,6 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
-	handle_register "thinkdev.app/think/runex/runexapi/api/v1/register"
 	"thinkdev.app/think/runex/runexapi/api/v1/uploads"
 	handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 	auth "thinkdev.app/think/runex/runexapi/middleware"
@@ -101,7 +99,7 @@ func Route(route *gin.Engine, connectionDB *mongo.Database) {
 
 	ActivityRoute(route, connectionDB, middleware)
 	CategoryRoute(route, connectionDB, middleware)
-	RegisterRoute(route, connectionDB, middleware)
+	//RegisterRoute(route, connectionDB, middleware)
 	BannerRoute(route, connectionDB, middleware)
 	CouponRoute(route, connectionDB, middleware)
 	RunHistoryRoute(route, connectionDB, middleware)
@@ -161,7 +159,7 @@ func CategoryRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *
 }
 
 // RegisterRoute for manage register
-func RegisterRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
+/*func RegisterRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {
 	registerRepository := repository.RegisterRepositoryMongo{
 		ConnectionDB: connectionDB,
 	}
@@ -193,7 +191,7 @@ func RegisterRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *
 			api.PUT("/updateStatus", registerAPI.UpdateStatus)
 		}
 	}
-}
+}*/
 
 // BannerRoute for manage banner
 func BannerRoute(route *gin.Engine, connectionDB *mongo.Database, middleware *jwt.GinJWTMiddleware) {

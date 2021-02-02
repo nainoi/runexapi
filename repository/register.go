@@ -487,7 +487,7 @@ func (registerMongo RegisterRepositoryMongo) SendRaceMailRegister(registerID str
 	return err
 }
 
-func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID string) ([]model.EventRegInfo, error) {
+/*func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID string) ([]model.EventRegInfo, error) {
 	var register []model.Register
 	objectID, err := primitive.ObjectIDFromHex(userID)
 	filter := bson.D{{"user_id", objectID}, {"status", "PAYMENT_SUCCESS"}}
@@ -550,7 +550,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 	}
 	//uniqueEvents := unique(events)
 	return events, nil
-}
+}*/
 
 func (registerMongo RegisterRepositoryMongo) GetRegisterReport(formRequest model.DataRegisterRequest) (model.ReportRegister, error) {
 	var register []model.Register

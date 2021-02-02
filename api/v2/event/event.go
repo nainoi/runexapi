@@ -11,22 +11,13 @@ import (
 	//handle_user "thinkdev.app/think/runex/runexapi/api/v1/user"
 
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
-	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 
 	//"thinkdev.app/think/runex/runexapi/repository"
 	repo2 "thinkdev.app/think/runex/runexapi/repository/v2"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gosimple/slug"
 	"thinkdev.app/think/runex/runexapi/model"
-	"thinkdev.app/think/runex/runexapi/pkg/app"
-	"thinkdev.app/think/runex/runexapi/pkg/e"
 )
-
-// EventAPI reference
-type EventAPI struct {
-	EventRepository repo2.EventRepository
-}
 
 // EventStatus struct
 type EventStatus struct {
@@ -89,6 +80,7 @@ func (api EventAPI) AddEvent(c *gin.Context) {
 
 }*/
 
+/*
 // MyEvent api godoc
 // @Summary Get my event
 // @Description get event owner API calls
@@ -115,7 +107,7 @@ func (api EventAPI) MyEvent(c *gin.Context) {
 
 	res.Response(http.StatusOK, "success", event)
 
-}
+}*/
 
 // GetAll api godoc
 // @Summary Get event all
@@ -185,6 +177,7 @@ func GetAll(c *gin.Context) {
 
 }
 
+/*
 // GetAllActive api godoc
 // @Summary Get event active status
 // @Description get Get event active status API calls
@@ -247,7 +240,7 @@ func (api EventAPI) GetAllActive(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "success", event)
 
-}
+}*/
 
 // GetDetail api godoc
 // @Summary Get event detail
@@ -287,7 +280,7 @@ func GetDetail(c *gin.Context) {
 }
 
 //GetByStatus go doc
-func (api EventAPI) GetByStatus(c *gin.Context) {
+/*func (api EventAPI) GetByStatus(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 	)
@@ -303,7 +296,7 @@ func (api EventAPI) GetByStatus(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, event)
 
-}
+}*/
 
 /*
 func (api EventAPI) GetByID(c *gin.Context) {
@@ -571,7 +564,7 @@ func (api EventAPI) DeleteTicketEvent(c *gin.Context) {
 }
 */
 
-func (api EventAPI) SearchEvent(c *gin.Context) {
+/*func (api EventAPI) SearchEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 	)
@@ -590,9 +583,9 @@ func (api EventAPI) SearchEvent(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, event)
 
-}
+}*/
 
-func (api EventAPI) ValidateSlug(c *gin.Context) {
+/*func (api EventAPI) ValidateSlug(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
 	)
@@ -623,8 +616,9 @@ func (api EventAPI) ValidateSlug(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, json.Slug)
 
-}
+}*/
 
+/*
 // GetBySlug api godoc
 // @Summary Get my event
 // @Description get event owner API calls
@@ -665,7 +659,7 @@ func (api EventAPI) GetBySlug(c *gin.Context) {
 	//data := EventRes{event, user}
 	appG.Response(http.StatusOK, "success", gin.H{"event": event, "user": user})
 
-}
+}*/
 
 func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 	req.Header.Add("Authorization", via[0].Header.Get("Authorization"))

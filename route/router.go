@@ -7,7 +7,6 @@ import (
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
 	"thinkdev.app/think/runex/runexapi/api/v2/config"
 	eventV2 "thinkdev.app/think/runex/runexapi/api/v2/event"
-	handle_event_v2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
@@ -15,6 +14,7 @@ import (
 	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
 	"thinkdev.app/think/runex/runexapi/api/v2/report"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
+	"thinkdev.app/think/runex/runexapi/api/v2/tambon"
 	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
@@ -38,7 +38,16 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		eventGroup(*api, connectionDB)
 		registerGroup(*api, connectionDB)
 		reportGroup(*api, connectionDB)
+		tambonGroup(*api)
 	}
+}
+
+func tambonGroup(g gin.RouterGroup) {
+	g.GET("/tambon/:zipcode", tambon.SearchZipcode)
+	g.GET("/province/:province", tambon.SearchProvince)
+	g.GET("/amphoe/:amphoe", tambon.SearchAmphoe)
+	g.GET("/district/:district", tambon.SearchDistrict)
+	g.GET("tambons", tambon.All)
 }
 
 func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
@@ -181,25 +190,25 @@ func migrationGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 }
 
 func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
-	eventRepository := repository.EventRepositoryMongo{
-		ConnectionDB: connectionDB,
-	}
-	eventAPI := handle_event_v2.EventAPI{
-		EventRepository: &eventRepository,
-	}
+	// eventRepository := repository.EventRepositoryMongo{
+	// 	ConnectionDB: connectionDB,
+	// }
+	// eventAPI := handle_event_v2.EventAPI{
+	// 	EventRepository: &eventRepository,
+	// }
 	group := g.Group("/event")
 	{
-		group.GET("/findByStatus/:status", eventAPI.GetByStatus)
+		// group.GET("/findByStatus/:status", eventAPI.GetByStatus)
 		//group.GET("/eventInfo/:id", eventAPI.GetByID)
-		group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
+		// group.GET("/eventDetail/:slug", eventAPI.GetBySlug)
 		group.GET("/all", eventV2.GetAll)
 		// group.GET("/active", eventV2.GetAllActive)
-		group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
+		// group.GET("/getBySlug/:slug", eventAPI.GetBySlug)
 		group.GET("/detail/:code", eventV2.GetDetail)
 		group.Use(oauth.AuthMiddleware())
 		{
 			// group.POST("", eventAPI.AddEvent)
-			group.GET("/myEvent", eventAPI.MyEvent)
+			// group.GET("/myEvent", eventAPI.MyEvent)
 			// group.PUT("/edit/:id", eventAPI.EditEvent)
 			// group.DELETE("/delete/:id", eventAPI.DeleteEvent)
 			// group.POST("/:id/uploadImage", eventAPI.UploadImage)
@@ -210,7 +219,7 @@ func eventGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			// group.POST("/:id/addTicket", eventAPI.AddTicket)
 			// group.POST("/:id/editTicket", eventAPI.EditTicket)
 			// group.DELETE("/deleteTicket/:id/:ticketID", eventAPI.DeleteTicketEvent)
-			group.PUT("/validateSlug", eventAPI.ValidateSlug)
+			// group.PUT("/validateSlug", eventAPI.ValidateSlug)
 		}
 	}
 

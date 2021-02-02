@@ -75,7 +75,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterAll() ([]model.RegisterV
 		var u model.RegisterV2
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
+			log.Println(err)
 		}
 		//fmt.Printf("post: %+v\n", p)
 		register = append(register, u)
@@ -87,7 +87,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterAll() ([]model.RegisterV
 //AddRegister repo
 func (registerMongo RegisterRepositoryMongo) AddRegister(register model.RegisterRequest) (model.RegisterV2, error) {
 
-	filter := bson.M{"event_id": register.EventID}
+	filter := bson.M{"event_code": register.EventCode}
 	dataInfo := register.Regs
 	count, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filter)
 	//log.Printf("[info] count %s", count)
@@ -119,29 +119,30 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 	}
 
 	if count > 0 {
-		filter := bson.D{primitive.E{Key: "event_id", Value: register.EventID}, primitive.E{Key: "regs.user_id", Value: dataInfo.UserID}}
+		filter := bson.D{primitive.E{Key: "event_code", Value: register.EventCode}, primitive.E{Key: "regs.user_id", Value: dataInfo.UserID}}
 		var regModel model.RegisterV2
 		options := options.FindOne()
 		options.SetProjection(bson.M{"regs.$": 1})
 
 		err := registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filter, options).Decode(&regModel)
 		if err == nil {
-			regModel.EventID = register.EventID
 			return regModel, err
 		}
 		dataInfo.ID = primitive.NewObjectID()
 		dataInfo.CreatedAt = time.Now()
 		dataInfo.UpdatedAt = time.Now()
-		dataInfo.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
 		dataInfo.OrderID = utils.OrderIDGenerate()
+		for _, v := range dataInfo.TicketOptions {
+			v.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+		}
 		update := bson.M{"$push": bson.M{"regs": dataInfo}}
-		filter = bson.D{primitive.E{Key: "event_id", Value: register.EventID}}
+		filter = bson.D{primitive.E{Key: "event_code", Value: register.Regs.EventCode}}
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
 			log.Println(err.Error())
 			return regModel, err
 		}
-		SaveRegister(dataInfo, register.EventID)
+		SaveRegister(dataInfo, register.EventCode)
 
 	} else {
 		var arrRegs []model.Regs
@@ -149,11 +150,16 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.CreatedAt = time.Now()
 		dataInfo.UpdatedAt = time.Now()
 		dataInfo.OrderID = utils.OrderIDGenerate()
-		dataInfo.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+		for _, v := range dataInfo.TicketOptions {
+			v.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+		}
 		arrRegs = append(arrRegs, dataInfo)
+
 		registerModel := model.RegisterV2{
-			EventID: register.EventID,
-			Regs:    arrRegs,
+			EventCode: register.EventCode,
+			Regs:      arrRegs,
+			OwnerID:   register.Regs.Event.UserID,
+			UserCode:  register.Regs.Event.UserID,
 		}
 
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).InsertOne(context.TODO(), registerModel)
@@ -163,21 +169,15 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			return registerModel, err
 		}
 
-		SaveRegister(dataInfo, register.EventID)
+		SaveRegister(dataInfo, register.EventCode)
 	}
+	go registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventCode)
 
-	var regModel model.RegisterV2
-	if err != nil {
-		return regModel, err
-	}
-	err3 := registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventID.Hex())
-	if err3 != nil {
-		log.Println(err3)
-	}
-
-	regModel, err2 := registerMongo.GetRegEventByIDNew(dataInfo.ID.Hex(), register.EventID.Hex())
-	if err2 != nil {
-		return regModel, err2
+	var regModel = model.RegisterV2{
+		Regs:      []model.Regs{dataInfo},
+		EventCode: register.EventCode,
+		OwnerID:   register.Regs.Event.UserID,
+		UserCode:  register.Regs.Event.UserID,
 	}
 
 	return regModel, err
@@ -226,8 +226,8 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 		dataInfo.UpdatedAt = time.Now()
 		arrRegs = append(arrRegs, dataInfo)
 		registerModel := model.RegisterV2{
-			EventID: register.EventID,
-			Regs:    arrRegs,
+			EventCode: register.EventCode,
+			Regs:      arrRegs,
 		}
 
 		_, err := registerMongo.ConnectionDB.Collection(registerCollection).InsertOne(context.TODO(), registerModel)
@@ -242,7 +242,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 	// 	log.Fatal(res)
 	// }
 	// fmt.Println("Inserted a single document: ", res.InsertedID)
-	regModel, err2 := registerMongo.GetRegEventByIDNew(dataInfo.ID.Hex(), register.EventID.Hex())
+	regModel, err2 := registerMongo.GetRegEventByIDNew(dataInfo.ID.Hex(), register.EventCode)
 	if err2 != nil {
 		return regModel, err
 	}
@@ -255,7 +255,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 		log.Print(err)
 	}
 
-	err3 := registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventID.Hex())
+	err3 := registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventCode)
 	if err3 != nil {
 		log.Fatal(err3)
 	}
@@ -384,9 +384,9 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 	if err != nil {
 		log.Println(err)
 	}
-
+	var u model.RegisterV2
+	u.Regs = []model.Regs{}
 	for cur.Next(context.TODO()) {
-		var u model.RegisterV2
 
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
@@ -400,6 +400,8 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 		if err != nil {
 			log.Print(err)
 		}
+		log.Println(event)
+		log.Println(u)
 		u.Regs[0].Event = event
 		// var event model.Event
 		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
@@ -584,22 +586,15 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByID(regID string) (mode
 }
 
 //GetRegEventByIDNew repo for register detail
-func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, eventID string) (model.RegisterV2, error) {
+func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, eventCode string) (model.RegisterV2, error) {
 
 	var regEvent model.RegisterV2
-
-	eventObjectID, err := primitive.ObjectIDFromHex(eventID)
-	if err != nil {
-		log.Fatal(err)
-	}
 	regObjectID, err3 := primitive.ObjectIDFromHex(regID)
 	if err3 != nil {
-		log.Fatal(err3)
+		log.Println(err3)
 	}
-	log.Printf("[info eventObjectID] cur %s", eventObjectID)
-	log.Printf("[info regObjectID] cur %s", regObjectID)
 
-	filter := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
+	filter := bson.D{bson.E{Key: "event_code", Value: eventCode}, bson.E{Key: "regs._id", Value: regObjectID}}
 
 	options := options.FindOne()
 	options.SetProjection(bson.M{"regs.$": 1})
@@ -608,7 +603,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, ev
 	if err2 != nil {
 		log.Fatal(err2)
 	}
-	regEvent.EventID = eventObjectID
+	regEvent.EventCode = eventCode
 	return regEvent, err2
 }
 
@@ -702,15 +697,14 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegister(registerID string)
 }
 
 // SendMailRegisterNew new version
-func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID string, eventID string) error {
+func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID string, eventCode string) error {
 	var registerEvent model.RegisterV2
 	var register model.Regs
 	var user model.UserProvider
 	var mailTemplate model.EmailTemplateData2
-	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
 	regObjectID, _ := primitive.ObjectIDFromHex(registerID)
 	//filter := bson.D{{"event_id", eventObjectID}}
-	filter := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
+	filter := bson.D{bson.E{Key: "event_code", Value: eventCode}, bson.E{Key: "regs._id", Value: regObjectID}}
 
 	options := options.FindOne()
 	options.SetProjection(bson.M{"regs.$": 1})
@@ -720,43 +714,42 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegisterNew(registerID stri
 	}
 	register = registerEvent.Regs[0]
 	filterUser := bson.D{bson.E{Key: "_id", Value: register.UserID}}
-	err = registerMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
+	err = registerMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 	if err != nil {
 		log.Println(err)
 	}
-	var registerEventAll model.RegisterV2
-	filterEvent := bson.D{bson.E{Key: "event_id", Value: eventObjectID}}
-	err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filterEvent).Decode(&registerEventAll)
-	count := len(registerEventAll.Regs)
-	fmt.Println("First Length:", count)
-	registerNumber := fmt.Sprintf("%05d", count)
-	address := ""
-	if register.TicketOptions[0].UserOption.Address != nil {
-		shipingAddress := register.TicketOptions[0].UserOption.Address[0]
-		address = shipingAddress.Address + " City " + shipingAddress.City + " District " + shipingAddress.District + " Province " + shipingAddress.Province + " " + shipingAddress.Zipcode
+	// var registerEventAll model.RegisterV2
+	// filterEvent := bson.D{bson.E{Key: "event_code", Value: eventCode}}
+	// err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filterEvent).Decode(&registerEventAll)
+	// count := len(registerEventAll.Regs)
+	// fmt.Println("First Length:", count)
+	// registerNumber := fmt.Sprintf("%05d", count)
+	// address := ""
+	// if register.TicketOptions[0].UserOption.Address != "" {
+	// 	address = register.TicketOptions[0].UserOption.Address
 
-	}
+	// }
 
-	filterUpdate := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
-	updated := bson.M{"$set": bson.M{"regs.$.register_number": registerNumber}}
-	_, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
-	if err != nil {
-		log.Printf("[info] err %s", err.Error())
-		return err
-	}
+	// filterUpdate := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
+	// updated := bson.M{"$set": bson.M{"regs.$.register_number": registerNumber}}
+	// _, err = registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filterUpdate, updated)
+	// if err != nil {
+	// 	log.Printf("[info] err %s", err.Error())
+	// 	return err
+	// }
 
 	mailTemplate.Name = user.FirstName + " " + user.LastName
-	mailTemplate.RefID = registerID
+	mailTemplate.RefID = register.OrderID
 	mailTemplate.Email = user.Email
 	mailTemplate.Phone = user.Phone
 	mailTemplate.IdentificationNumber = user.CitycenID
 	mailTemplate.ContactPhone = user.Phone
-	mailTemplate.CompetitionType = register.TicketOptions[0].Tickets.TicketName
-	mailTemplate.RegisterNumber = registerNumber
-	mailTemplate.TicketName = register.TicketOptions[0].Tickets.TicketName
+	mailTemplate.CompetitionType = register.TicketOptions[0].Tickets.Title
+	mailTemplate.RegisterNumber = register.TicketOptions[0].RegisterNumber
+	mailTemplate.TicketName = register.TicketOptions[0].Tickets.Title
 	mailTemplate.Status = register.Status
 	mailTemplate.PaymentType = register.PaymentType
-	mailTemplate.ShipingAddress = address
+	mailTemplate.ShipingAddress = register.TicketOptions[0].UserOption.Address
 
 	fmt.Println("Mail Object :  ", mailTemplate)
 
@@ -1587,8 +1580,8 @@ func (registerMongo RegisterRepositoryMongo) UpdateStatusRegister(registerID str
 }
 
 //SaveRegister repo
-func SaveRegister(data model.Regs, eventID primitive.ObjectID) error {
-	filter := bson.D{bson.E{Key: "reg_id", Value: data.ID}, bson.E{Key: "event_id", Value: eventID}}
+func SaveRegister(data model.Regs, eventID string) error {
+	filter := bson.D{bson.E{Key: "reg_id", Value: data.ID}, bson.E{Key: "event_code", Value: eventID}}
 	count, err := db.DB.Collection(registerAllCollection).CountDocuments(context.TODO(), filter)
 	if count == 0 {
 		_, err := db.DB.Collection(registerAllCollection).InsertOne(context.TODO(), data)

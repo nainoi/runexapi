@@ -18,22 +18,22 @@ type ReportDashboard struct {
 
 // TicketSummary struct
 type TicketSummary struct {
-	TicketID                primitive.ObjectID `json:"ticket_id" bson:"ticket_id,omitempty"`
-	ID                      string             `json:"id" bson:"id"`
-	Title                   string             `json:"title" bson:"title"`
-	RegisterCount           int                `json:"register_count" bson:"register_count"`
-	PaidCount               int                `json:"paid_count" bson:"paid_count"`
-	PaidWaitingApproveCount int                `json:"paid_waiting_approve_count" bson:"paid_waiting_approve_count"`
+	TicketID                string `json:"ticket_id" bson:"ticket_id,omitempty"`
+	ID                      string `json:"id" bson:"id"`
+	Title                   string `json:"title" bson:"title"`
+	RegisterCount           int    `json:"register_count" bson:"register_count"`
+	PaidCount               int    `json:"paid_count" bson:"paid_count"`
+	PaidWaitingApproveCount int    `json:"paid_waiting_approve_count" bson:"paid_waiting_approve_count"`
 }
 
 // AmountSummary struct
 type AmountSummary struct {
-	TicketID           primitive.ObjectID `json:"ticket_id" bson:"ticket_id,omitempty"`
-	ID                 string             `json:"id" bson:"id"`
-	Title              string             `json:"title" bson:"title"`
-	PaidSuccess        float64            `json:"paid_success" bson:"paid_success"`
-	PaidWaiting        float64            `json:"paid_waiting" bson:"paid_waiting"`
-	PaidWaitingApprove float64            `json:"paid_waiting_approve" bson:"paid_waiting_approve"`
+	TicketID           string  `json:"ticket_id" bson:"ticket_id,omitempty"`
+	ID                 string  `json:"id" bson:"id"`
+	Title              string  `json:"title" bson:"title"`
+	PaidSuccess        float64 `json:"paid_success" bson:"paid_success"`
+	PaidWaiting        float64 `json:"paid_waiting" bson:"paid_waiting"`
+	PaidWaitingApprove float64 `json:"paid_waiting_approve" bson:"paid_waiting_approve"`
 }
 
 // AmountSummaryEvent struct

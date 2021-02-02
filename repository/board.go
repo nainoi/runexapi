@@ -9,11 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/model"
+	v2 "thinkdev.app/think/runex/runexapi/repository/v2"
 )
 
 // BoardRepository interface
 type BoardRepository interface {
-	GetBoardByEvent(eventID string, userID string) (model.EventV2, int64, []model.Ranking, []model.Ranking, error)
+	GetBoardByEvent(eventID string, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error)
 }
 
 // BoardRepositoryMongo db struct
@@ -26,33 +27,33 @@ const (
 )
 
 //GetBoardByEvent board ranking
-func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID string) ( model.EventV2, int64 ,[]model.Ranking, []model.Ranking, error) {
+func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error) {
 	//var activity model.Activity
 	//var activityInfo []model.ActivityInfo
-	var event = model.EventV2{}
+	var event = model.Event{}
 	var activities = []model.Ranking{}
 	myActivities := []model.Ranking{}
 
-	objectEventID, err := primitive.ObjectIDFromHex(eventID)
-	if err != nil {
-		log.Println(err)
-		return event, 0, activities, myActivities, err
-	}
+	// objectEventID, err := primitive.ObjectIDFromHex(eventID)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return event, 0, activities, myActivities, err
+	// }
 	objectUserID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
 		log.Println(err)
 		return event, 0, activities, myActivities, err
 	}
-	
+
 	var temps = []model.Ranking{}
-	
+
 	//filter := bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
-	filter := bson.D{primitive.E{Key: "event_id", Value: objectEventID}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: code}}
 	option := options.Find()
 
-	filterEvent := bson.D{primitive.E{Key: "_id", Value: objectEventID}}
-	
-	err = boardMongo.ConnectionDB.Collection("event_v2").FindOne(context.TODO(), filterEvent).Decode(&event)
+	//filterEvent := bson.D{primitive.E{Key: "_id", Value: objectEventID}}
+
+	event, err = v2.DetailEventByCode(code)
 	if err != nil {
 		return event, 0, activities, myActivities, err
 	}
@@ -62,7 +63,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		return event, count, activities, myActivities, err
 	}
 	//filter = bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
-	option.SetSort(bson.D{primitive.E{Key:"activities.total_distance",Value: -1}})
+	option.SetSort(bson.D{primitive.E{Key: "activities.total_distance", Value: -1}})
 	cur, err := boardMongo.ConnectionDB.Collection(activityV2Collection).Find(context.TODO(), filter, option)
 
 	if err != nil {
@@ -78,15 +79,14 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 	}
 
 	n := 0
-	
 
 	for cur.Next(context.TODO()) {
 		// if n >= 10 {
 		// 	break
 		// }
-		
+
 		var activity model.ActivityV2
-		var a  model.Ranking
+		var a model.Ranking
 		// decode the document
 		if err := cur.Decode(&activity); err != nil {
 			log.Fatal(err)
@@ -94,19 +94,19 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		if n < 10 {
 			var user model.UserEvent
 			// log.Printf("[info] userID %s", userID)
-			filterUser := bson.D{primitive.E{Key: "_id",Value: activity.Activities.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: activity.Activities.UserID}}
 			err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {
 				log.Println(err)
 			}
 			a = model.Ranking{
-				UserID: activity.Activities.UserID,
-				ActivityInfo: activity.Activities.ActivityInfo,
+				UserID:        activity.Activities.UserID,
+				ActivityInfo:  activity.Activities.ActivityInfo,
 				ToTalDistance: activity.Activities.ToTalDistance,
-				UserInfo: user,
-				EventID: objectEventID,
-				ID: activity.ID,
+				UserInfo:      user,
+				EventCode:     code,
+				ID:            activity.ID,
 			}
 			a.RankNo = n + 1
 			//a.UserInfo = user
@@ -132,7 +132,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 			var user model.UserEvent
 			// log.Printf("[info] userID %s", userID)
 			ranking := temps[index-2]
-			filterUser := bson.D{primitive.E{Key:"_id",Value: ranking.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: ranking.UserID}}
 			err := boardMongo.ConnectionDB.Collection("user").FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {
@@ -145,7 +145,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		if (index - 1) >= 0 {
 			var user model.UserEvent
 			ranking := temps[index-1]
-			filterUser := bson.D{primitive.E{Key:"_id",Value: ranking.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: ranking.UserID}}
 			err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {
@@ -157,7 +157,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		}
 		var user model.UserEvent
 		ranking := temps[index]
-		filterUser := bson.D{primitive.E{Key: "_id",Value: ranking.UserID}}
+		filterUser := bson.D{primitive.E{Key: "_id", Value: ranking.UserID}}
 		err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 		if err != nil {
@@ -169,7 +169,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		if (index + 1) < len(temps) {
 			var user model.UserEvent
 			ranking := temps[index+1]
-			filterUser := bson.D{primitive.E{Key: "_id",Value: ranking.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: ranking.UserID}}
 			err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {
@@ -182,7 +182,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(eventID string, userID st
 		if (index + 2) < len(temps) {
 			var user model.UserEvent
 			ranking := temps[index+2]
-			filterUser := bson.D{primitive.E{Key: "_id",Value: ranking.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: ranking.UserID}}
 			err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {

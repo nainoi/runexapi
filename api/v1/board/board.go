@@ -24,7 +24,7 @@ type BoardEvent struct {
 
 // BoardResponse response struct
 type BoardResponse struct {
-	Event         model.EventV2   `json:"event"`
+	Event         model.Event     `json:"event"`
 	AllRank       []model.Ranking `json:"ranks"`
 	MyRank        []model.Ranking `json:"myrank"`
 	TotalActivity int64           `json:"total_activity"`

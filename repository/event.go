@@ -48,87 +48,87 @@ const (
 	ebibCollection  = "ebib"
 )
 
-func (eventMongo EventRepositoryMongo) AddEvent(event model.Event) (string, error) {
+// func (eventMongo EventRepositoryMongo) AddEvent(event model.Event) (string, error) {
 
-	event.Product = []model.ProduceEvent{}
-	event.Ticket = []model.TicketEvent{}
-	event.CreatedTime = time.Now()
-	event.UpdatedTime = time.Now()
-	res, err := eventMongo.ConnectionDB.Collection(eventCollection).InsertOne(context.TODO(), event)
-	if err != nil {
-		log.Fatal(res)
-	}
-	var ebib model.EbibEvent
-	ebib.EventID = event.ID
-	ebib.LastNo = 0
-	ebib.CreatedAt = time.Now()
-	ebib.UpdatedAt = time.Now()
-	eventMongo.ConnectionDB.Collection(ebibCollection).InsertOne(context.TODO(), ebib)
+// 	event.Product = []model.ProduceEvent{}
+// 	event.Ticket = []model.TicketEvent{}
+// 	event.CreatedTime = time.Now()
+// 	event.UpdatedTime = time.Now()
+// 	res, err := eventMongo.ConnectionDB.Collection(eventCollection).InsertOne(context.TODO(), event)
+// 	if err != nil {
+// 		log.Fatal(res)
+// 	}
+// 	var ebib model.EbibEvent
+// 	ebib.EventID = event.ID
+// 	ebib.LastNo = 0
+// 	ebib.CreatedAt = time.Now()
+// 	ebib.UpdatedAt = time.Now()
+// 	eventMongo.ConnectionDB.Collection(ebibCollection).InsertOne(context.TODO(), ebib)
 
-	fmt.Println("Inserted a single document: ", res.InsertedID)
-	return res.InsertedID.(primitive.ObjectID).Hex(), err
-}
+// 	fmt.Println("Inserted a single document: ", res.InsertedID)
+// 	return res.InsertedID.(primitive.ObjectID).Hex(), err
+// }
 
-func (eventMongo EventRepositoryMongo) EditEvent(eventID string, event model.Event) error {
+// func (eventMongo EventRepositoryMongo) EditEvent(eventID string, event model.Event) error {
 
-	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{{"_id", objectID}}
-	event.UpdatedTime = time.Now()
-	updated := bson.M{"$set": event}
-	res, err := eventMongo.ConnectionDB.Collection(eventCollection).UpdateOne(context.TODO(), filter, updated)
-	if err != nil {
-		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
-		return err
-	}
+// 	objectID, err := primitive.ObjectIDFromHex(eventID)
+// 	filter := bson.D{{"_id", objectID}}
+// 	event.UpdatedTime = time.Now()
+// 	updated := bson.M{"$set": event}
+// 	res, err := eventMongo.ConnectionDB.Collection(eventCollection).UpdateOne(context.TODO(), filter, updated)
+// 	if err != nil {
+// 		//log.Fatal(res)
+// 		log.Printf("[info] err %s", res)
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (eventMongo EventRepositoryMongo) GetEventByStatus(status string) ([]model.Event, error) {
-	var events []model.Event
-	filter := bson.D{{"status", status}}
-	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), filter)
-	//log.Printf("[info] cur %s", cur)
-	if err != nil {
-		log.Println(err)
-	}
+// func (eventMongo EventRepositoryMongo) GetEventByStatus(status string) ([]model.Event, error) {
+// 	var events []model.Event
+// 	filter := bson.D{{"status", status}}
+// 	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), filter)
+// 	//log.Printf("[info] cur %s", cur)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
 
-	for cur.Next(context.TODO()) {
-		var u model.Event
-		// decode the document
-		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
-		}
-		//fmt.Printf("post: %+v\n", p)
-		events = append(events, u)
-	}
+// 	for cur.Next(context.TODO()) {
+// 		var u model.Event
+// 		// decode the document
+// 		if err := cur.Decode(&u); err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		//fmt.Printf("post: %+v\n", p)
+// 		events = append(events, u)
+// 	}
 
-	return events, err
-}
+// 	return events, err
+// }
 
-func (eventMongo EventRepositoryMongo) GetEventAll() ([]model.Event, error) {
-	var events []model.Event
-	options := options.Find()
-	options.SetSort(bson.D{{"created_time", -1}})
-	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), bson.D{{}}, options)
-	//log.Printf("[info] cur %s", cur)
-	if err != nil {
-		log.Println(err)
-	}
+// func (eventMongo EventRepositoryMongo) GetEventAll() ([]model.Event, error) {
+// 	var events []model.Event
+// 	options := options.Find()
+// 	options.SetSort(bson.D{{"created_time", -1}})
+// 	cur, err := eventMongo.ConnectionDB.Collection(eventCollection).Find(context.TODO(), bson.D{{}}, options)
+// 	//log.Printf("[info] cur %s", cur)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
 
-	for cur.Next(context.TODO()) {
-		var u model.Event
-		// decode the document
-		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
-		}
-		//fmt.Printf("post: %+v\n", p)
-		events = append(events, u)
-	}
+// 	for cur.Next(context.TODO()) {
+// 		var u model.Event
+// 		// decode the document
+// 		if err := cur.Decode(&u); err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		//fmt.Printf("post: %+v\n", p)
+// 		events = append(events, u)
+// 	}
 
-	return events, err
-}
+// 	return events, err
+// }
 
 func (eventMongo EventRepositoryMongo) GetEventActive() ([]model.Event, error) {
 	var events []model.Event
@@ -170,33 +170,33 @@ func (eventMongo EventRepositoryMongo) ExistByName(name string) (bool, error) {
 	return false, nil
 }
 
-func (eventMongo EventRepositoryMongo) ExistByNameForEdit(name string, eventID string) (bool, error) {
+// func (eventMongo EventRepositoryMongo) ExistByNameForEdit(name string, eventID string) (bool, error) {
 
-	var event model.Event
-	id, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.M{"_id": id}
-	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
-	log.Printf("[info] event %s", err2)
-	if err2 != nil {
-		log.Fatal(err2)
-		//return true, err2
-	}
-	if event.Name == name {
-		return false, nil
-	}
+// 	var event model.Event
+// 	id, err := primitive.ObjectIDFromHex(eventID)
+// 	filter := bson.M{"_id": id}
+// 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+// 	log.Printf("[info] event %s", err2)
+// 	if err2 != nil {
+// 		log.Fatal(err2)
+// 		//return true, err2
+// 	}
+// 	if event.Name == name {
+// 		return false, nil
+// 	}
 
-	filter2 := bson.D{{"name", name}}
-	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter2)
-	log.Printf("[info] count %s", count)
-	if err != nil {
-		log.Println(err)
-	}
-	if count > 0 {
-		return true, nil
-	}
+// 	filter2 := bson.D{{"name", name}}
+// 	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter2)
+// 	log.Printf("[info] count %s", count)
+// 	if err != nil {
+// 		log.Println(err)
+// 	}
+// 	if count > 0 {
+// 		return true, nil
+// 	}
 
-	return false, nil
-}
+// 	return false, nil
+// }
 
 func (eventMongo EventRepositoryMongo) GetEventByID(eventID string) (model.Event, error) {
 
@@ -287,26 +287,26 @@ func (eventMongo EventRepositoryMongo) EditProductEvent(eventID string, product 
 	return nil
 }
 
-func (eventMongo EventRepositoryMongo) GetProductByEventID(eventID string) ([]model.ProduceEvent, error) {
+// func (eventMongo EventRepositoryMongo) GetProductByEventID(eventID string) ([]model.ProduceEvent, error) {
 
-	objectID, err := primitive.ObjectIDFromHex(eventID)
+// 	objectID, err := primitive.ObjectIDFromHex(eventID)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	var event model.Event
-	var productInfo []model.ProduceEvent
-	filter := bson.D{{"_id", objectID}}
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	var event model.Event
+// 	var productInfo []model.ProduceEvent
+// 	filter := bson.D{{"_id", objectID}}
 
-	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+// 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 
-	if err2 != nil {
-		log.Println(err2)
-		return nil, err2
-	}
-	productInfo = event.Product
-	return productInfo, err2
-}
+// 	if err2 != nil {
+// 		log.Println(err2)
+// 		return nil, err2
+// 	}
+// 	productInfo = event.Product
+// 	return productInfo, err2
+// }
 
 func (eventMongo EventRepositoryMongo) DeleteProductEvent(eventID string, productID string) error {
 	objectID, err := primitive.ObjectIDFromHex(eventID)
@@ -365,26 +365,26 @@ func (eventMongo EventRepositoryMongo) EditTicketEvent(eventID string, ticket mo
 	return nil
 }
 
-func (eventMongo EventRepositoryMongo) GetTicketByEventID(eventID string) ([]model.TicketEvent, error) {
+// func (eventMongo EventRepositoryMongo) GetTicketByEventID(eventID string) ([]model.TicketEvent, error) {
 
-	objectID, err := primitive.ObjectIDFromHex(eventID)
+// 	objectID, err := primitive.ObjectIDFromHex(eventID)
 
-	if err != nil {
-		log.Fatal(err)
-	}
-	var event model.Event
-	var ticketInfo []model.TicketEvent
-	filter := bson.D{{"_id", objectID}}
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	var event model.Event
+// 	var ticketInfo []model.TicketEvent
+// 	filter := bson.D{{"_id", objectID}}
 
-	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+// 	err2 := eventMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
 
-	if err2 != nil {
-		log.Println(err2)
-		return nil, err2
-	}
-	ticketInfo = event.Ticket
-	return ticketInfo, err2
-}
+// 	if err2 != nil {
+// 		log.Println(err2)
+// 		return nil, err2
+// 	}
+// 	ticketInfo = event.Ticket
+// 	return ticketInfo, err2
+// }
 
 func (eventMongo EventRepositoryMongo) DeleteTicketEvent(eventID string, ticketID string) error {
 	objectID, err := primitive.ObjectIDFromHex(eventID)

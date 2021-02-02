@@ -6,35 +6,35 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Event struct {
-	ID              primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Name            string             `json:"name" bson:"name"`
-	Description     string             `json:"description" bson:"description"`
-	Body            string             `json:"body" bson:"body"`
-	Captions        []Caption          `json:"captions" bson:"captions"`
-	Cover           string             `json:"cover" bson:"cover"`
-	CoverThumb      string             `json:"cover_thumb" bson:"cover_thumb"`
-	Category        Category           `json:"category" bson:"category"`
-	Slug            string             `json:"slug" bson:"slug"`
-	Product         []ProduceEvent     `json:"product" bson:"product"`
-	Ticket          []TicketEvent      `json:"ticket" bson:"ticket"`
-	Tag             []Tag              `json:"tags" bson:"tags"`
-	OwnerID         primitive.ObjectID `json:"owner_id" bson:"owner_id"`
-	Status          string             `json:"status" bson:"status"`
-	Location        string             `json:"location" bson:"location"`
-	ReceiveLocation string             `json:"receive_location" bson:"receive_location"`
-	IsActive        bool               `json:"is_active" bson:"is_active"`
-	IsFree          bool               `json:"is_free" bson:"is_free"`
-	StartReg        time.Time          `json:"start_reg" bson:"start_reg"`
-	EndReg          time.Time          `json:"end_reg" bson:"end_reg"`
-	StartEvent      time.Time          `json:"start_event" bson:"start_event"`
-	EndEvent        time.Time          `json:"end_event" bson:"end_event"`
-	Inapp           bool               `json:"inapp" bson:"inapp"`
-	IsPost          bool               `json:"is_post" bson:"is_post"`
-	PostEndDate     time.Time          `json:"post_end_date" bson:"post_end_date"`
-	CreatedTime     time.Time          `json:"created_time" bson:"created_time"`
-	UpdatedTime     time.Time          `json:"updated_time" bson:"updated_time"`
-}
+// type Event struct {
+// 	ID              primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+// 	Name            string             `json:"name" bson:"name"`
+// 	Description     string             `json:"description" bson:"description"`
+// 	Body            string             `json:"body" bson:"body"`
+// 	Captions        []Caption          `json:"captions" bson:"captions"`
+// 	Cover           string             `json:"cover" bson:"cover"`
+// 	CoverThumb      string             `json:"cover_thumb" bson:"cover_thumb"`
+// 	Category        Category           `json:"category" bson:"category"`
+// 	Slug            string             `json:"slug" bson:"slug"`
+// 	Product         []ProduceEvent     `json:"product" bson:"product"`
+// 	Ticket          []TicketEvent      `json:"ticket" bson:"ticket"`
+// 	Tag             []Tag              `json:"tags" bson:"tags"`
+// 	OwnerID         primitive.ObjectID `json:"owner_id" bson:"owner_id"`
+// 	Status          string             `json:"status" bson:"status"`
+// 	Location        string             `json:"location" bson:"location"`
+// 	ReceiveLocation string             `json:"receive_location" bson:"receive_location"`
+// 	IsActive        bool               `json:"is_active" bson:"is_active"`
+// 	IsFree          bool               `json:"is_free" bson:"is_free"`
+// 	StartReg        time.Time          `json:"start_reg" bson:"start_reg"`
+// 	EndReg          time.Time          `json:"end_reg" bson:"end_reg"`
+// 	StartEvent      time.Time          `json:"start_event" bson:"start_event"`
+// 	EndEvent        time.Time          `json:"end_event" bson:"end_event"`
+// 	Inapp           bool               `json:"inapp" bson:"inapp"`
+// 	IsPost          bool               `json:"is_post" bson:"is_post"`
+// 	PostEndDate     time.Time          `json:"post_end_date" bson:"post_end_date"`
+// 	CreatedTime     time.Time          `json:"created_time" bson:"created_time"`
+// 	UpdatedTime     time.Time          `json:"updated_time" bson:"updated_time"`
+// }
 
 type Category struct {
 	CategoryID primitive.ObjectID `json:"id" bson:"_id"`

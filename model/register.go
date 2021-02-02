@@ -200,23 +200,24 @@ type TicketOption struct {
 }
 
 type UserOption struct {
-	FirstName        string           `json:"firstname" bson:"firstname"`
-	LastName         string           `json:"lastname" bson:"lastname"`
-	FirstNameTH      string           `json:"firstname_th" bson:"firstname_th"`
-	LastNameTH       string           `json:"lastname_th" bson:"lastname_th"`
-	Phone            string           `json:"phone" bson:"phone"`
-	BirthDate        time.Time        `json:"birthdate" bson:"birthdate"`
-	Gender           string           `json:"gender" bson:"gender"`
-	CreatedAt        time.Time        `json:"created_at" bson:"created_at"`
-	UpdatedAt        time.Time        `json:"updated_at" bson:"updated_at"`
-	Confirm          bool             `json:"confirm" bson:"confirm"`
-	EmergencyContact string           `json:"emergency_contact" bson:"emergency_contact"`
-	EmergencyPhone   string           `json:"emergency_phone" bson:"emergency_phone"`
-	Nationality      string           `json:"nationality" bson:"nationality"`
-	Passport         string           `json:"passport" bson:"passport"`
-	CitycenID        string           `json:"citycen_id" bson:"citycen_id"`
-	BloodType        string           `json:"blood_type" bson:"blood_type"`
-	Address          []ShipingAddress `json:"address" bson:"address"`
+	FirstName        string    `json:"firstname" bson:"firstname"`
+	LastName         string    `json:"lastname" bson:"lastname"`
+	FirstNameTH      string    `json:"firstname_th" bson:"firstname_th"`
+	LastNameTH       string    `json:"lastname_th" bson:"lastname_th"`
+	Phone            string    `json:"phone" bson:"phone"`
+	BirthDate        time.Time `json:"birthdate" bson:"birthdate"`
+	Gender           string    `json:"gender" bson:"gender"`
+	CreatedAt        time.Time `json:"created_at" bson:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at" bson:"updated_at"`
+	Confirm          bool      `json:"confirm" bson:"confirm"`
+	EmergencyContact string    `json:"emergency_contact" bson:"emergency_contact"`
+	EmergencyPhone   string    `json:"emergency_phone" bson:"emergency_phone"`
+	Nationality      string    `json:"nationality" bson:"nationality"`
+	Passport         string    `json:"passport" bson:"passport"`
+	CitycenID        string    `json:"citycen_id" bson:"citycen_id"`
+	BloodType        string    `json:"blood_type" bson:"blood_type"`
+	Address          string    `json:"address" bson:"address"`
+	Tambon           Tambon    `json:"tambon" bson:"tambon"`
 }
 
 type ShipingAddressUpdateForm struct {
