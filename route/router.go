@@ -10,6 +10,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/migration"
 	"thinkdev.app/think/runex/runexapi/api/v2/notification"
+	"thinkdev.app/think/runex/runexapi/api/v2/paymethod"
 	"thinkdev.app/think/runex/runexapi/api/v2/preorder"
 	handle_register_v2 "thinkdev.app/think/runex/runexapi/api/v2/register"
 	"thinkdev.app/think/runex/runexapi/api/v2/report"
@@ -39,6 +40,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		registerGroup(*api, connectionDB)
 		reportGroup(*api, connectionDB)
 		tambonGroup(*api)
+		payMethodGroup(*api)
 	}
 }
 
@@ -48,6 +50,10 @@ func tambonGroup(g gin.RouterGroup) {
 	g.GET("/amphoe/:amphoe", tambon.SearchAmphoe)
 	g.GET("/district/:district", tambon.SearchDistrict)
 	g.GET("tambons", tambon.All)
+}
+
+func payMethodGroup(g gin.RouterGroup) {
+	g.GET("paymethods", paymethod.Get)
 }
 
 func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {

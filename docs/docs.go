@@ -177,6 +177,56 @@ var doc = `{
                 }
             }
         },
+        "/amphoe/:{amphoe}": {
+            "get": {
+                "description": "get tambon datas list by zipcode",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tambon"
+                ],
+                "summary": "get tambon datas list by zipcode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Tambon"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/board/ranking/:{eventID}": {
             "get": {
                 "security": [
@@ -282,65 +332,9 @@ var doc = `{
                 }
             }
         },
-        "/event": {
-            "post": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "add new event API calls",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "event"
-                ],
-                "summary": "add new event",
-                "parameters": [
-                    {
-                        "description": "payload",
-                        "name": "payload",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.EventV2"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/GetBySlug/{slug}": {
+        "/district/:{district}": {
             "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "get event owner API calls",
+                "description": "get tambon datas list by zipcode",
                 "consumes": [
                     "application/json"
                 ],
@@ -348,61 +342,9 @@ var doc = `{
                     "application/json"
                 ],
                 "tags": [
-                    "event"
+                    "tambon"
                 ],
-                "summary": "Get my event",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/model.EventV2"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/active": {
-            "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "get Get event active status API calls",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "event"
-                ],
-                "summary": "Get event active status",
+                "summary": "get tambon datas list by zipcode",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -417,7 +359,7 @@ var doc = `{
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "$ref": "#/definitions/model.EventV2"
+                                                "$ref": "#/definitions/model.Tambon"
                                             }
                                         }
                                     }
@@ -528,61 +470,6 @@ var doc = `{
                                             "type": "array",
                                             "items": {
                                                 "$ref": "#/definitions/model.EventList"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/event/myEvent": {
-            "get": {
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ],
-                "description": "get event owner API calls",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "event"
-                ],
-                "summary": "Get my event",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/model.EventV2"
                                             }
                                         }
                                     }
@@ -821,6 +708,56 @@ var doc = `{
                 }
             }
         },
+        "/province/:{province}": {
+            "get": {
+                "description": "get tambon datas list by zipcode",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tambon"
+                ],
+                "summary": "get tambon datas list by zipcode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Tambon"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/refreshAccessToken": {
             "post": {
                 "description": "Authenticates a user and provides a JWT to refresh Authorize API calls",
@@ -964,6 +901,46 @@ var doc = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/register/checkRegEventCode/:{code}": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "check register API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "register"
+                ],
+                "summary": "check register by user id and event code",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
                         }
                     },
                     "400": {
@@ -1573,6 +1550,106 @@ var doc = `{
                 }
             }
         },
+        "/tambon": {
+            "get": {
+                "description": "get tambon datas list all",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tambon"
+                ],
+                "summary": "get tambon datas list all",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Tambon"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/tambon/:{zipcode}": {
+            "get": {
+                "description": "get tambon datas list by zipcode",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tambon"
+                ],
+                "summary": "get tambon datas list by zipcode",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/model.Tambon"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user": {
             "get": {
                 "security": [
@@ -1761,6 +1838,58 @@ var doc = `{
                 }
             }
         },
+        "/workoutDetail": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "list workouts API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Get workouts detail by id",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Workouts"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/workouts": {
             "get": {
                 "security": [
@@ -1913,6 +2042,58 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/workouts/historyAll": {
+            "get": {
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "description": "list workouts API calls",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "workouts"
+                ],
+                "summary": "Get workouts history list by month",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/model.Workouts"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1920,7 +2101,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "event": {
-                    "$ref": "#/definitions/model.EventV2"
+                    "$ref": "#/definitions/model.Event"
                 },
                 "myrank": {
                     "type": "array",
@@ -2000,10 +2181,10 @@ var doc = `{
         },
         "model.AddActivityFormWorkout": {
             "type": "object",
-            "required": [
-                "event_id"
-            ],
             "properties": {
+                "event_code": {
+                    "type": "string"
+                },
                 "event_id": {
                     "type": "string"
                 },
@@ -2243,13 +2424,158 @@ var doc = `{
                 }
             }
         },
-        "model.CoverThumb": {
+        "model.Event": {
             "type": "object",
             "properties": {
-                "image": {
+                "agreement": {
                     "type": "string"
                 },
-                "size": {
+                "category": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "contact": {
+                    "type": "string"
+                },
+                "contactFacebook": {
+                    "type": "string"
+                },
+                "contactLine": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "coverThumbnail": {
+                    "type": "string"
+                },
+                "eventDate": {
+                    "type": "string"
+                },
+                "eventEndDate": {
+                    "type": "string"
+                },
+                "eventEndDateText": {
+                    "type": "string"
+                },
+                "eventStartDate": {
+                    "type": "string"
+                },
+                "eventStartDateText": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "isFreeEvent": {
+                    "type": "boolean"
+                },
+                "isRunexOnly": {
+                    "type": "boolean"
+                },
+                "isSendShirtByPost": {
+                    "type": "boolean"
+                },
+                "organizer": {
+                    "type": "string"
+                },
+                "photoBib": {
+                    "type": "string"
+                },
+                "photoBibThumbnail": {
+                    "type": "string"
+                },
+                "photoCert": {
+                    "type": "string"
+                },
+                "photoCertThumbnail": {
+                    "type": "string"
+                },
+                "photoMedal": {
+                    "type": "string"
+                },
+                "photoMedalThumbnail": {
+                    "type": "string"
+                },
+                "photoShirt": {
+                    "type": "string"
+                },
+                "photoShirtThumbnail": {
+                    "type": "string"
+                },
+                "place": {
+                    "type": "string"
+                },
+                "prizes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "description": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "photo": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "registerEndDate": {
+                    "type": "string"
+                },
+                "registerEndDateText": {
+                    "type": "string"
+                },
+                "registerStartDate": {
+                    "type": "string"
+                },
+                "registerStartDateText": {
+                    "type": "string"
+                },
+                "schedules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "description": {
+                                "type": "string"
+                            },
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "shirts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Shirts"
+                    }
+                },
+                "tickets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.Tickets"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "userId": {
                     "type": "string"
                 }
             }
@@ -2335,166 +2661,6 @@ var doc = `{
                 },
                 "status": {
                     "description": "Product     []ProduceEvent     ` + "`" + `json:\"product\" bson:\"product\"` + "`" + `\nTicket      []TicketEvent      ` + "`" + `json:\"ticket\" bson:\"ticket\"` + "`" + `",
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventRegV2": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string"
-                },
-                "cover": {
-                    "type": "string"
-                },
-                "cover_thumb": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.CoverThumb"
-                    }
-                },
-                "created_time": {
-                    "type": "string"
-                },
-                "end_event": {
-                    "type": "string"
-                },
-                "end_reg": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "inapp": {
-                    "type": "boolean"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_free": {
-                    "type": "boolean"
-                },
-                "is_post": {
-                    "type": "boolean"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owner_id": {
-                    "type": "string"
-                },
-                "partner": {
-                    "$ref": "#/definitions/model.PartnerEvent"
-                },
-                "post_end_date": {
-                    "type": "string"
-                },
-                "receive_location": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "start_event": {
-                    "type": "string"
-                },
-                "start_reg": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updated_time": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.EventV2": {
-            "type": "object",
-            "properties": {
-                "body": {
-                    "type": "string"
-                },
-                "category": {
-                    "type": "string"
-                },
-                "cover": {
-                    "type": "string"
-                },
-                "cover_thumb": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.CoverThumb"
-                    }
-                },
-                "created_time": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "end_event": {
-                    "type": "string"
-                },
-                "end_reg": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "inapp": {
-                    "type": "boolean"
-                },
-                "is_active": {
-                    "type": "boolean"
-                },
-                "is_free": {
-                    "type": "boolean"
-                },
-                "is_post": {
-                    "type": "boolean"
-                },
-                "location": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owner_id": {
-                    "type": "string"
-                },
-                "partner": {
-                    "$ref": "#/definitions/model.PartnerEvent"
-                },
-                "post_end_date": {
-                    "type": "string"
-                },
-                "receive_location": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                },
-                "start_event": {
-                    "type": "string"
-                },
-                "start_reg": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "ticket": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.TicketEventV2"
-                    }
-                },
-                "updated_time": {
                     "type": "string"
                 }
             }
@@ -2719,65 +2885,10 @@ var doc = `{
                 }
             }
         },
-        "model.ProduceEventV2": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "detail": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "image": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ProductImage"
-                    }
-                },
-                "is_show": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "reuse": {
-                    "type": "boolean"
-                },
-                "sizes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ProductSizes"
-                    }
-                },
-                "status": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "model.ProductImage": {
             "type": "object",
             "properties": {
                 "path_url": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.ProductSizes": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "remark": {
                     "type": "string"
                 }
             }
@@ -2805,8 +2916,11 @@ var doc = `{
                         "$ref": "#/definitions/model.ActivityInfo"
                     }
                 },
-                "event_id": {
+                "event_code": {
                     "type": "string"
+                },
+                "event_id": {
+                    "type": "integer"
                 },
                 "event_user": {
                     "type": "string"
@@ -2984,8 +3098,11 @@ var doc = `{
         "model.RegisterRequest": {
             "type": "object",
             "properties": {
-                "event_id": {
+                "event_code": {
                     "type": "string"
+                },
+                "event_id": {
+                    "type": "integer"
                 },
                 "kao_request": {
                     "$ref": "#/definitions/model.GetKaoActivityRequest"
@@ -3015,35 +3132,6 @@ var doc = `{
                 }
             }
         },
-        "model.RegisterTicketV2": {
-            "type": "object",
-            "properties": {
-                "distance": {
-                    "type": "number"
-                },
-                "product": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ProduceEventV2"
-                    }
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "ticket_id": {
-                    "type": "string"
-                },
-                "ticket_name": {
-                    "type": "string"
-                },
-                "total_price": {
-                    "type": "number"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
         "model.RegisterTokenRequest": {
             "type": "object",
             "properties": {
@@ -3058,9 +3146,6 @@ var doc = `{
                 "event_code": {
                     "type": "string"
                 },
-                "event_id": {
-                    "type": "string"
-                },
                 "owner_id": {
                     "type": "string"
                 },
@@ -3070,7 +3155,7 @@ var doc = `{
                         "$ref": "#/definitions/model.Regs"
                     }
                 },
-                "user_id": {
+                "user_code": {
                     "type": "string"
                 }
             }
@@ -3088,7 +3173,10 @@ var doc = `{
                     "type": "number"
                 },
                 "event": {
-                    "$ref": "#/definitions/model.EventRegV2"
+                    "$ref": "#/definitions/model.Event"
+                },
+                "event_code": {
+                    "type": "string"
                 },
                 "event_id": {
                     "type": "string"
@@ -3112,9 +3200,6 @@ var doc = `{
                     "type": "string"
                 },
                 "reg_date": {
-                    "type": "string"
-                },
-                "register_number": {
                     "type": "string"
                 },
                 "status": {
@@ -3204,6 +3289,29 @@ var doc = `{
                 },
                 "zipcode": {
                     "type": "string"
+                }
+            }
+        },
+        "model.Shirts": {
+            "type": "object",
+            "properties": {
+                "chest": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "length": {
+                    "type": "string"
+                },
+                "short_sleeve_shirt": {
+                    "type": "boolean"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "sleeveless_shirt": {
+                    "type": "boolean"
                 }
             }
         },
@@ -3561,6 +3669,35 @@ var doc = `{
                 }
             }
         },
+        "model.Tambon": {
+            "type": "object",
+            "properties": {
+                "amphoe": {
+                    "type": "string"
+                },
+                "amphoe_code": {
+                    "type": "integer"
+                },
+                "district": {
+                    "type": "string"
+                },
+                "district_code": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "province_code": {
+                    "type": "integer"
+                },
+                "zipcode": {
+                    "type": "integer"
+                }
+            }
+        },
         "model.TicketEvent": {
             "type": "object",
             "properties": {
@@ -3608,47 +3745,6 @@ var doc = `{
                 }
             }
         },
-        "model.TicketEventV2": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "currency": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "distance": {
-                    "type": "number"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "price": {
-                    "type": "number"
-                },
-                "products": {
-                    "$ref": "#/definitions/model.ProduceEventV2"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "team": {
-                    "type": "integer"
-                },
-                "ticket_type": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "model.TicketOption": {
             "type": "object",
             "properties": {
@@ -3687,8 +3783,11 @@ var doc = `{
                 "register_number": {
                     "type": "string"
                 },
+                "shirts": {
+                    "$ref": "#/definitions/model.Shirts"
+                },
                 "tickets": {
-                    "$ref": "#/definitions/model.RegisterTicketV2"
+                    "$ref": "#/definitions/model.Tickets"
                 },
                 "total_price": {
                     "type": "number"
@@ -3717,6 +3816,53 @@ var doc = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.Tickets": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "detail": {
+                    "type": "object"
+                },
+                "distance": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "items": {
+                    "type": "object"
+                },
+                "limit": {
+                    "type": "string"
+                },
+                "photo_map": {
+                    "type": "string"
+                },
+                "photo_medal": {
+                    "type": "string"
+                },
+                "photo_shirt": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -3869,10 +4015,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "address": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.ShipingAddress"
-                    }
+                    "type": "string"
                 },
                 "birthdate": {
                     "type": "string"
@@ -3918,6 +4061,9 @@ var doc = `{
                 },
                 "phone": {
                     "type": "string"
+                },
+                "tambon": {
+                    "$ref": "#/definitions/model.Tambon"
                 },
                 "updated_at": {
                     "type": "string"

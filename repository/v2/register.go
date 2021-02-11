@@ -134,6 +134,8 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.OrderID = utils.OrderIDGenerate()
 		for _, v := range dataInfo.TicketOptions {
 			v.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+			v.UserOption.CreatedAt = time.Now()
+			v.UserOption.UpdatedAt = time.Now()
 		}
 		update := bson.M{"$push": bson.M{"regs": dataInfo}}
 		filter = bson.D{primitive.E{Key: "event_code", Value: register.Regs.EventCode}}
@@ -150,8 +152,12 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.CreatedAt = time.Now()
 		dataInfo.UpdatedAt = time.Now()
 		dataInfo.OrderID = utils.OrderIDGenerate()
-		for _, v := range dataInfo.TicketOptions {
-			v.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+		for i := range dataInfo.TicketOptions {
+			dataInfo.TicketOptions[i].RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+			dataInfo.TicketOptions[i].UserOption.CreatedAt = time.Now()
+			dataInfo.TicketOptions[i].UserOption.UpdatedAt = time.Now()
+
+			log.Println(dataInfo.TicketOptions[i])
 		}
 		arrRegs = append(arrRegs, dataInfo)
 
@@ -400,8 +406,6 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 		if err != nil {
 			log.Print(err)
 		}
-		log.Println(event)
-		log.Println(u)
 		u.Regs[0].Event = event
 		// var event model.Event
 		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
@@ -573,13 +577,12 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByID(regID string) (mode
 	var regEvent model.RegisterV2
 	id, err := primitive.ObjectIDFromHex(regID)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 	filter := bson.M{"_id": id}
 	err2 := registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(), filter).Decode(&regEvent)
-	log.Printf("[info RegEvent] cur %s", err2)
 	if err2 != nil {
-		log.Fatal(err2)
+		log.Println(err2)
 	}
 
 	return regEvent, err2
@@ -608,10 +611,9 @@ func (registerMongo RegisterRepositoryMongo) GetRegEventByIDNew(regID string, ev
 }
 
 //CheckUserRegisterEvent check user register event
-func (registerMongo RegisterRepositoryMongo) CheckUserRegisterEvent(eventID string, userID string) (bool, error) {
+func (registerMongo RegisterRepositoryMongo) CheckUserRegisterEvent(eventCode string, userID string) (bool, error) {
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
-	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{Key: "event_id", Value: eventObjectID}, primitive.E{Key: "regs.user_id", Value: userObjectID}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "regs.user_id", Value: userObjectID}}
 	count, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filter)
 	log.Printf("[info] count %d", count)
 	if err != nil {

@@ -2,7 +2,7 @@ definitions:
   board.BoardResponse:
     properties:
       event:
-        $ref: '#/definitions/model.EventV2'
+        $ref: '#/definitions/model.Event'
       myrank:
         items:
           $ref: '#/definitions/model.Ranking'
@@ -55,12 +55,12 @@ definitions:
     type: object
   model.AddActivityFormWorkout:
     properties:
+      event_code:
+        type: string
       event_id:
         type: string
       workout_info:
         $ref: '#/definitions/model.WorkoutActivityInfo'
-    required:
-    - event_id
     type: object
   model.AddMultiActivityFormWorkout:
     properties:
@@ -214,11 +214,107 @@ definitions:
       updated_at:
         type: string
     type: object
-  model.CoverThumb:
+  model.Event:
     properties:
-      image:
+      agreement:
         type: string
-      size:
+      category:
+        type: string
+      code:
+        type: string
+      contact:
+        type: string
+      contactFacebook:
+        type: string
+      contactLine:
+        type: string
+      content:
+        type: string
+      cover:
+        type: string
+      coverThumbnail:
+        type: string
+      eventDate:
+        type: string
+      eventEndDate:
+        type: string
+      eventEndDateText:
+        type: string
+      eventStartDate:
+        type: string
+      eventStartDateText:
+        type: string
+      id:
+        type: integer
+      isFreeEvent:
+        type: boolean
+      isRunexOnly:
+        type: boolean
+      isSendShirtByPost:
+        type: boolean
+      organizer:
+        type: string
+      photoBib:
+        type: string
+      photoBibThumbnail:
+        type: string
+      photoCert:
+        type: string
+      photoCertThumbnail:
+        type: string
+      photoMedal:
+        type: string
+      photoMedalThumbnail:
+        type: string
+      photoShirt:
+        type: string
+      photoShirtThumbnail:
+        type: string
+      place:
+        type: string
+      prizes:
+        items:
+          properties:
+            description:
+              type: string
+            id:
+              type: integer
+            name:
+              type: string
+            photo:
+              type: string
+          type: object
+        type: array
+      registerEndDate:
+        type: string
+      registerEndDateText:
+        type: string
+      registerStartDate:
+        type: string
+      registerStartDateText:
+        type: string
+      schedules:
+        items:
+          properties:
+            description:
+              type: string
+            id:
+              type: integer
+            name:
+              type: string
+          type: object
+        type: array
+      shirts:
+        items:
+          $ref: '#/definitions/model.Shirts'
+        type: array
+      tickets:
+        items:
+          $ref: '#/definitions/model.Tickets'
+        type: array
+      title:
+        type: string
+      userId:
         type: string
     type: object
   model.EventActivity:
@@ -277,112 +373,6 @@ definitions:
         description: |-
           Product     []ProduceEvent     `json:"product" bson:"product"`
           Ticket      []TicketEvent      `json:"ticket" bson:"ticket"`
-        type: string
-    type: object
-  model.EventRegV2:
-    properties:
-      category:
-        type: string
-      cover:
-        type: string
-      cover_thumb:
-        items:
-          $ref: '#/definitions/model.CoverThumb'
-        type: array
-      created_time:
-        type: string
-      end_event:
-        type: string
-      end_reg:
-        type: string
-      id:
-        type: string
-      inapp:
-        type: boolean
-      is_active:
-        type: boolean
-      is_free:
-        type: boolean
-      is_post:
-        type: boolean
-      location:
-        type: string
-      name:
-        type: string
-      owner_id:
-        type: string
-      partner:
-        $ref: '#/definitions/model.PartnerEvent'
-      post_end_date:
-        type: string
-      receive_location:
-        type: string
-      slug:
-        type: string
-      start_event:
-        type: string
-      start_reg:
-        type: string
-      status:
-        type: string
-      updated_time:
-        type: string
-    type: object
-  model.EventV2:
-    properties:
-      body:
-        type: string
-      category:
-        type: string
-      cover:
-        type: string
-      cover_thumb:
-        items:
-          $ref: '#/definitions/model.CoverThumb'
-        type: array
-      created_time:
-        type: string
-      description:
-        type: string
-      end_event:
-        type: string
-      end_reg:
-        type: string
-      id:
-        type: string
-      inapp:
-        type: boolean
-      is_active:
-        type: boolean
-      is_free:
-        type: boolean
-      is_post:
-        type: boolean
-      location:
-        type: string
-      name:
-        type: string
-      owner_id:
-        type: string
-      partner:
-        $ref: '#/definitions/model.PartnerEvent'
-      post_end_date:
-        type: string
-      receive_location:
-        type: string
-      slug:
-        type: string
-      start_event:
-        type: string
-      start_reg:
-        type: string
-      status:
-        type: string
-      ticket:
-        items:
-          $ref: '#/definitions/model.TicketEventV2'
-        type: array
-      updated_time:
         type: string
     type: object
   model.FindPreOrderRequest:
@@ -528,45 +518,9 @@ definitions:
       Tel_No:
         type: string
     type: object
-  model.ProduceEventV2:
-    properties:
-      created_at:
-        type: string
-      detail:
-        type: string
-      id:
-        type: string
-      image:
-        items:
-          $ref: '#/definitions/model.ProductImage'
-        type: array
-      is_show:
-        type: boolean
-      name:
-        type: string
-      reuse:
-        type: boolean
-      sizes:
-        items:
-          $ref: '#/definitions/model.ProductSizes'
-        type: array
-      status:
-        type: string
-      updated_at:
-        type: string
-    required:
-    - name
-    type: object
   model.ProductImage:
     properties:
       path_url:
-        type: string
-    type: object
-  model.ProductSizes:
-    properties:
-      name:
-        type: string
-      remark:
         type: string
     type: object
   model.ProductTicket:
@@ -584,8 +538,10 @@ definitions:
         items:
           $ref: '#/definitions/model.ActivityInfo'
         type: array
-      event_id:
+      event_code:
         type: string
+      event_id:
+        type: integer
       event_user:
         type: string
       id:
@@ -702,8 +658,10 @@ definitions:
     type: object
   model.RegisterRequest:
     properties:
-      event_id:
+      event_code:
         type: string
+      event_id:
+        type: integer
       kao_request:
         $ref: '#/definitions/model.GetKaoActivityRequest'
       regs:
@@ -722,25 +680,6 @@ definitions:
       type:
         type: string
     type: object
-  model.RegisterTicketV2:
-    properties:
-      distance:
-        type: number
-      product:
-        items:
-          $ref: '#/definitions/model.ProduceEventV2'
-        type: array
-      remark:
-        type: string
-      ticket_id:
-        type: string
-      ticket_name:
-        type: string
-      total_price:
-        type: number
-      type:
-        type: string
-    type: object
   model.RegisterTokenRequest:
     properties:
       firebase_token:
@@ -750,15 +689,13 @@ definitions:
     properties:
       event_code:
         type: string
-      event_id:
-        type: string
       owner_id:
         type: string
       regs:
         items:
           $ref: '#/definitions/model.Regs'
         type: array
-      user_id:
+      user_code:
         type: string
     type: object
   model.Regs:
@@ -770,7 +707,9 @@ definitions:
       discount_price:
         type: number
       event:
-        $ref: '#/definitions/model.EventRegV2'
+        $ref: '#/definitions/model.Event'
+      event_code:
+        type: string
       event_id:
         type: string
       id:
@@ -786,8 +725,6 @@ definitions:
       promo_code:
         type: string
       reg_date:
-        type: string
-      register_number:
         type: string
       status:
         type: string
@@ -847,6 +784,21 @@ definitions:
         type: string
       zipcode:
         type: string
+    type: object
+  model.Shirts:
+    properties:
+      chest:
+        type: string
+      id:
+        type: integer
+      length:
+        type: string
+      short_sleeve_shirt:
+        type: boolean
+      size:
+        type: string
+      sleeveless_shirt:
+        type: boolean
     type: object
   model.SimilarActivities:
     properties:
@@ -1082,6 +1034,25 @@ definitions:
       strava_id:
         type: string
     type: object
+  model.Tambon:
+    properties:
+      amphoe:
+        type: string
+      amphoe_code:
+        type: integer
+      district:
+        type: string
+      district_code:
+        type: integer
+      id:
+        type: string
+      province:
+        type: string
+      province_code:
+        type: integer
+      zipcode:
+        type: integer
+    type: object
   model.TicketEvent:
     properties:
       created_at:
@@ -1113,33 +1084,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  model.TicketEventV2:
-    properties:
-      created_at:
-        type: string
-      currency:
-        type: string
-      description:
-        type: string
-      distance:
-        type: number
-      id:
-        type: string
-      price:
-        type: number
-      products:
-        $ref: '#/definitions/model.ProduceEventV2'
-      quantity:
-        type: integer
-      team:
-        type: integer
-      ticket_type:
-        type: string
-      title:
-        type: string
-      updated_at:
-        type: string
-    type: object
   model.TicketOption:
     properties:
       product:
@@ -1165,8 +1109,10 @@ definitions:
         type: string
       register_number:
         type: string
+      shirts:
+        $ref: '#/definitions/model.Shirts'
       tickets:
-        $ref: '#/definitions/model.RegisterTicketV2'
+        $ref: '#/definitions/model.Tickets'
       total_price:
         type: number
       user_option:
@@ -1185,6 +1131,37 @@ definitions:
       ticket_id:
         type: string
       title:
+        type: string
+    type: object
+  model.Tickets:
+    properties:
+      category:
+        type: string
+      created_at:
+        type: string
+      detail:
+        type: object
+      distance:
+        type: string
+      event_id:
+        type: string
+      id:
+        type: string
+      items:
+        type: object
+      limit:
+        type: string
+      photo_map:
+        type: string
+      photo_medal:
+        type: string
+      photo_shirt:
+        type: string
+      price:
+        type: string
+      title:
+        type: string
+      updated_at:
         type: string
     type: object
   model.Trend:
@@ -1285,9 +1262,7 @@ definitions:
   model.UserOption:
     properties:
       address:
-        items:
-          $ref: '#/definitions/model.ShipingAddress'
-        type: array
+        type: string
       birthdate:
         type: string
       blood_type:
@@ -1318,6 +1293,8 @@ definitions:
         type: string
       phone:
         type: string
+      tambon:
+        $ref: '#/definitions/model.Tambon'
       updated_at:
         type: string
     type: object
@@ -1536,6 +1513,36 @@ paths:
       summary: Add activity from workout
       tags:
       - activity
+  /amphoe/:{amphoe}:
+    get:
+      consumes:
+      - application/json
+      description: get tambon datas list by zipcode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Tambon'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: get tambon datas list by zipcode
+      tags:
+      - tambon
   /api/v1/board/ranking/:{eventID}:
     get:
       consumes:
@@ -1598,73 +1605,11 @@ paths:
       summary: Get config app
       tags:
       - config
-  /event:
-    post:
-      consumes:
-      - application/json
-      description: add new event API calls
-      parameters:
-      - description: payload
-        in: body
-        name: payload
-        required: true
-        schema:
-          $ref: '#/definitions/model.EventV2'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      security:
-      - bearerAuth: []
-      summary: add new event
-      tags:
-      - event
-  /event/GetBySlug/{slug}:
+  /district/:{district}:
     get:
       consumes:
       - application/json
-      description: get event owner API calls
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/model.EventV2'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      security:
-      - bearerAuth: []
-      summary: Get my event
-      tags:
-      - event
-  /event/active:
-    get:
-      consumes:
-      - application/json
-      description: get Get event active status API calls
+      description: get tambon datas list by zipcode
       produces:
       - application/json
       responses:
@@ -1676,7 +1621,7 @@ paths:
             - properties:
                 data:
                   items:
-                    $ref: '#/definitions/model.EventV2'
+                    $ref: '#/definitions/model.Tambon'
                   type: array
               type: object
         "400":
@@ -1687,11 +1632,9 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/response.Response'
-      security:
-      - bearerAuth: []
-      summary: Get event active status
+      summary: get tambon datas list by zipcode
       tags:
-      - event
+      - tambon
   /event/all:
     get:
       consumes:
@@ -1754,38 +1697,6 @@ paths:
       security:
       - bearerAuth: []
       summary: Get event detail
-      tags:
-      - event
-  /event/myEvent:
-    get:
-      consumes:
-      - application/json
-      description: get event owner API calls
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.Response'
-            - properties:
-                data:
-                  items:
-                    $ref: '#/definitions/model.EventV2'
-                  type: array
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.Response'
-      security:
-      - bearerAuth: []
-      summary: Get my event
       tags:
       - event
   /kao:
@@ -1927,6 +1838,36 @@ paths:
       summary: send notification one token one time
       tags:
       - notification
+  /province/:{province}:
+    get:
+      consumes:
+      - application/json
+      description: get tambon datas list by zipcode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Tambon'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: get tambon datas list by zipcode
+      tags:
+      - tambon
   /refreshAccessToken:
     post:
       description: Authenticates a user and provides a JWT to refresh Authorize API
@@ -2023,6 +1964,31 @@ paths:
       security:
       - bearerAuth: []
       summary: add register event
+      tags:
+      - register
+  /register/checkRegEventCode/:{code}:
+    get:
+      consumes:
+      - application/json
+      description: check register API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: check register by user id and event code
       tags:
       - register
   /register/checkUserRegisterEvent/:{eventID}:
@@ -2384,6 +2350,66 @@ paths:
       summary: Update User sync user with strava
       tags:
       - user
+  /tambon:
+    get:
+      consumes:
+      - application/json
+      description: get tambon datas list all
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Tambon'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: get tambon datas list all
+      tags:
+      - tambon
+  /tambon/:{zipcode}:
+    get:
+      consumes:
+      - application/json
+      description: get tambon datas list by zipcode
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/model.Tambon'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: get tambon datas list by zipcode
+      tags:
+      - tambon
   /user:
     get:
       consumes:
@@ -2495,6 +2521,36 @@ paths:
       summary: Add workout
       tags:
       - workouts
+  /workoutDetail:
+    get:
+      consumes:
+      - application/json
+      description: list workouts API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Workouts'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get workouts detail by id
+      tags:
+      - workouts
   /workouts:
     get:
       consumes:
@@ -2558,6 +2614,36 @@ paths:
       - workouts
   /workouts/history:
     post:
+      consumes:
+      - application/json
+      description: list workouts API calls
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/model.Workouts'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - bearerAuth: []
+      summary: Get workouts history list by month
+      tags:
+      - workouts
+  /workouts/historyAll:
+    get:
       consumes:
       - application/json
       description: list workouts API calls
