@@ -18,6 +18,9 @@ log:
     level: "debug"
     format: "json"
 
+events:
+    api: "https://events-api.runex.co"
+
 omise:
     OmisePublicKey: "pkey_5i1p3nkjgq6vrrrfhkp"
     OmiseSecretKey: "skey_5i6wunbg5thk3eqd5kk"

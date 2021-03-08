@@ -16,6 +16,10 @@ redis:
 log:
     level: "debug"
     format: "json"
+
+events:
+    api: "https://events-api.thinkdev.app"
+
 omise:
     OmisePublicKey: "pkey_test_5i6ivm4cotoab601bfr"
     OmiseSecretKey: "skey_test_5h9vov2hqe9iv55o8tu"

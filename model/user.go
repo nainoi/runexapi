@@ -10,8 +10,8 @@ import (
 type User struct {
 	UserID           primitive.ObjectID   `json:"-" bson:"_id,omitempty"`
 	Email            string               `json:"email" bson:"email"`
-	Provider         string               `json:"-" bson:"provider"`
-	ProviderID       string               `json:"-" bson:"provider_id"`
+	Provider         string               `json:"provider" bson:"provider"`
+	ProviderID       string               `json:"provider_id" bson:"provider_id"`
 	FullName         string               `json:"fullname" bson:"fullname"`
 	FirstName        string               `json:"firstname" bson:"firstname"`
 	FirstNameTH      string               `json:"firstname_th" bson:"firstname_th"`

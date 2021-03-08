@@ -24,24 +24,24 @@ type RegisterV2 struct {
 
 // Regs struct for register v2 event data
 type Regs struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
-	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
-	EventCode      string             `json:"event_code" bson:"event_code"`
-	Status         string             `json:"status" bson:"status"`
-	PaymentType    string             `json:"payment_type" bson:"payment_type"`
-	TotalPrice     float64            `json:"total_price" bson:"total_price"`
-	DiscountPrice  float64            `json:"discount_price" bson:"discount_price"`
-	PromoCode      string             `json:"promo_code" bson:"promo_code"`
-	OrderID        string             `json:"order_id" bson:"order_id"`
-	RegDate        time.Time          `json:"reg_date" bson:"reg_date"`
-	PaymentDate    time.Time          `json:"payment_date" bson:"payment_date"`
-	Coupon         Coupon             `json:"coupon" bson:"coupon"`
-	TicketOptions  []TicketOptionV2   `json:"ticket_options" bson:"ticket_options"`
-	Partner        PartnerEvent       `json:"partner" bson:"partner"`
-	Event          Event              `json:"event" bson:"event"`
-	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
+	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
+	EventID       primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode     string             `json:"event_code" bson:"event_code"`
+	Status        string             `json:"status" bson:"status"`
+	PaymentType   string             `json:"payment_type" bson:"payment_type"`
+	TotalPrice    float64            `json:"total_price" bson:"total_price"`
+	DiscountPrice float64            `json:"discount_price" bson:"discount_price"`
+	PromoCode     string             `json:"promo_code" bson:"promo_code"`
+	OrderID       string             `json:"order_id" bson:"order_id"`
+	RegDate       time.Time          `json:"reg_date" bson:"reg_date"`
+	PaymentDate   time.Time          `json:"payment_date" bson:"payment_date"`
+	Coupon        Coupon             `json:"coupon" bson:"coupon"`
+	TicketOptions []TicketOptionV2   `json:"ticket_options" bson:"ticket_options"`
+	Partner       PartnerEvent       `json:"partner" bson:"partner"`
+	Event         Event              `json:"event" bson:"event"`
+	CreatedAt     time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt     time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 //TicketOptionV2 struct
@@ -64,4 +64,13 @@ type RegisterTicketV2 struct {
 	Type       string  `json:"type" bson:"type"`
 	Remark     string  `json:"remark" bson:"remark"`
 	// Product    []ProduceEventV2 `json:"product" bson:"product"`
+}
+
+//RegisterChargeRequest payment charge request
+type RegisterChargeRequest struct {
+	TokenOmise string  `json:"token" form:"token"`
+	RegID      string  `json:"reg_id" form:"reg_id"`
+	EventCode  string  `json:"event_code" form:"event_code"`
+	Price      float64 `json:"price" form:"price"`
+	OrderID    string  `json:"order_id" form:"order_id"`
 }

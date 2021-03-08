@@ -11,6 +11,7 @@ type Merchant struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID      primitive.ObjectID `json:"user_id" bson:"user_id"`
 	EventID     primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode   string             `json:"event_code" bson:"event_code"`
 	RegID       primitive.ObjectID `json:"reg_id" bson:"reg_id"`
 	Status      string             `json:"status" bson:"status"`
 	PaymentType string             `json:"payment_type" bson:"payment_type"`

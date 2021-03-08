@@ -3,7 +3,6 @@ package registerV2
 import (
 	"log"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/omise/omise-go"
@@ -86,76 +85,64 @@ func (api RegisterAPI) GetByUserID(c *gin.Context) {
 	res.Response(http.StatusOK, "success", register)
 }
 
-//ChargeRegEvent api doc
+// ChargeRegEvent api doc
+// @Summary payment charge register event by register id
+// @Description payment charge register event API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/payment [post]
 func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
-	userID, _, _ := utils.GetTokenValue(c)
-	token := c.PostForm("token")
-	price := c.PostForm("price")
-	eventID := c.PostForm("event_id")
-	regID := c.PostForm("reg_id")
-	// log.Printf("created charge: %s\n", token)
-	// log.Printf("created charge: %s\n", price)
-	// log.Printf("created eventid: %s\n", eventID)
-	if amount, err := strconv.ParseInt(price, 10, 64); err == nil {
-		if token == "" {
-			appG.Response(http.StatusBadRequest, "", gin.H{"message": err.Error()})
-			return
-		}
+	userID, _ := oauth.GetValuesToken(c)
 
-		OmisePublicKey := viper.GetString("omise.OmisePublicKey")
-		OmiseSecretKey := viper.GetString("omise.OmiseSecretKey")
+	var json model.RegisterChargeRequest
 
-		client, err := omise.NewClient(OmisePublicKey, OmiseSecretKey)
-		if err != nil {
-			log.Println(err)
-			appG.Response(http.StatusInternalServerError, err.Error(), nil)
-			return
-		}
-		charge, create := &omise.Charge{}, &operations.CreateCharge{
-			Amount:   amount,
-			Currency: "thb",
-			Card:     token,
-		}
-
-		if err := client.Do(charge, create); err != nil {
-			log.Println(err)
-			appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
-			return
-		}
-
-		err = api.RegisterRepository.AddMerChant(userID, eventID, regID, *charge)
-		if err != nil {
-			log.Println("error add merchant", err.Error())
-			appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
-			return
-		}
-		// if regID != "" {
-		// 	register, err := api.RegisterRepository.GetRegEventByID(regID)
-		// 	if err != nil {
-		// 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
-		// 		return
-		// 	}
-		// register.TotalPrice = float64(charge.Amount / 100)
-		// register.PaymentType = config.PAYMENT_CREDIT_CARD
-		// register.Status = config.PAYMENT_SUCCESS
-		// register.OrderID = charge.ID
-		// register.UpdatedAt = time.Now()
-
-		// err = api.RegisterRepository.EditRegister(regID, register)
-		// if err != nil {
-		// 	log.Println("error update register payment success", err.Error())
-		// 	c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
-		// 	return
-		// }
-		//}
-
-		appG.Response(http.StatusOK, "success", charge)
-	} else {
-		appG.Response(http.StatusBadRequest, "Token or price is null", gin.H{"message": "Token or price is null"})
+	if err := c.ShouldBindJSON(&json); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), err.Error())
+		return
 	}
+	var amount int64 = int64(json.Price) * 100
+	if json.TokenOmise == "" {
+		appG.Response(http.StatusBadRequest, "Token invalid", "Token invalid")
+		return
+	}
+
+	OmisePublicKey := viper.GetString("omise.OmisePublicKey")
+	OmiseSecretKey := viper.GetString("omise.OmiseSecretKey")
+
+	client, err := omise.NewClient(OmisePublicKey, OmiseSecretKey)
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+	charge, create := &omise.Charge{}, &operations.CreateCharge{
+		Amount:   amount,
+		Currency: "thb",
+		Card:     json.TokenOmise,
+	}
+
+	if err := client.Do(charge, create); err != nil {
+		log.Println(err)
+		appG.Response(http.StatusInternalServerError, err.Error(), err.Error())
+		return
+	}
+
+	err = api.RegisterRepository.AddMerChant(userID, json.EventCode, json.RegID, *charge, json.OrderID)
+	if err != nil {
+		log.Println("error add merchant", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), err.Error())
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", charge)
 
 }
 
