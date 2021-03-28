@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
@@ -97,6 +98,91 @@ func (api WorkoutsAPI) AddWorkout(c *gin.Context) {
 	}
 
 	res.Response(http.StatusOK, "success", workoutInfo)
+}
+
+// AddWorkoutHook api godoc
+// @Summary Add workout
+// @Description save workout API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags workouts
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.HookWorkout true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /workout_hook [post]
+func (api WorkoutsAPI) AddWorkoutHook(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var form model.HookWorkout
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	// body, _ := ioutil.ReadAll(c.Request.Body)
+	// println(string(body))
+
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	if err := c.ShouldBind(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	/*time1, err := time.Parse(time.RFC3339, form.WorkoutDate)
+	if err != nil {
+		fmt.Println(err)
+		time1 = time.Now()
+		//c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+	}
+
+	time2, err := time.Parse(time.RFC3339, form.StartDate)
+	if err != nil {
+		fmt.Println(err)
+		time2 = time.Now()
+	}
+
+	time3, err := time.Parse(time.RFC3339, form.EndDate)
+	if err != nil {
+		fmt.Println(err)
+		time3 = time.Now()
+	}
+
+	form.UserID = userID*/
+
+	//userObjectID, err := primitive.ObjectIDFromHex(userID)
+
+	// workInfo := model.WorkoutActivityInfo{
+	// 	ActivityType:     form.ActivityType,
+	// 	APP:              form.APP,
+	// 	Calory:           form.Calory,
+	// 	Caption:          form.Caption,
+	// 	Distance:         form.Distance,
+	// 	Pace:             form.Pace,
+	// 	Duration:         form.Duration,
+	// 	TimeString:       form.TimeString,
+	// 	EndDate:          time3,
+	// 	StartDate:        time2,
+	// 	WorkoutDate:      time1,
+	// 	NetElevationGain: form.NetElevationGain,
+	// 	IsSync:           form.IsSync,
+	// 	Locations:        form.Locations,
+	// }
+
+	// workoutModel := model.AddWorkout{
+	// 	UserID:              userObjectID,
+	// 	WorkoutActivityInfo: workInfo,
+	// }
+
+	err := api.WorkoutsRepository.WorkoutHook(form)
+	if err != nil {
+		log.Println("error Add multi Workout", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
 }
 
 // AddMultiWorkout api godoc

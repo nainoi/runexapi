@@ -11,7 +11,7 @@ type AddActivityForm struct {
 	Caption      string  `form:"caption" json:"caption"`
 	Distance     float64 `form:"distance" json:"distance" bson:"distance" binding:"required"`
 	ActivityDate string  `form:"activity_date" json:"activity_date" bson:"distance"`
-	EventID      string  `form:"event_id" json:"event_id" bson:"event_id"  binding:"required"`
+	EventCode    string  `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`
 	UserID       string  `form:"user_id" json:"user_id" bson:"user_id"`
 	ImageURL     string  `form:"image_url" json:"image_url" bson:"image_url"`
 }
@@ -21,7 +21,7 @@ type AddMultiActivityForm struct {
 	Caption      string   `form:"caption" json:"caption"`
 	Distance     float64  `form:"distance" json:"distance" bson:"distance" binding:"required"`
 	ActivityDate string   `form:"activity_date" json:"activity_date" bson:"distance"`
-	EventID      []string `form:"event_id" json:"event_id" bson:"event_id"  binding:"required"`
+	EventCodes   []string `form:"event_codes" json:"event_codes" bson:"event_codes" binding:"required"`
 	UserID       string   `form:"user_id" json:"user_id" bson:"user_id"`
 	ImageURL     string   `form:"image_url" json:"image_url" bson:"image_url"`
 }
@@ -29,7 +29,7 @@ type AddMultiActivityForm struct {
 type AddActivity struct {
 	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID       primitive.ObjectID `json:"user_id" bson:"user_id"`
-	EventID      primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode    string             `json:"event_code" bson:"event_code"`
 	EventUser    string             `json:"event_user" bson:"event_user"`
 	ActivityInfo ActivityInfo       `json:"activity_info" bson:"activity_info"`
 	// Distance     float32   `json:"distance" bson:"distance"`
@@ -43,7 +43,7 @@ type AddActivity struct {
 type Activity struct {
 	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
-	EventID       primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode     string             `json:"event_code" bson:"event_code"`
 	EventUser     string             `json:"event_user" bson:"event_user"`
 	ActivityInfo  []ActivityInfo     `json:"activity_info" bson:"activity_info,omitempty"`
 	ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
@@ -77,15 +77,17 @@ type ActivitySingel struct {
 
 // ActivityInfo info data
 type ActivityInfo struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	Distance     float64            `json:"distance" bson:"distance"`
-	ImageURL     string             `json:"img_url" bson:"img_url"`
-	Caption      string             `form:"caption" json:"caption"`
-	APP          string             `form:"app" json:"app"`
-	Time         int64              `form:"time" json:"time"`
-	ActivityDate time.Time          `json:"activity_date" bson:"activity_date"`
-	CreatedAt    time.Time          `json:"created_at" bson:"created_at"`
-	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
+	ID           primitive.ObjectID `form:"id" json:"id" bson:"_id,omitempty"`
+	Distance     float64            `form:"distance" json:"distance" bson:"distance"`
+	ImageURL     string             `form:"img_url" json:"img_url" bson:"img_url"`
+	Caption      string             `form:"caption" json:"caption" bson:"caption"`
+	APP          string             `form:"app" json:"app" bson:"app"`
+	Time         int64              `form:"time" json:"time" bson:"time"`
+	IsApprove    bool               `form:"is_approve" json:"is_approve" bson:"is_approve"`
+	Status       string             `form:"status" json:"status" bson:"status"`
+	ActivityDate time.Time          `form:"activity_date" json:"activity_date" bson:"activity_date"`
+	CreatedAt    time.Time          `form:"created_at" json:"created_at" bson:"created_at"`
+	UpdatedAt    time.Time          `form:"updated_at" json:"updated_at" bson:"updated_at"`
 }
 
 type HistoryDayFilter struct {

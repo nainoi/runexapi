@@ -7,28 +7,28 @@ import (
 )
 
 type Register struct {
-	ID      primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID  primitive.ObjectID `json:"user_id" bson:"user_id"`
-	EventID primitive.ObjectID `json:"event_id" bson:"event_id"`
-	Event   EventReg           `json:"event" bson:"event"`
-	Product []RegisterProduct  `json:"product" bson:"product"`
-	// Ticket         RegisterTicket     `json:"ticket" bson:"ticket"`
-	Tickets        []RegisterTicket `json:"tickets" bson:"tickets"`
-	Status         string           `json:"status" bson:"status"`
-	PaymentType    string           `json:"payment_type" bson:"payment_type"`
-	TotalPrice     float64          `json:"total_price" bson:"total_price"`
-	DiscountPrice  float64          `json:"discount_price" bson:"discount_price"`
-	PromoCode      string           `json:"promo_code" bson:"promo_code"`
-	OrderID        string           `json:"order_id" bson:"order_id"`
-	RegDate        time.Time        `json:"reg_date" bson:"reg_date"`
-	RegisterNumber string           `json:"register_number" bson:"register_number"`
-	ShipingAddress ShipingAddress   `json:"shiping_address" bson:"shiping_address"`
-	Coupon         Coupon           `json:"coupon" bson:"coupon"`
-	TicketOptions  []TicketOption   `json:"ticket_options" bson:"ticket_options"`
-	Slip           SlipTransfer     `json:"slip" bson:"slip"`
-	Phone          string           `json:"phone" bson:"phone"`
-	CreatedAt      time.Time        `json:"created_at" bson:"created_at"`
-	UpdatedAt      time.Time        `json:"updated_at" bson:"updated_at"`
+	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
+	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
+	Event          EventReg           `json:"event" bson:"event"`
+	Product        []RegisterProduct  `json:"product" bson:"product"`
+	Tickets        []RegisterTicket   `json:"tickets" bson:"tickets"`
+	Status         string             `json:"status" bson:"status"`
+	PaymentType    string             `json:"payment_type" bson:"payment_type"`
+	TotalPrice     float64            `json:"total_price" bson:"total_price"`
+	DiscountPrice  float64            `json:"discount_price" bson:"discount_price"`
+	PromoCode      string             `json:"promo_code" bson:"promo_code"`
+	OrderID        string             `json:"order_id" bson:"order_id"`
+	Ref2           string             `json:"ref2" bson:"ref2"`
+	RegDate        time.Time          `json:"reg_date" bson:"reg_date"`
+	RegisterNumber string             `json:"register_number" bson:"register_number"`
+	ShipingAddress ShipingAddress     `json:"shiping_address" bson:"shiping_address"`
+	Coupon         Coupon             `json:"coupon" bson:"coupon"`
+	TicketOptions  []TicketOption     `json:"ticket_options" bson:"ticket_options"`
+	Slip           SlipTransfer       `json:"slip" bson:"slip"`
+	Phone          string             `json:"phone" bson:"phone"`
+	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
+	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 type ShipingAddress struct {
@@ -185,6 +185,11 @@ type DataRegisterRequest struct {
 	KeyWord    string `json:"key_word" bson:"key_word"`
 }
 
+type OwnerRequest struct {
+	EventCode string `json:"event_code" bson:"event_code" binding:"required"`
+	OwnerID   string `json:"owner_id" bson:"owner_id" binding:"required"`
+}
+
 type UpdayeRegisterStatusRequest struct {
 	RegisterID string `json:"register_id" bson:"register_id"`
 	Status     string `json:"status" bson:"status" binding:"required"`
@@ -218,6 +223,17 @@ type UserOption struct {
 	BloodType        string    `json:"blood_type" bson:"blood_type"`
 	Address          string    `json:"address" bson:"address"`
 	Tambon           Tambon    `json:"tambon" bson:"tambon"`
+	Team             string    `json:"team" bson:"team"`
+	Color            string    `json:"color" bson:"color"`
+	Zone             string    `json:"zone" bson:"zone"`
+}
+
+type UserOptionReport struct {
+	FirstName        string    `json:"firstname" bson:"firstname"`
+	LastName         string    `json:"lastname" bson:"lastname"`
+	Phone            string    `json:"phone" bson:"phone"`
+	BirthDate        time.Time `json:"birthdate" bson:"birthdate"`
+	Gender           string    `json:"gender" bson:"gender"`
 }
 
 type ShipingAddressUpdateForm struct {

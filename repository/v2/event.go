@@ -136,29 +136,6 @@ func (eventMongo EventRepositoryMongo) ExistByName(name string) (bool, error) {
 	return false, nil
 }
 
-//IsOwner repo
-func (eventMongo EventRepositoryMongo) IsOwner(eventID string, userID string) bool {
-	eID, err := primitive.ObjectIDFromHex(eventID)
-	if err != nil {
-		return false
-	}
-	uID, err := primitive.ObjectIDFromHex(userID)
-	if err != nil {
-		return false
-	}
-	filter := bson.D{primitive.E{Key: "_id", Value: eID}, primitive.E{Key: "user_id", Value: uID}}
-	count, err := eventMongo.ConnectionDB.Collection(eventCollection).CountDocuments(context.TODO(), filter)
-	if err != nil {
-		return false
-	}
-
-	if count > 0 {
-		return true
-	}
-
-	return false
-}
-
 func checkRedirectFunc(req *http.Request, via []*http.Request) error {
 	req.Header.Add("Authorization", via[0].Header.Get("Authorization"))
 	return nil

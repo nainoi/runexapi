@@ -1,9 +1,0 @@
-diff a/api/v1/workouts/workout.go b/api/v1/workouts/workout.go	(rejected hunks)
-@@ -70,6 +70,7 @@
- 
- 	workInfo := model.WorkoutActivityInfo{
- 		ActivityType:     form.ActivityType,
-+		App:              form.App,
- 		Calory:           form.Calory,
- 		Caption:          form.Caption,
- 		Distance:         form.Distance,

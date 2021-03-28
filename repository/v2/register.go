@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
+	"thinkdev.app/think/runex/runexapi/firebase"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/request"
 	"thinkdev.app/think/runex/runexapi/utils"
@@ -30,7 +31,7 @@ type RegisterRepository interface {
 	AddRaceRegister(register model.RegisterRequest) (model.RegisterV2, error)
 	AddMerChant(userID string, eventID string, regID string, charge omise.Charge, orderID string) error
 	EditRegister(registerID string, register model.RegisterRequest) error
-	GetRegisterByEvent(eventID string) ([]model.RegisterV2, error)
+	GetRegisterByEvent(eventID string) ([]model.ReportRegisterV2, error)
 	NotifySlipRegister(registerID string, slip model.SlipTransfer) error
 	AdminNotifySlipRegister(registerID string, slip model.SlipTransfer) error
 	CountByEvent(eventID string) (int64, error)
@@ -60,6 +61,7 @@ const (
 	merchantCollection    = "merchant"
 	activityCollection    = "activityV2"
 	registerAllCollection = "register_all"
+	scbPaymentCollection  = "scbpayment"
 )
 
 // GetRegisterAll repo
@@ -153,6 +155,18 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		SaveRegister(dataInfo, register.EventCode)
 
 	} else {
+		mod := mongo.IndexModel{
+			Keys: bson.M{
+				"event_code": 1, // index in ascending order
+				"ref2":       1,
+			}, Options: nil,
+		}
+
+		// Create an Index using the CreateOne() method
+		_, err := db.DB.Collection(registerCollection).Indexes().CreateOne(context.Background(), mod)
+		if err != nil {
+			log.Println(err)
+		}
 		event, err := DetailEventOwnerByCode(register.EventCode)
 		var arrRegs []model.Regs
 		dataInfo.ID = primitive.NewObjectID()
@@ -174,6 +188,8 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			Regs:      arrRegs,
 			OwnerID:   event.UserID,
 			UserCode:  event.UserID,
+			Ref2:      utils.Ref2Generate(),
+			Event: event,
 		}
 
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).InsertOne(context.TODO(), registerModel)
@@ -189,8 +205,6 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 	var regModel = model.RegisterV2{
 		Regs:      []model.Regs{dataInfo},
 		EventCode: register.EventCode,
-		OwnerID:   register.Regs.Event.UserID,
-		UserCode:  register.Regs.Event.UserID,
 	}
 
 	return regModel, err
@@ -353,11 +367,10 @@ func (registerMongo RegisterRepositoryMongo) EditRegister(registerID string, reg
 }
 
 // GetRegisterByEvent repo list data register event
-func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) ([]model.RegisterV2, error) {
+func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) ([]model.ReportRegisterV2, error) {
 
-	var register = []model.RegisterV2{}
-	objectID, err := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{bson.E{Key: "event_id", Value: objectID}}
+	var register = []model.ReportRegisterV2{}
+	filter := bson.D{bson.E{Key: "event_code", Value: eventID}}
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
@@ -365,10 +378,10 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByEvent(eventID string) 
 	}
 
 	for cur.Next(context.TODO()) {
-		var u model.RegisterV2
+		var u model.ReportRegisterV2
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
+			//log.Fatal(err)
 		}
 		//fmt.Printf("post: %+v\n", p)
 		register = append(register, u)
@@ -389,34 +402,25 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
-	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_code": 1}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
 	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
 		log.Println(err)
 	}
-	var u model.RegisterV2
-	u.Regs = []model.Regs{}
-	for cur.Next(context.TODO()) {
 
+	//u.Regs = []model.Regs{}
+	for cur.Next(context.TODO()) {
+		var u model.RegisterV2
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
 			log.Print(err)
 		}
-
-		// var event model.EventRegV2
-		// filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
-		event, err := DetailEventByCode(u.EventCode)
-		//err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
-		if err != nil {
-			log.Print(err)
+		event, err := DetailEventOwnerByCode(u.EventCode)
+		if err == nil {
+			u.Event = event
 		}
-		u.Regs[0].Event = event
-		// var event model.Event
-		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
-		// //fmt.Printf("post: %+v\n", p)
-		//u.Event = event
 		register = append(register, u)
 	}
 
@@ -456,11 +460,11 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserEventAndRegID(user
 		// var event model.EventRegV2
 		// filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
 		// err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
-		event, err := DetailEventByCode(u.EventCode)
-		if err != nil {
-			log.Print(err)
-		}
-		u.Regs[0].Event = event
+		// event, err := DetailEventByCode(u.EventCode)
+		// if err != nil {
+		// 	log.Print(err)
+		// }
+		//u.Regs[0].Event = event
 		// var event model.Event
 		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
 		// //fmt.Printf("post: %+v\n", p)
@@ -832,7 +836,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
-	projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1}}}
+	projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1, "event_code": 1}}}
 	//projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$elemMatch": bson.M{"$$regs.user_id": objectID, "$$regs.status": config.PAYMENT_SUCCESS}}, "event_id": 1}}}
 
 	//filter := bson.D{primitive.E{Key:"user_id",Value: objectID}, primitive.E{Key: "status",Value: "PAYMENT_SUCCESS"}}
@@ -850,18 +854,11 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 			log.Println(err)
 		}
 
-		// var event model.EventRegV2
-		// filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
-		// err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
-		event, err := DetailEventByCode(u.EventCode)
-		if err != nil {
-			log.Print(err)
+		event, err := DetailEventOwnerByCode(u.EventCode)
+		if err == nil {
+			u.Event = event
 		}
-		u.Regs[0].Event = event
-		// var event model.Event
-		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
-		// //fmt.Printf("post: %+v\n", p)
-		//u.Event = event
+		
 		register = append(register, u)
 	}
 
@@ -1094,7 +1091,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterReportAll(formRequest mo
 	filterWaiting := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING}, bson.E{Key: "event_id", Value: objectEventID}}
 	filterWaitingApprove := bson.D{bson.E{Key: "status", Value: config.PAYMENT_WAITING_APPROVE}, bson.E{Key: "event_id", Value: objectEventID}}
 
-	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{{"event_id", objectEventID}})
+	countAll, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), bson.D{primitive.E{Key: "event_id", Value: objectEventID}})
 
 	countSuccess, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filterSuccess)
 
@@ -1599,4 +1596,97 @@ func SaveRegister(data model.Regs, eventID string) error {
 		return err
 	}
 	return err
+}
+
+// WorkoutHook repository for insert workouts
+func PaymentWithSCB(p model.SCBPayment) error {
+	var reg model.RegisterV2
+
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"ref2": p.Billpaymentref2, "regs.order_id": p.Billpaymentref1}}}
+	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
+	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
+	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.order_id", p.Billpaymentref1}}}}, "ref2": 1, "event_code": 1}}}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	if err != nil {
+		return err
+	}
+	for cur.Next(context.TODO()) {
+		// decode the document
+		if err := cur.Decode(&reg); err != nil {
+			log.Print(err)
+		}
+	}
+
+	price := 0
+	price, err = strconv.Atoi(p.Amount)
+	var merchant model.Merchant
+	merchant.UserID = reg.Regs[0].UserID
+	merchant.EventCode = reg.EventCode
+	merchant.RegID = reg.Regs[0].ID
+	merchant.PaymentType = config.PAYMENT_QRCODE
+	merchant.Status = config.PAYMENT_SUCCESS
+	merchant.OrderID = p.Billpaymentref1
+	merchant.TransactionID = p.Transactionid
+	merchant.TotalPrice = int64(price)
+	merchant.CreatedAt = time.Now()
+	merchant.UpdatedAt = time.Now()
+	//fmt.Println("Inserted a single document: ", merchant)
+	res, err := db.DB.Collection(merchantCollection).InsertOne(context.TODO(), merchant)
+	if err != nil {
+		log.Println(res)
+	}
+
+	p.CreatedAt = time.Now()
+	p.UpdatedAt = time.Now()
+
+	res, err = db.DB.Collection(scbPaymentCollection).InsertOne(context.TODO(), p)
+
+	if UpdatePaymentRegStatus(reg.Regs[0].ID, reg.EventCode, reg.Regs[0].UserID, config.PAYMENT_SUCCESS) {
+		token, err := GetFirebaseToken(reg.Regs[0].UserID)
+		if err == nil {
+			if len(token.FirebaseTokens) > 0 {
+				fcm := firebase.InitializeServiceAccountID()
+				client, _ := fcm.Messaging(context.Background())
+				body := fmt.Sprintf("Thank you for payment %s", p.Amount)
+				go firebase.SendMulticastAndHandleErrors(context.Background(), client, token.FirebaseTokens, "RUNEX Register Payment", body)
+			}
+		}
+		return nil
+	}
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+//UpdatePaymentRegStatus repo with register_id, status, user_id
+func UpdatePaymentRegStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string) bool {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
+	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println("updating the Data", err)
+		return false
+	}
+	return true
+}
+
+//IsOwner repo
+func IsOwner(eventCode string, userID string) bool {
+
+	filter := bson.D{primitive.E{Key: "owner_id", Value: userID}, primitive.E{Key: "event_code", Value: eventCode}}
+	count, err := db.DB.Collection(registerCollection).CountDocuments(context.TODO(), filter)
+	if err != nil {
+		return false
+	}
+
+	if count > 0 {
+		return true
+	}
+
+	return false
 }

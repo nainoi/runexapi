@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 )
 
 //ReportRepository interface
@@ -48,8 +49,7 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 	// }
 
 	var event model.Event
-	filterEvent := bson.M{"code": eventID}
-	err := reportMongo.ConnectionDB.Collection("event_v2").FindOne(context.TODO(), filterEvent).Decode(&event)
+	event,err := repository.DetailEventByCode(eventID)
 	if err != nil {
 		log.Println(err)
 		return dashboard, err
@@ -126,6 +126,10 @@ func (reportMongo ReportRepositoryMongo) GetDashboardByEvent(eventID string) (mo
 	// }
 
 	filter := bson.M{"event_code": event.Code}
+	count, err := reportMongo.ConnectionDB.Collection("register_v2").CountDocuments(context.TODO(), filter)
+	if count == 0 {
+		return dashboard, err
+	}
 	err = reportMongo.ConnectionDB.Collection("register_v2").FindOne(context.TODO(), filter).Decode(&registerEvent)
 
 	if err != nil {

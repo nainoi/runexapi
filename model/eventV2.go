@@ -29,35 +29,41 @@ type EventResponse struct {
 
 // Event new model
 type Event struct {
-	Agreement           string    `json:"agreement"`
-	Category            string    `json:"category"`
-	Code                string    `json:"code"`
-	Contact             string    `json:"contact"`
-	ContactFacebook     string    `json:"contactFacebook"`
-	ContactLine         string    `json:"contactLine"`
-	Content             string    `json:"content"`
-	Cover               string    `json:"cover"`
-	CoverThumbnail      string    `json:"coverThumbnail"`
-	EventDate           string    `json:"eventDate"`
-	EventEndDate        time.Time `json:"eventEndDate"`
-	EventEndDateText    string    `json:"eventEndDateText"`
-	EventStartDate      time.Time `json:"eventStartDate"`
-	EventStartDateText  string    `json:"eventStartDateText"`
-	ID                  int       `json:"id"`
-	IsFreeEvent         bool      `json:"isFreeEvent"`
-	IsRunexOnly         bool      `json:"isRunexOnly"`
-	IsSendShirtByPost   bool      `json:"isSendShirtByPost"`
-	Organizer           string    `json:"organizer"`
-	PhotoBib            string    `json:"photoBib"`
-	PhotoBibThumbnail   string    `json:"photoBibThumbnail"`
-	PhotoCert           string    `json:"photoCert"`
-	PhotoCertThumbnail  string    `json:"photoCertThumbnail"`
-	PhotoMedal          string    `json:"photoMedal"`
-	PhotoMedalThumbnail string    `json:"photoMedalThumbnail"`
-	PhotoShirt          string    `json:"photoShirt"`
-	PhotoShirtThumbnail string    `json:"photoShirtThumbnail"`
-	Place               string    `json:"place"`
-	Prizes              []struct {
+	Agreement              string    `json:"agreement"`
+	Category               string    `json:"category"`
+	Code                   string    `json:"code"`
+	Contact                string    `json:"contact"`
+	ContactFacebook        string    `json:"contactFacebook"`
+	ContactLine            string    `json:"contactLine"`
+	Content                string    `json:"content"`
+	Cover                  string    `json:"cover"`
+	CoverThumbnail         string    `json:"coverThumbnail"`
+	EventDate              string    `json:"eventDate"`
+	EventEndDate           time.Time `json:"eventEndDate"`
+	EventEndDateText       string    `json:"eventEndDateText"`
+	EventStartDate         time.Time `json:"eventStartDate"`
+	EventStartDateText     string    `json:"eventStartDateText"`
+	ID                     int64     `json:"id"`
+	IsClosed               bool      `json:"isClosed"`
+	IsFreeEvent            bool      `json:"isFreeEvent"`
+	IsRunexOnly            bool      `json:"isRunexOnly"`
+	IsSendShirtByPost      bool      `json:"isSendShirtByPost"`
+	IsOpenPayment          bool      `json:"isOpenPayment"`
+	IsOpenRegister         bool      `json:"isOpenRegister"`
+	IsOpenSendActivity     bool      `json:"isOpenSendActivity"`
+	IsPublish              bool      `json:"isPublish"`
+	IsTransactionFixedRate bool      `json:"isTransactionFixedRate"`
+	Organizer              string    `json:"organizer"`
+	PhotoBib               string    `json:"photoBib"`
+	PhotoBibThumbnail      string    `json:"photoBibThumbnail"`
+	PhotoCert              string    `json:"photoCert"`
+	PhotoCertThumbnail     string    `json:"photoCertThumbnail"`
+	PhotoMedal             string    `json:"photoMedal"`
+	PhotoMedalThumbnail    string    `json:"photoMedalThumbnail"`
+	PhotoShirt             string    `json:"photoShirt"`
+	PhotoShirtThumbnail    string    `json:"photoShirtThumbnail"`
+	Place                  string    `json:"place"`
+	Prizes                 []struct {
 		Description string `json:"description"`
 		ID          int    `json:"id"`
 		Name        string `json:"name"`
@@ -72,28 +78,38 @@ type Event struct {
 		ID          int    `json:"id"`
 		Name        string `json:"name"`
 	} `json:"schedules"`
-	Tickets []Tickets `json:"tickets"`
-	Shirts  []Shirts  `json:"shirts"`
-	Title   string    `json:"title"`
-	UserID  string    `json:"userId"`
+	Slug     string    `json:"slug"`
+	Tickets  []Tickets `json:"tickets"`
+	Shirts   []Shirts  `json:"shirts"`
+	Title    string    `json:"title"`
+	UserID   string    `json:"userId"`
+	Pictures []Picture `json:"pictures"`
+}
+
+type Picture struct {
+	Cover     string `json:"cover"`
+	ID        int64  `json:"id"`
+	Thumbnail string `json:"thumbnail"`
+	Title     string `json:"title"`
 }
 
 // Tickets new model
 type Tickets struct {
-	Category   string      `json:"category" bson:"category"`
-	CreatedAt  time.Time   `json:"created_at" bson:"created_at"`
-	Detail     interface{} `json:"detail" bson:"detail"`
-	Distance   string      `json:"distance" bson:"distance"`
-	EventID    string      `json:"event_id" bson:"event_id"`
-	ID         string      `json:"id" bson:"id"`
-	Items      interface{} `json:"items" bson:"items"`
-	Limit      string      `json:"limit" bson:"limit"`
-	PhotoMap   string      `json:"photo_map" bson:"photo_map"`
-	PhotoMedal string      `json:"photo_medal" bson:"photo_medal"`
-	PhotoShirt string      `json:"photo_shirt" bson:"photo_shirt"`
-	Price      string      `json:"price" bson:"price"`
-	Title      string      `json:"title" bson:"title"`
-	UpdatedAt  time.Time   `json:"updated_at" bson:"updated_at"`
+	Category     string      `json:"category" bson:"category"`
+	CreatedAt    time.Time   `json:"created_at" bson:"created_at"`
+	Detail       interface{} `json:"detail" bson:"detail"`
+	Distance     string      `json:"distance" bson:"distance"`
+	EventID      string      `json:"event_id" bson:"event_id"`
+	ID           string      `json:"id" bson:"id"`
+	Items        interface{} `json:"items" bson:"items"`
+	Limit        string      `json:"limit" bson:"limit"`
+	PhotoMap     string      `json:"photo_map" bson:"photo_map"`
+	PhotoMedal   string      `json:"photo_medal" bson:"photo_medal"`
+	PhotoShirt   string      `json:"photo_shirt" bson:"photo_shirt"`
+	Price        string      `json:"price" bson:"price"`
+	Title        string      `json:"title" bson:"title"`
+	RunnerInTeam string      `json:"runnerInTeam" bson:"runnerInTeam"`
+	UpdatedAt    time.Time   `json:"updated_at" bson:"updated_at"`
 }
 
 //Shirts model

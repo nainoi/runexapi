@@ -69,7 +69,7 @@ func (activityMongo ActivityRepositoryMongo) AddActivity(activity model.AddActiv
 		activityModel := model.Activity{
 			EventUser:     activity.EventUser,
 			UserID:        activity.UserID,
-			EventID:       activity.EventID,
+			EventCode:     activity.EventCode,
 			ActivityInfo:  arrActivityInfo,
 			ToTalDistance: activity.ActivityInfo.Distance,
 		}
@@ -103,7 +103,7 @@ func (activityMongo ActivityRepositoryMongo) GetActivityByEvent(event_user strin
 func (activityMongo ActivityRepositoryMongo) GetActivityByEvent2(eventUser string) (model.Activity, error) {
 	var activity model.Activity
 	//var activityInfo []model.ActivityInfo
-	filter := bson.D{primitive.E{Key: "event_user",Value: eventUser}}
+	filter := bson.D{primitive.E{Key: "event_user", Value: eventUser}}
 	count, err := activityMongo.ConnectionDB.Collection(activityCollection).CountDocuments(context.TODO(), filter)
 	if count == 0 {
 		return model.Activity{}, err
@@ -128,7 +128,7 @@ func (activityMongo ActivityRepositoryMongo) GetHistoryDayByEvent(eventUser stri
 	//t2 := "2019-10-31T00:00:00.000Z"
 	//filterDate := bson.D{{"$gte", t1}, {"$lt", t2}}
 	//{"activity_info.distance", bson.D{{"$gt", 15}}}
-	filter := bson.D{primitive.E{Key:"event_user",Value: eventUser}}
+	filter := bson.D{primitive.E{Key: "event_user", Value: eventUser}}
 	err := activityMongo.ConnectionDB.Collection(activityCollection).FindOne(context.TODO(), filter).Decode(&activity)
 
 	if err != nil {
@@ -284,8 +284,8 @@ func (activityMongo ActivityRepositoryMongo) DeleteActivity(event_user string, a
 func (activityMongo ActivityRepositoryMongo) GetActivityAllEvent(eventID string) ([]model.ActivityAllInfo, error) {
 	var allInfos []model.ActivityAllInfo
 	//var activityInfo []model.ActivityInfo
-	objectID , _ := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{ Key:"event_id", Value: objectID}}
+	objectID, _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{Key: "event_id", Value: objectID}}
 	curr, err := activityMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter)
 	if err != nil {
 		log.Println(err)
@@ -299,7 +299,7 @@ func (activityMongo ActivityRepositoryMongo) GetActivityAllEvent(eventID string)
 		}
 		//fmt.Printf("post: %+v\n", p)
 		var user model.User
-		filterUser := bson.D{primitive.E{ Key:"_id", Value: a.UserID}}
+		filterUser := bson.D{primitive.E{Key: "_id", Value: a.UserID}}
 		err := activityMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 		if err != nil {

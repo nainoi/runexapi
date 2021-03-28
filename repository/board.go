@@ -63,7 +63,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID strin
 		return event, count, activities, myActivities, err
 	}
 	//filter = bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
-	option.SetSort(bson.D{primitive.E{Key: "activities.total_distance", Value: -1}})
+	option.SetSort(bson.D{primitive.E{Key: "total_distance", Value: -1}})
 	cur, err := boardMongo.ConnectionDB.Collection(activityV2Collection).Find(context.TODO(), filter, option)
 
 	if err != nil {
@@ -94,16 +94,16 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID strin
 		if n < 10 {
 			var user model.UserEvent
 			// log.Printf("[info] userID %s", userID)
-			filterUser := bson.D{primitive.E{Key: "_id", Value: activity.Activities.UserID}}
+			filterUser := bson.D{primitive.E{Key: "_id", Value: activity.UserID}}
 			err := boardMongo.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filterUser).Decode(&user)
 
 			if err != nil {
 				log.Println(err)
 			}
 			a = model.Ranking{
-				UserID:        activity.Activities.UserID,
-				ActivityInfo:  activity.Activities.ActivityInfo,
-				ToTalDistance: activity.Activities.ToTalDistance,
+				UserID:        activity.UserID,
+				ActivityInfo:  activity.ActivityInfo,
+				ToTalDistance: activity.ToTalDistance,
 				UserInfo:      user,
 				EventCode:     code,
 				ID:            activity.ID,

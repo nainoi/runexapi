@@ -28,3 +28,6 @@ omise:
 swagger:
     base_api: "https://api.runex.co"
     base_path: "/api/v2"
+
+Public:
+    token: "5Dk2o03a4hPglRSUuNeEFXEah57CGQfMVjQ7f"

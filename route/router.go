@@ -122,6 +122,7 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	workoutsAPI := handle_workouts.WorkoutsAPI{
 		WorkoutsRepository: &workoutsRepository,
 	}
+	g.POST("/workout_hook", workoutsAPI.AddWorkoutHook)
 	g.Use(oauth.AuthMiddleware())
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
@@ -158,11 +159,13 @@ func activityGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	}
 	group := g.Group("/activity")
 	{
+		group.POST("/waiting", activityV2API.GetActivityWaiting)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("/add", activityV2API.AddActivity)
 			group.GET("/getByEvent/:event", activityV2API.GetActivityByEvent)
 			group.GET("/getByEvent2/:event", activityV2API.GetActivityByEvent2)
+			group.POST("/dashboard", activityV2API.GetDashboard)
 			group.POST("/getHistoryDay", activityV2API.GetHistoryDayByEvent)
 			group.POST("/getHistoryMonth", activityV2API.GetHistoryMonthByEvent)
 			group.DELETE("/deleteActivity/:id/:activityID", activityV2API.DeleteActivityEvent)
@@ -240,7 +243,8 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	}
 	group := g.Group("/register")
 	{
-
+		group.POST("/payment_hook", registerAPI.PaymentHook)
+		group.POST("/regsEvent", registerAPI.GetRegEventFromOwner)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.GET("/all", registerAPI.GetAll)
@@ -253,6 +257,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.GET("/myRegEventActivate", registerAPI.GetMyRegEventActivate)
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 			group.POST("/payment", registerAPI.ChargeRegEvent)
+
 		}
 	}
 

@@ -12,11 +12,11 @@ import (
 	"time"
 
 	guuid "github.com/google/uuid"
+	"github.com/spf13/viper"
 
 	"github.com/gin-gonic/gin"
 	"github.com/nfnt/resize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"thinkdev.app/think/runex/runexapi/api/v2/kao"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/config"
@@ -25,6 +25,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/pkg/app"
 	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository"
+	v2 "thinkdev.app/think/runex/runexapi/repository/v2"
 	"thinkdev.app/think/runex/runexapi/utils"
 )
 
@@ -65,7 +66,7 @@ func (api ActivityV2API) AddFromWorkout(c *gin.Context) {
 	userID, _ := oauth.GetValuesToken(c)
 	activityInfo := model.ActivityInfo{
 		Caption:      form.WorkoutActivityInfo.Caption,
-		Distance:     form.WorkoutActivityInfo.Distance,
+		Distance:     utils.ToFixed(form.WorkoutActivityInfo.Distance, 2),
 		ImageURL:     "",
 		APP:          form.WorkoutActivityInfo.APP,
 		ActivityDate: form.WorkoutActivityInfo.WorkoutDate,
@@ -79,10 +80,16 @@ func (api ActivityV2API) AddFromWorkout(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	eventObjectID, err := primitive.ObjectIDFromHex(form.EventID)
+	rID, _ := primitive.ObjectIDFromHex(form.RegID)
+	pID, _ := primitive.ObjectIDFromHex(form.ParentRegID)
+
 	activityModel := model.AddActivityV2{
 		UserID:       userObjectID,
-		EventID:      eventObjectID,
+		EventCode:    form.EventCode,
+		RegID:        rID,
+		ParentRegID:  pID,
+		OrderID:      form.OrderID,
+		Ticket:       form.Ticket,
 		ActivityInfo: activityInfo,
 	}
 
@@ -214,9 +221,9 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
 		eventActivity := each
 
-		if each.Partner.PartnerName != "" {
+		/*if each.Partner.PartnerName != "" {
 			if each.Partner.PartnerName == config.PartnerKao {
-				body, err := kao.KaoActivity(path, workoutInfo.Distance, workoutInfo.Duration, each.Partner.Slug, each.Partner.RefActivityValue, each.Partner.RefEventValue, each.Partner.RefPhoneValue)
+				_, err := kao.KaoActivity(path, workoutInfo.Distance, workoutInfo.Duration, each.Partner.Slug, each.Partner.RefActivityValue, each.Partner.RefEventValue, each.Partner.RefPhoneValue)
 				if err != nil {
 					log.Println("error AddActivity", err.Error())
 					res.Response(http.StatusInternalServerError, err.Error(), nil)
@@ -224,27 +231,31 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 					return
 				}
 				if err == nil {
-					eventObjectID, err := primitive.ObjectIDFromHex(eventActivity.EventID)
-
-					if err != nil {
-						log.Println(err)
-					}
 
 					activityInfo := model.ActivityInfo{
 						ID:           primitive.NewObjectID(),
 						Caption:      workoutInfo.Caption,
-						Distance:     workoutInfo.Distance,
+						Distance:     utils.ToFixed(workoutInfo.Distance, 2),
 						ImageURL:     resObject.URL,
 						Time:         workoutInfo.Duration,
 						APP:          workoutInfo.APP,
+						IsApprove:    true,
+						Status:       config.ACTIVITY_STATUS_APPROVE,
 						ActivityDate: workoutInfo.WorkoutDate,
 						CreatedAt:    time.Now(),
 						UpdatedAt:    time.Now(),
 					}
 
+					rID, _ := primitive.ObjectIDFromHex(eventActivity.RegID)
+					pID, _ := primitive.ObjectIDFromHex(eventActivity.ParentRegID)
+
 					activityModel := model.AddActivityV2{
 						UserID:       userObjectID,
-						EventID:      eventObjectID,
+						EventCode:    eventActivity.EventCode,
+						RegID:        rID,
+						ParentRegID:  pID,
+						OrderID:      eventActivity.OrderID,
+						Ticket:       eventActivity.Ticket,
 						ActivityInfo: activityInfo,
 					}
 
@@ -258,9 +269,9 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 
 					kaoActivity := model.LogSendKaoActivity{
 						UserID:         userObjectID,
-						EventID:        eventObjectID,
+						EventCode:      eventActivity.EventCode,
 						ActivityInfoID: activityInfo.ID,
-						Distance:       workoutInfo.Distance,
+						Distance:       utils.ToFixed(workoutInfo.Distance, 2),
 						ImageURL:       resObject.URL,
 						Time:           workoutInfo.Duration,
 						APP:            workoutInfo.APP,
@@ -272,43 +283,47 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 					}
 					_ = api.ActivityV2Repository.AddKaoLogActivity(kaoActivity)
 				}
-				log.Println(string(body))
+				// log.Println(string(body))
 			}
-		} else {
-			eventObjectID, err := primitive.ObjectIDFromHex(eventActivity.EventID)
+		} else {*/
 
-			if err != nil {
-				log.Println(err)
-			}
-
-			activityInfo := model.ActivityInfo{
-				ID:           primitive.NewObjectID(),
-				Caption:      workoutInfo.Caption,
-				Distance:     workoutInfo.Distance,
-				ImageURL:     resObject.URL,
-				Time:         workoutInfo.Duration,
-				APP:          workoutInfo.APP,
-				ActivityDate: workoutInfo.WorkoutDate,
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
-			}
-
-			activityModel := model.AddActivityV2{
-				UserID:       userObjectID,
-				EventID:      eventObjectID,
-				ActivityInfo: activityInfo,
-			}
-
-			err2 := api.ActivityV2Repository.AddActivity(activityModel)
-			if err2 != nil {
-				log.Println("error AddActivity", err2.Error())
-				res.Response(http.StatusInternalServerError, err2.Error(), nil)
-				c.Abort()
-				return
-			}
+		activityInfo := model.ActivityInfo{
+			ID:           primitive.NewObjectID(),
+			Caption:      workoutInfo.Caption,
+			Distance:     utils.ToFixed(workoutInfo.Distance, 2),
+			ImageURL:     resObject.URL,
+			Time:         workoutInfo.Duration,
+			APP:          workoutInfo.APP,
+			IsApprove:    true,
+			Status:       config.ACTIVITY_STATUS_APPROVE,
+			ActivityDate: workoutInfo.WorkoutDate,
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
 		}
 
+		rID, _ := primitive.ObjectIDFromHex(eventActivity.RegID)
+		pID, _ := primitive.ObjectIDFromHex(eventActivity.ParentRegID)
+
+		activityModel := model.AddActivityV2{
+			UserID:       userObjectID,
+			EventCode:    eventActivity.EventCode,
+			RegID:        rID,
+			ParentRegID:  pID,
+			OrderID:      eventActivity.OrderID,
+			Ticket:       eventActivity.Ticket,
+			ActivityInfo: activityInfo,
+		}
+
+		err2 := api.ActivityV2Repository.AddActivity(activityModel)
+		if err2 != nil {
+			log.Println("error AddActivity", err2.Error())
+			res.Response(http.StatusInternalServerError, err2.Error(), nil)
+			c.Abort()
+			return
+		}
 	}
+
+	// }
 	workoutInfo.IsSync = true
 	err = api.ActivityV2Repository.UpdateWorkout(workoutInfo, userObjectID)
 
@@ -327,7 +342,7 @@ func (api ActivityV2API) AddMultipleFromWorkout(c *gin.Context) {
 // @Tags activity
 // @Accept  application/json
 // @Produce application/json
-// @Param payload body model.AddActivityForm true "payload"
+// @Param payload body model.AddActivityV2 true "payload"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
@@ -336,17 +351,19 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
-	var form model.AddActivityForm
+	var form model.AddActivityForm2
 	if err := c.ShouldBind(&form); err != nil {
 		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
 		return
 	}
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
-	path := ""
+
 	file, header, err := c.Request.FormFile("image")
 
 	var resObject = model.UploadResponse{}
+	path := ""
+
 	if err != nil {
 		fmt.Println("Error Retrieving the File")
 		path = ""
@@ -356,11 +373,10 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 		if err != nil {
 			log.Println(err)
 		}
-		file.Close()
 
 		// resize to width 1000 using Lanczos resampling
 		// and preserve aspect ratio
-		m := resize.Resize(800, 0, img, resize.Lanczos3)
+		m := resize.Resize(960, 0, img, resize.Lanczos3)
 
 		filename := header.Filename
 		fmt.Println(filename)
@@ -381,45 +397,44 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 
 		path = "/upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month)) + "/" + uniqidFilename.String() + ".png"
 		if err != nil {
-			log.Println(err)
+			log.Fatal(err)
 		}
 		defer out.Close()
 		// write new image to file
 		jpeg.Encode(out, m, nil)
 
-		//_, err = io.Copy(out, file)
-
-		resObject = upload.UploadWithFolderToS3(path, "activity", uniqidFilename.String()+".png")
-
-		defer os.Remove(path)
-	}
-	fmt.Println(form)
-	time1, err := time.Parse(time.RFC3339, form.ActivityDate)
-	if err != nil {
-		fmt.Println(err)
-		time1 = time.Now()
-		//c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+		resObject = upload.UploadWithFolderToS3(pathDir+"/"+uniqidFilename.String()+".png", "activty", uniqidFilename.String()+".png")
 	}
 
-	form.UserID = userID
-	form.ImageURL = resObject.URL
+	defer file.Close()
+	defer os.Remove(path)
+	// fmt.Println(form)
+	// time1, err := time.Parse(time.RFC3339, form.ActivityInfo.ActivityDate)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	time1 = time.Now()
+	// 	//c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
+	// }
 
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	eventObjectID, err := primitive.ObjectIDFromHex(form.EventID)
+	pRegID, err := primitive.ObjectIDFromHex(form.ParentRegID)
+	regID, err := primitive.ObjectIDFromHex(form.RegID)
 
-	activityInfo := model.ActivityInfo{
-		Caption:      form.Caption,
-		Distance:     form.Distance,
-		ImageURL:     form.ImageURL,
-		ActivityDate: time1,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-	}
+	log.Println(resObject.URL)
+
+	form.ActivityInfo.ImageURL = resObject.URL
+
+	form.ActivityInfo.CreatedAt = time.Now()
+	form.ActivityInfo.UpdatedAt = time.Now()
 
 	activityModel := model.AddActivityV2{
 		UserID:       userObjectID,
-		EventID:      eventObjectID,
-		ActivityInfo: activityInfo,
+		EventCode:    form.EventCode,
+		ActivityInfo: form.ActivityInfo,
+		ParentRegID:  pRegID,
+		OrderID:      form.OrderID,
+		RegID:        regID,
+		Ticket:       form.Ticket,
 	}
 
 	err2 := api.ActivityV2Repository.AddActivity(activityModel)
@@ -430,6 +445,25 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, "success", nil)
+}
+
+func (api ActivityV2API) GetActivityByEvent2(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	eventID := c.Param("event")
+	//userID := "5d772660c8a56133c2d7c5ba"
+	userID, _ := oauth.GetValuesToken(c)
+
+	activity, err := api.ActivityV2Repository.GetActivityByEvent2(eventID, userID)
+
+	if err != nil {
+		log.Println("error AddEvent Get Event info2", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", activity)
 }
 
 func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
@@ -451,18 +485,35 @@ func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
 	appG.Response(http.StatusOK, e.SUCCESS, activity)
 }
 
-func (api ActivityV2API) GetActivityByEvent2(c *gin.Context) {
+// GetDashboard api godoc
+// @Summary get activity dashboard
+// @Description get activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.EventActivityDashboardReq true "payload"
+// @Success 200 {object} response.Response{data=[]model.ActivityV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/dashboard [post]
+func (api ActivityV2API) GetDashboard(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
-	eventID := c.Param("event")
+	var req model.EventActivityDashboardReq
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 
-	activity, err := api.ActivityV2Repository.GetActivityByEvent2(eventID, userID)
+	activity, err := repository.GetActivityEventDashboard(req, userID)
 
 	if err != nil {
-		log.Println("error AddEvent Get Event info2", err.Error())
+		log.Println("error Get Event info2", err.Error())
 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
@@ -545,4 +596,44 @@ func (api ActivityV2API) DeleteActivityEvent(c *gin.Context) {
 
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
 
+}
+
+// GetActivityWaiting api godoc
+// @Summary get activity waiting approve
+// @Description get activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.OwnerRequest true "payload"
+// @Success 200 {object} response.Response{data=model.ActivityInfo}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/waiting [post]
+func (api ActivityV2API) GetActivityWaiting(c *gin.Context) {
+	var res = response.Gin{C: c}
+	var form model.OwnerRequest
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	if err := c.ShouldBindJSON(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	if !v2.IsOwner(form.EventCode, form.OwnerID) {
+		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+		return
+	}
+
+	datas, err := repository.GetActivityWaitApprove(form.EventCode)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", datas)
 }

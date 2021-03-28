@@ -64,7 +64,7 @@ func InitializeServiceAccountID() *firebase.App {
 	}
 	app, err := firebase.NewApp(context.Background(), conf, opt)
 	if err != nil {
-		log.Println("error initializing app: %v\n", err)
+		log.Println("error initializing app: %@ \n", err.Error())
 	}
 	// [END initialize_sdk_with_service_account_id]
 	return app

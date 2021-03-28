@@ -142,7 +142,15 @@ func StringToSlug(s string) string {
 //OrderIDGenerate to generate order id string from datetime
 func OrderIDGenerate() string {
 	currentTime := time.Now()
-	fmt.Println("Current Time in String: ", currentTime.String())
-	fmt.Println("MMDDYYHHMMSS : ", currentTime.Format("020106150405"))
-	return fmt.Sprintf("RX%s",currentTime.Format("020106150405"))
+	// fmt.Println("Current Time in String: ", currentTime.String())
+	// fmt.Println("MMDDYYHHMMSS : ", currentTime.Format("020106150405"))
+	return fmt.Sprintf("RX%s", currentTime.Format("020106150405"))
+}
+
+//Ref2Generate to generate order id string from datetime
+func Ref2Generate() string {
+	currentTime := time.Now()
+	// fmt.Println("Current Time in String: ", currentTime.String())
+	// fmt.Println("MMDDYYHHMMSS : ", currentTime.Format("020106150405"))
+	return fmt.Sprintf("2REF%s", currentTime.Format("020106150405"))
 }

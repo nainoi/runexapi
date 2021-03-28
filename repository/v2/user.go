@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
 )
 
@@ -256,10 +257,11 @@ func (db RepoUserDB) FirebaseRegister(token string, userID string) error {
 }
 
 // GetFirebaseToken repo register firebase token
-func (db RepoUserDB) GetFirebaseToken(userID primitive.ObjectID) (model.FirebaseUser, error) {
+func GetFirebaseToken(userID primitive.ObjectID) (model.FirebaseUser, error) {
 	filter := bson.D{primitive.E{Key: "user_id", Value: userID}}
 	var fcm model.FirebaseUser
-	err := db.ConnectionDB.Collection(fcmConlection).FindOne(context.TODO(), filter).Decode(&fcm)
+	err := db.DB.Collection(fcmConlection).FindOne(context.TODO(), filter).Decode(&fcm)
+	log.Println(fcm)
 	return fcm, err
 }
 

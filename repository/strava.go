@@ -70,7 +70,7 @@ func (repo RepoStravaDB) AddActivity(stravaReq model.StravaAddRequest) error {
 		update := bson.M{"$push": bson.M{"activities": stravaReq.StravaActivity}}
 		_, err = repo.ConnectionDB.Collection(stravaConlection).UpdateOne(context.TODO(), filter, update)
 		if err == nil {
-			token, err := userRepo.GetFirebaseToken(user.UserID)
+			token, err := repository.GetFirebaseToken(user.UserID)
 			if err == nil {
 				if len(token.FirebaseTokens) > 0 {
 					fcm := firebase.InitializeServiceAccountID()

@@ -141,8 +141,7 @@ func (api ActivityAPI) AddActivity(c *gin.Context) {
 	form.ImageURL = path
 
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
-	eventObjectID, err := primitive.ObjectIDFromHex(form.EventID)
-	eventUser := form.EventID + "." + userID
+	eventUser := form.EventCode + "." + userID
 
 	//event.UpdatedTime = time.Now()
 	//loc, _ := time.LoadLocation("Asia/Bangkok")
@@ -159,7 +158,7 @@ func (api ActivityAPI) AddActivity(c *gin.Context) {
 	activityModel := model.AddActivity{
 		EventUser:    eventUser,
 		UserID:       userObjectID,
-		EventID:      eventObjectID,
+		EventCode:    form.EventCode,
 		ActivityInfo: activityInfo,
 	}
 
@@ -242,14 +241,13 @@ func (api ActivityAPI) AddMultiActivity(c *gin.Context) {
 	form.UserID = userID
 	form.ImageURL = path
 
-	var arrEvent = form.EventID
+	var arrEvent = form.EventCodes
 
 	for index, each := range arrEvent {
 		fmt.Printf("EventID value [%d] is [%s]\n", index, each)
-		eventID := each
+		eventCode := each
 		userObjectID, err := primitive.ObjectIDFromHex(userID)
-		eventObjectID, err := primitive.ObjectIDFromHex(eventID)
-		eventUser := eventID + "." + userID
+		eventUser := eventCode + "." + userID
 
 		if err != nil {
 			log.Fatal(err)
@@ -267,7 +265,7 @@ func (api ActivityAPI) AddMultiActivity(c *gin.Context) {
 		activityModel := model.AddActivity{
 			EventUser:    eventUser,
 			UserID:       userObjectID,
-			EventID:      eventObjectID,
+			EventCode:    eventCode,
 			ActivityInfo: activityInfo,
 		}
 

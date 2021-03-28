@@ -8,7 +8,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"thinkdev.app/think/runex/runexapi/config"
+	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/utils"
 )
 
 // ActivityV2Repository interface repo
@@ -21,6 +24,7 @@ type ActivityV2Repository interface {
 	DeleteActivity(event_id string, user_id string, activity_id string) error
 	UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error
 	AddKaoLogActivity(activity model.LogSendKaoActivity) error
+	//GetActivityWaitApprove(eventCode string) ([]model.ActivityInfo, error)
 }
 
 // ActivityV2RepositoryMongo db ref
@@ -38,9 +42,10 @@ const (
 func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddActivityV2) error {
 	//model := activity.
 	//filter := bson.D{"event_id": activity.EventID}
-	filter := bson.D{primitive.E{Key: "event_id", Value: activity.EventID}, primitive.E{Key: "activities.user_id", Value: activity.UserID}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: activity.EventCode}, primitive.E{Key: "user_id", Value: activity.UserID}, primitive.E{Key: "reg_id", Value: activity.RegID}}
 	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	log.Printf("[info] count %d", count)
+	log.Printf("[info] count %s", activity.EventCode)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -48,85 +53,160 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 	if count > 0 {
 		var activityModel model.ActivityV2
 		err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activityModel)
-		var totalDistance = activityModel.Activities.ToTalDistance + activity.ActivityInfo.Distance
+		if activity.ActivityInfo.APP == "" {
+			dataInfo := activity.ActivityInfo
+			dataInfo.ID = primitive.NewObjectID()
+			dataInfo.IsApprove = false
+			dataInfo.Status = config.ACTIVITY_STATUS_WAITING
+			update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
+			_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, update)
+			if err != nil {
+				return err
+			}
+			activityLogInfo := model.LogActivityInfo{
+				UserID:         activity.UserID,
+				ActivityInfoID: dataInfo.ID,
+				Distance:       utils.ToFixed(dataInfo.Distance, 2),
+				ImageURL:       dataInfo.ImageURL,
+				Caption:        dataInfo.Caption,
+				Time:           dataInfo.Time,
+				APP:            dataInfo.APP,
+				ActivityDate:   dataInfo.ActivityDate,
+				CreatedAt:      dataInfo.CreatedAt,
+				UpdatedAt:      dataInfo.UpdatedAt,
+			}
+			_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
+		} else {
+			var totalDistance = activityModel.ToTalDistance + activity.ActivityInfo.Distance
 
-		updateDistance := bson.M{"$set": bson.M{"activities.total_distance": totalDistance}}
-		_, err2 := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, updateDistance)
-		if err2 != nil {
-			log.Printf("[info] err %s", err2)
-			return err2
+			updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
+			_, err2 := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, updateDistance)
+			if err2 != nil {
+				log.Printf("[info] err %s", err2)
+				return err2
+			}
+			dataInfo := activity.ActivityInfo
+			dataInfo.ID = primitive.NewObjectID()
+			dataInfo.IsApprove = true
+			dataInfo.Status = config.ACTIVITY_STATUS_APPROVE
+			update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
+			_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, update)
+			if err != nil {
+				//log.Fatal(res)
+				//log.Printf("[info] err %s", res)
+				return err
+			}
+			activityLogInfo := model.LogActivityInfo{
+				UserID:         activity.UserID,
+				ActivityInfoID: dataInfo.ID,
+				Distance:       utils.ToFixed(dataInfo.Distance, 2),
+				ImageURL:       dataInfo.ImageURL,
+				Caption:        dataInfo.Caption,
+				Time:           dataInfo.Time,
+				APP:            dataInfo.APP,
+				ActivityDate:   dataInfo.ActivityDate,
+				CreatedAt:      dataInfo.CreatedAt,
+				UpdatedAt:      dataInfo.UpdatedAt,
+			}
+			_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 		}
-		dataInfo := activity.ActivityInfo
-		update := bson.M{"$push": bson.M{"activities.activity_info": dataInfo}}
-		_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filter, update)
-		if err != nil {
-			//log.Fatal(res)
-			//log.Printf("[info] err %s", res)
-			return err
-		}
-		activityLogInfo := model.LogActivityInfo{
-			UserID:         activity.UserID,
-			ActivityInfoID: dataInfo.ID,
-			Distance:       dataInfo.Distance,
-			ImageURL:       dataInfo.ImageURL,
-			Caption:        dataInfo.Caption,
-			Time:           dataInfo.Time,
-			APP:            dataInfo.APP,
-			ActivityDate:   dataInfo.ActivityDate,
-			CreatedAt:      dataInfo.CreatedAt,
-			UpdatedAt:      dataInfo.UpdatedAt,
-		}
-		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
-
 	} else {
 		var arrActivityInfo []model.ActivityInfo
 
 		dataInfo := activity.ActivityInfo
-		arrActivityInfo = append(arrActivityInfo, dataInfo)
+		if activity.ActivityInfo.APP == "" {
+			dataInfo.ID = primitive.NewObjectID()
+			dataInfo.IsApprove = false
+			dataInfo.Status = config.ACTIVITY_STATUS_WAITING
+			arrActivityInfo = append(arrActivityInfo, dataInfo)
 
-		activities := model.Activities{
-			UserID:        activity.UserID,
-			ToTalDistance: activity.ActivityInfo.Distance,
-			ActivityInfo:  arrActivityInfo,
-		}
+			activityModel := model.ActivityV2{
+				UserID:        activity.UserID,
+				EventCode:     activity.EventCode,
+				ActivityInfo:  arrActivityInfo,
+				Ticket:        activity.Ticket,
+				OrderID:       activity.OrderID,
+				ToTalDistance: 0,
+				RegID:         activity.RegID,
+				ParentRegID:   activity.ParentRegID,
+			}
 
-		activityModel := model.ActivityV2{
-			EventID:    activity.EventID,
-			Activities: activities,
-		}
-		log.Println(activityModel)
-		res, err := activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
-		if err != nil {
-			log.Fatal(res)
-			return err
-		}
+			_, err := activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
 
-		activityLogInfo := model.LogActivityInfo{
-			UserID:         activity.UserID,
-			EventID:        activity.EventID,
-			ActivityInfoID: dataInfo.ID,
-			Distance:       dataInfo.Distance,
-			ImageURL:       dataInfo.ImageURL,
-			Caption:        dataInfo.Caption,
-			Time:           dataInfo.Time,
-			APP:            dataInfo.APP,
-			ActivityDate:   dataInfo.ActivityDate,
-			CreatedAt:      dataInfo.CreatedAt,
-			UpdatedAt:      dataInfo.UpdatedAt,
+			activityLogInfo := model.LogActivityInfo{
+				UserID:         activity.UserID,
+				EventCode:      activity.EventCode,
+				ActivityInfoID: dataInfo.ID,
+				Distance:       utils.ToFixed(dataInfo.Distance, 2),
+				ImageURL:       dataInfo.ImageURL,
+				Caption:        dataInfo.Caption,
+				Time:           dataInfo.Time,
+				APP:            dataInfo.APP,
+				ActivityDate:   dataInfo.ActivityDate,
+				IsApprove:      false,
+				CreatedAt:      dataInfo.CreatedAt,
+				UpdatedAt:      dataInfo.UpdatedAt,
+			}
+			_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
+			if err != nil {
+				return err
+			}
+
+		} else {
+			dataInfo.ID = primitive.NewObjectID()
+			dataInfo.IsApprove = true
+			dataInfo.Status = config.ACTIVITY_STATUS_APPROVE
+			arrActivityInfo = append(arrActivityInfo, dataInfo)
+
+			// activities := model.Activities{
+			// 	UserID:        activity.UserID,
+			// 	ToTalDistance: activity.ActivityInfo.Distance,
+			// 	ActivityInfo:  arrActivityInfo,
+			// }
+
+			activityModel := model.ActivityV2{
+				UserID:        activity.UserID,
+				EventCode:     activity.EventCode,
+				ActivityInfo:  arrActivityInfo,
+				Ticket:        activity.Ticket,
+				OrderID:       activity.OrderID,
+				ToTalDistance: activity.ActivityInfo.Distance,
+				RegID:         activity.RegID,
+				ParentRegID:   activity.ParentRegID,
+			}
+
+			_, err := activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
+			if err != nil {
+				return err
+			}
+
+			activityLogInfo := model.LogActivityInfo{
+				UserID:         activity.UserID,
+				EventCode:      activity.EventCode,
+				ActivityInfoID: dataInfo.ID,
+				Distance:       utils.ToFixed(dataInfo.Distance, 2),
+				ImageURL:       dataInfo.ImageURL,
+				Caption:        dataInfo.Caption,
+				Time:           dataInfo.Time,
+				APP:            dataInfo.APP,
+				ActivityDate:   dataInfo.ActivityDate,
+				IsApprove:      true,
+				CreatedAt:      dataInfo.CreatedAt,
+				UpdatedAt:      dataInfo.UpdatedAt,
+			}
+			_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 		}
-		_, _ = activityMongo.ConnectionDB.Collection(activityLog).InsertOne(context.TODO(), activityLogInfo)
 	}
 
 	return nil
 }
 
 // GetActivityByEvent event and activity detail
-func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent(eventID string, userID string) ([]model.ActivityInfo, error) {
+func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent(eventCode string, userID string) ([]model.ActivityInfo, error) {
 	var activity model.ActivityV2
 	var activityInfo = []model.ActivityInfo{}
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
-	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{Key: "event_id", Value: eventObjectID}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
 	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	if count > 0 {
 		err = activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
@@ -146,8 +226,8 @@ func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent(eventID string
 func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(eventID string, userID string) (model.ActivityV2, error) {
 	var activity = model.ActivityV2{}
 	userObjectID, _ := primitive.ObjectIDFromHex(userID)
-	eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
-	filter := bson.D{primitive.E{Key: "event_code", Value: eventObjectID}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
+	// eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{Key: "event_code", Value: eventID}, primitive.E{Key: "user_id", Value: userObjectID}}
 	count, err := activityMongo.ConnectionDB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	if count > 0 {
 		err = activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
@@ -155,6 +235,40 @@ func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(eventID strin
 		if err != nil {
 			log.Println(err)
 			return activity, err
+		}
+		//activityInfo = activity.ActivityInfo
+
+		return activity, err
+	}
+	return activity, err
+}
+
+// GetActivityByEvent2 event and activity detail
+func GetActivityEventDashboard(req model.EventActivityDashboardReq, userID string) ([]model.ActivityV2, error) {
+	var activity = []model.ActivityV2{}
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "user_id", Value: userObjectID}}
+	if !req.ParentRegID.IsZero() {
+		filter = bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "parent_reg_id", Value: req.ParentRegID}}
+	}
+	
+	count, err := db.DB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if count > 0 {
+		curr, err := db.DB.Collection(activityV2Collection).Find(context.TODO(), filter)
+
+		if err != nil {
+			log.Println(err)
+			return activity, err
+		}
+
+		for curr.Next(context.TODO()) {
+			var u model.ActivityV2
+			// decode the document
+			if err := curr.Decode(&u); err != nil {
+				log.Println(err)
+			}
+			//fmt.Printf("post: %+v\n", p)
+			activity = append(activity, u)
 		}
 		//activityInfo = activity.ActivityInfo
 
@@ -172,8 +286,8 @@ func (activityMongo ActivityV2RepositoryMongo) GetHistoryDayByEvent(event_id str
 	//filterDate := bson.D{{"$gte", t1}, {"$lt", t2}}
 	//{"activity_info.distance", bson.D{{"$gt", 15}}}
 	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
-	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
-	filter := bson.D{primitive.E{Key:"event_id",Value: eventObjectID}, primitive.E{Key: "activities.user_id",Value: userObjectID}}
+	// eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
+	filter := bson.D{primitive.E{Key: "event_code", Value: event_id}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
 
 	err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
 
@@ -181,7 +295,7 @@ func (activityMongo ActivityV2RepositoryMongo) GetHistoryDayByEvent(event_id str
 		log.Println(err)
 		return historyDayInfo, err
 	}
-	activityInfo = activity.Activities.ActivityInfo
+	activityInfo = activity.ActivityInfo
 
 	//var activityInfoNew []model.ActivityInfo
 
@@ -217,8 +331,8 @@ func (activityMongo ActivityV2RepositoryMongo) HistoryMonthByEvent(event_id stri
 	var activityInfo []model.ActivityInfo
 
 	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
-	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
-	filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+	// eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
+	filter := bson.D{primitive.E{Key: "event_code", Value: event_id}, primitive.E{Key: "user_id", Value: userObjectID}}
 
 	err := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
 
@@ -226,7 +340,7 @@ func (activityMongo ActivityV2RepositoryMongo) HistoryMonthByEvent(event_id stri
 		log.Println(err)
 		return nil, err
 	}
-	activityInfo = activity.Activities.ActivityInfo
+	activityInfo = activity.ActivityInfo
 
 	var historyMonthInfo []model.HistoryMonthInfo
 
@@ -270,48 +384,45 @@ func (activityMongo ActivityV2RepositoryMongo) HistoryMonthByEvent(event_id stri
 	return historyMonthInfo, err
 }
 
-func (activityMongo ActivityV2RepositoryMongo) DeleteActivity(event_id string, user_id string, activity_id string) error {
-	objectID, _ := primitive.ObjectIDFromHex(activity_id)
+func (activityMongo ActivityV2RepositoryMongo) DeleteActivity(eventCode string, userID string, activityID string) error {
+	objectID, _ := primitive.ObjectIDFromHex(activityID)
 
 	var activity model.ActivityV2
 	var activityInfo model.ActivityInfo
 
-	userObjectID, _ := primitive.ObjectIDFromHex(user_id)
-	eventObjectID, _ := primitive.ObjectIDFromHex(event_id)
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
 	//filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
 
-	filterActivityInfo := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}, {"activities.activity_info._id", objectID}}
+	filterActivityInfo := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activities.user_id", Value: userObjectID}, primitive.E{Key: "activities.activity_info._id", Value: objectID}}
 	err2 := activityMongo.ConnectionDB.Collection(activityV2Collection).FindOne(context.TODO(), filterActivityInfo).Decode(&activity)
 	//log.Println("[info] activity %s", activity)
 	if err2 != nil {
 		log.Println(err2)
 		return err2
 	}
-	for _, item := range activity.Activities.ActivityInfo {
+	for _, item := range activity.ActivityInfo {
 		if objectID == item.ID {
 			activityInfo = item
 			break
 		}
 	}
 	var distance = activityInfo.Distance
-	var toTalDistance = activity.Activities.ToTalDistance - distance
+	var toTalDistance = activity.ToTalDistance - distance
 
-	filterUpdate := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+	filterUpdate := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activities.user_id", Value: userObjectID}}
 
-	delete := bson.M{"$pull": bson.M{"activities.activity_info": bson.M{"_id": objectID}}}
-	updated := bson.M{"$set": bson.M{"activities.total_distance": toTalDistance}}
+	delete := bson.M{"$pull": bson.M{"activity_info": bson.M{"_id": objectID}}}
+	updated := bson.M{"$set": bson.M{"total_distance": toTalDistance}}
 
-	res, err := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterUpdate, delete)
+	_, err := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterUpdate, delete)
 	if err != nil {
 		//log.Fatal(res)
-		log.Printf("[info] err %s", res)
 		return err
 	}
-	log.Printf("[info] res %s", res)
-	res2, err2 := activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterUpdate, updated)
-	if err2 != nil {
-		log.Fatal(res2)
-		return err2
+
+	_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterUpdate, updated)
+	if err != nil {
+		return err
 	}
 	//activityInfo = activity.ActivityInfo
 
@@ -336,4 +447,30 @@ func (activityMongo ActivityV2RepositoryMongo) AddKaoLogActivity(activity model.
 		log.Println("insert send activity kao success")
 	}
 	return err
+}
+
+func GetActivityWaitApprove(eventCode string) ([]model.ActivityV2, error) {
+	var activityInfos = []model.ActivityV2{}
+
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": eventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"activity_info": bson.M{"$filter": bson.M{"input": "$activity_info", "as": "activity_info", "cond": bson.M{"$eq": bson.A{"$$activity_info.status", config.ACTIVITY_STATUS_WAITING}}}}, "event_code": 1, "order_id": 1, "reg_id": 1, "ticket": 1, "parent_reg_id": 1, "user_id": 1, "total_distance": 1, "id": 1}}}
+	curr, err := db.DB.Collection(activityV2Collection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+
+	// filterActivityInfo := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activity_info.status", Value: config.ACTIVITY_STATUS_WAITING}}
+	// curr, err := db.DB.Collection(activityV2Collection).Find(context.TODO(), filterActivityInfo)
+	// //log.Println("[info] activity %s", activity)
+	if err != nil {
+		return activityInfos, err
+	}
+
+	for curr.Next(context.TODO()) {
+		var u model.ActivityV2
+		// decode the document
+		if err := curr.Decode(&u); err != nil {
+			log.Println(err)
+		}
+		//fmt.Printf("post: %+v\n", p)
+		activityInfos = append(activityInfos, u)
+	}
+	return activityInfos, nil
 }

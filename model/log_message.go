@@ -21,12 +21,13 @@ type LogUpdateRegisterStatus struct {
 type LogActivityInfo struct {
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
 	ActivityInfoID primitive.ObjectID `json:"activity_info_id" bson:"activity_info_id"`
-	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode      string             `json:"event_code" bson:"event_code"`
 	Distance       float64            `json:"distance" bson:"distance"`
 	ImageURL       string             `json:"img_url" bson:"img_url"`
 	Caption        string             `form:"caption" json:"caption"`
 	APP            string             `form:"app" json:"app"`
 	Time           int64              `form:"time" json:"time"`
+	IsApprove      bool               `form:"is_approve" json:"is_approve"`
 	ActivityDate   time.Time          `json:"activity_date" bson:"activity_date"`
 	CreatedAt      time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt      time.Time          `json:"updated_at" bson:"updated_at"`
@@ -36,7 +37,7 @@ type LogActivityInfo struct {
 type LogRegister struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
-	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode      string             `json:"event_code" bson:"event_code"`
 	RegID          primitive.ObjectID `json:"reg_id" bson:"reg_id"`
 	Status         string             `json:"status" bson:"status"`
 	PaymentType    string             `json:"payment_type" bson:"payment_type"`
@@ -58,7 +59,7 @@ type LogRegister struct {
 type LogSendKaoActivity struct {
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
 	ActivityInfoID primitive.ObjectID `json:"activity_info_id" bson:"activity_info_id"`
-	EventID        primitive.ObjectID `json:"event_id" bson:"event_id"`
+	EventCode      string             `json:"event_code" bson:"event_code"`
 	Distance       float64            `json:"distance" bson:"distance"`
 	ImageURL       string             `json:"img_url" bson:"img_url"`
 	APP            string             `form:"app" json:"app"`

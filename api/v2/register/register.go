@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/mail"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
-	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
@@ -494,16 +493,51 @@ func (api RegisterAPI) GetRegEventFromEventer(c *gin.Context) {
 	userID, role := oauth.GetValuesToken(c)
 	eventID := c.Param("eventID")
 
-	eventRepository := repository.EventRepositoryMongo{
-		ConnectionDB: db.DB,
-	}
-
-	if !eventRepository.IsOwner(eventID, userID) && role != "ADMIN" {
+	if !repository.IsOwner(eventID, userID) && role != "ADMIN" {
 		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
 		return
 	}
 
 	datas, err := api.RegisterRepository.GetRegisterByEvent(eventID)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", datas)
+}
+
+// GetRegEventFromOwner api godoc
+// @Summary get register datas 's eventer and admin
+// @Description get register datas 's eventer and admin
+// @Consume application/x-www-form-urlencoded
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.OwnerRequest true "payload"
+// @Success 200 {object} response.Response{data=[]model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/regsEvent  [post]
+func (api RegisterAPI) GetRegEventFromOwner(c *gin.Context) {
+	var res = response.Gin{C: c}
+	var form model.OwnerRequest
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	if err := c.ShouldBindJSON(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	if !repository.IsOwner(form.EventCode, form.OwnerID) {
+		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+		return
+	}
+
+	datas, err := api.RegisterRepository.GetRegisterByEvent(form.EventCode)
 	if err != nil {
 		res.Response(http.StatusInternalServerError, err.Error(), nil)
 		return
@@ -608,4 +642,45 @@ func (api RegisterAPI) UpdateStatus(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
+}
+
+// PaymentHook api godoc
+// @Summary payment register hook
+// @Description payment register hook data API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.SCBPayment true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/payment_hook [post]
+func (api RegisterAPI) PaymentHook(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var form model.SCBPayment
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	// body, _ := ioutil.ReadAll(c.Request.Body)
+	// println(string(body))
+
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	if err := c.ShouldBind(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	err := repository.PaymentWithSCB(form)
+	if err != nil {
+		log.Println("error hook payment", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
 }
