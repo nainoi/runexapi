@@ -5,10 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
-	"thinkdev.app/think/runex/runexapi/pkg/app"
-	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository"
 )
 
@@ -44,17 +43,21 @@ type BoardResponse struct {
 // @Router /api/v1/board/ranking/:{eventID} [get]
 func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	var (
-		appG = app.Gin{C: c}
+		appG = response.Gin{C: c}
 	)
-	eventID := c.Param("eventID")
+	var req model.RankingRequest
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 
-	event, count, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(eventID, userID)
+	event, count, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(req, userID)
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
-		appG.Response(http.StatusBadRequest, e.ERROR, BoardResponse{
+		appG.Response(http.StatusBadRequest, "Error Get Event info", BoardResponse{
 			Event:         event,
 			TotalActivity: count,
 			AllRank:       []model.Ranking{},
@@ -70,5 +73,5 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 		MyRank:        myActivities,
 	}
 
-	appG.Response(http.StatusOK, e.SUCCESS, ranks)
+	appG.Response(http.StatusOK, "success", ranks)
 }

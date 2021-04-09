@@ -222,18 +222,21 @@ type UserOption struct {
 	CitycenID        string    `json:"citycen_id" bson:"citycen_id"`
 	BloodType        string    `json:"blood_type" bson:"blood_type"`
 	Address          string    `json:"address" bson:"address"`
+	HomeNo           string    `json:"home_no" bson:"home_no"`
+	Moo              string    `json:"moo" bson:"moo"`
 	Tambon           Tambon    `json:"tambon" bson:"tambon"`
 	Team             string    `json:"team" bson:"team"`
 	Color            string    `json:"color" bson:"color"`
 	Zone             string    `json:"zone" bson:"zone"`
+	EmpID            string    `json:"emp_id" bson:"emp_id"`
 }
 
 type UserOptionReport struct {
-	FirstName        string    `json:"firstname" bson:"firstname"`
-	LastName         string    `json:"lastname" bson:"lastname"`
-	Phone            string    `json:"phone" bson:"phone"`
-	BirthDate        time.Time `json:"birthdate" bson:"birthdate"`
-	Gender           string    `json:"gender" bson:"gender"`
+	FirstName string    `json:"firstname" bson:"firstname"`
+	LastName  string    `json:"lastname" bson:"lastname"`
+	Phone     string    `json:"phone" bson:"phone"`
+	BirthDate time.Time `json:"birthdate" bson:"birthdate"`
+	Gender    string    `json:"gender" bson:"gender"`
 }
 
 type ShipingAddressUpdateForm struct {

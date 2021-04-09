@@ -23,3 +23,9 @@ type Ranking struct {
 	// UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
 	// ActivityType string    `json:"activity_type" bson:"activity_type"`
 }
+
+type RankingRequest struct {
+	EventCode   string             `json:"event_code" bson:"event_code" binding:"required"`
+	TicketID    string             `json:"ticket_id" bson:"ticket_id" binding:"required"`
+	ParentRegID primitive.ObjectID `form:"parent_reg_id" json:"parent_reg_id"`
+}

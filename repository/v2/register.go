@@ -56,6 +56,15 @@ type RegisterRepositoryMongo struct {
 	ConnectionDB *mongo.Database
 }
 
+type Reg struct {
+	OwnerID   string      `json:"owner_id" bson:"owner_id"`
+	UserCode  string      `json:"user_code" bson:"user_code"`
+	EventCode string      `json:"event_code" bson:"event_code"`
+	Ref2      string      `json:"ref2" bson:"ref2"`
+	Regs      model.Regs  `json:"regs" bson:"regs"`
+	Event     model.Event `json:"event" bson:"event"`
+}
+
 const (
 	registerCollection    = "register_v2"
 	merchantCollection    = "merchant"
@@ -140,10 +149,36 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		dataInfo.UpdatedAt = time.Now()
 		dataInfo.OrderID = utils.OrderIDGenerate()
 		dataInfo.EventCode = register.EventCode
-		for _, v := range dataInfo.TicketOptions {
-			v.RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
-			v.UserOption.CreatedAt = time.Now()
-			v.UserOption.UpdatedAt = time.Now()
+
+		matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+		unwindStage := bson.D{primitive.E{Key: "$unwind", Value: "$regs"}}
+		countStage := bson.D{bson.E{Key:"$count",Value: "count"}}
+		cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, unwindStage, countStage})
+		if err != nil {
+			log.Println(err)
+			return regModel,err
+		}
+		var c CountBiB
+		for cur.Next(context.TODO()) {
+			// decode the document
+			if err := cur.Decode(&c); err != nil {
+				return regModel, err
+			}
+			//fmt.Printf("post: %+v\n", p)
+		}
+	
+		if c.Count > 0 {
+			count = int64(c.Count)
+		}
+
+		for i := range dataInfo.TicketOptions {
+			dataInfo.TicketOptions[i].RegisterNumber = fmt.Sprintf("%05d", int64(count+1))
+			dataInfo.TicketOptions[i].UserOption.CreatedAt = time.Now()
+			dataInfo.TicketOptions[i].UserOption.UpdatedAt = time.Now()
+			if dataInfo.TicketOptions[i].Tickets.Category == "team" {
+				dataInfo.IsTeamLead = true
+				dataInfo.ParentRegID = dataInfo.ID
+			}
 		}
 		update := bson.M{"$push": bson.M{"regs": dataInfo}}
 		filter = bson.D{primitive.E{Key: "event_code", Value: register.EventCode}}
@@ -179,7 +214,10 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			dataInfo.TicketOptions[i].UserOption.CreatedAt = time.Now()
 			dataInfo.TicketOptions[i].UserOption.UpdatedAt = time.Now()
 
-			log.Println(dataInfo.TicketOptions[i])
+			if dataInfo.TicketOptions[i].Tickets.Category == "team" {
+				dataInfo.IsTeamLead = true
+				dataInfo.ParentRegID = dataInfo.ID
+			}
 		}
 		arrRegs = append(arrRegs, dataInfo)
 
@@ -189,7 +227,7 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 			OwnerID:   event.UserID,
 			UserCode:  event.UserID,
 			Ref2:      utils.Ref2Generate(),
-			Event: event,
+			Event:     event,
 		}
 
 		_, err = registerMongo.ConnectionDB.Collection(registerCollection).InsertOne(context.TODO(), registerModel)
@@ -210,11 +248,197 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 	return regModel, err
 }
 
+type CountBiB struct {
+	Count int `json:"count" bson:"count"`
+}
+
+func CheckTeamLead(register model.AddTeamRequest, userID primitive.ObjectID) (bool, error) {
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs._id", register.ParentRegID}}}}}}}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	if err != nil {
+		return false, err
+	}
+	var reg model.RegisterV2
+
+	for cur.Next(context.TODO()) {
+		var u model.RegisterV2
+		// decode the document
+		if err := cur.Decode(&u); err != nil {
+			return false, err
+		}
+		//fmt.Printf("post: %+v\n", p)
+		reg = u
+	}
+	if reg.Regs[0].UserID == userID {
+		return true, err
+	}
+	return false, err
+}
+
+func CheckSameUser(register model.AddTeamRequest) (bool, error) {
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$and": []interface{}{bson.M{"$eq": bson.A{"$$regs.user_id", register.TeamUserID}}, bson.M{"$eq": bson.A{"$$regs.parent_reg_id", register.ParentRegID}}}}}}}}}
+	projectStage2 := bson.D{bson.E{Key: "$project", Value: bson.M{"count": bson.M{"$size": "$regs"}}}}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage, projectStage2})
+	if err != nil {
+		log.Println(err)
+		return false, err
+	}
+	var c CountBiB
+	for cur.Next(context.TODO()) {
+		// decode the document
+		if err := cur.Decode(&c); err != nil {
+			log.Println(err)
+			return false, err
+		}
+		//fmt.Printf("post: %+v\n", p)
+	}
+
+	if c.Count > 0 {
+		return true, err
+	}
+	return false, err
+}
+
+func CheckRunerInTeam(register model.AddTeamRequest) (int, bool, error) {
+	log.Println("check runer")
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.parent_reg_id", register.ParentRegID}}}}}}}
+	//projectStage := bson.D{bson.E{Key: "$project", Value:bson.M{"regs": bson.M{"count": bson.M{"$size": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.parent_reg_id", register.ParentRegID}}}}}}}}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	if err != nil {
+		log.Println(err)
+		return 0, false, err
+	}
+	// var cBib = CountBiB{
+	// 	Count: 0,
+	// }
+	var regs = []model.RegisterV2{}
+	for cur.Next(context.TODO()) {
+		var u model.RegisterV2
+		// decode the document
+		if err := cur.Decode(&u); err != nil {
+			return 0, false, err
+		}
+		//fmt.Printf("post: %+v\n", p)
+		regs = append(regs, u)
+	}
+	if len(register.Regs.TicketOptions) > 0 {
+		log.Println(register.Regs.TicketOptions[0].Tickets)
+		i, err := strconv.Atoi(register.Regs.TicketOptions[0].Tickets.RunnerInTeam)
+		if err != nil {
+			return len(regs), false, err
+		}
+		if len(regs) < i {
+			return len(regs), true, err
+		}
+		return len(regs), false, err
+	}
+
+	return len(regs), false, err
+}
+
+//GetRegEventDashboard
+func GetRegEventDashboard(register model.RegEventDashboardRequest) (model.RegisterV2, error) {
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.parent_reg_id", register.ParentRegID}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
+	if register.ParentRegID.IsZero() {
+		log.Println("zero")
+		projectStage = bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs._id", register.RegID}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
+	}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	if err != nil {
+		return model.RegisterV2{}, err
+	}
+	var r model.RegisterV2
+	for cur.Next(context.TODO()) {
+		// decode the document
+		if err := cur.Decode(&r); err != nil {
+			return r, err
+		}
+		//fmt.Printf("post: %+v\n", p)
+	}
+	return r, err
+}
+
+//AddRegister repo
+func AddTeamRegister(register model.AddTeamRequest) (model.RegisterV2, error) {
+	dataInfo := register.Regs
+
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": register.EventCode}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.event_code", register.EventCode}}}}}}}
+	projectStage2 := bson.D{bson.E{Key: "$project", Value: bson.M{"count": bson.M{"$size": "$regs"}}}}
+	cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage, projectStage2})
+	if err != nil {
+		log.Println(err)
+		return model.RegisterV2{}, err
+	}
+	var c CountBiB
+	for cur.Next(context.TODO()) {
+		// decode the document
+		if err := cur.Decode(&c); err != nil {
+			log.Println(err)
+			return model.RegisterV2{}, err
+		}
+		//fmt.Printf("post: %+v\n", p)
+	}
+
+	//projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"count": bson.M{"$size": bson.M{"input": "$regs", "as": "regs"}}}}}
+
+	// cur, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage})
+	// if err != nil {
+	// 	return regs, err
+	// }
+	// var cBib = CountBiB{
+	// 	Count: 0,
+	// }
+
+	// for cur.Next(context.TODO()) {
+	// 	var u model.RegisterV2
+	// 	// decode the document
+	// 	if err := cur.Decode(&u); err != nil {
+	// 		return regs, err
+	// 	}
+	// }
+
+	dataInfo.ID = primitive.NewObjectID()
+	dataInfo.CreatedAt = time.Now()
+	dataInfo.UpdatedAt = time.Now()
+	dataInfo.OrderID = utils.OrderIDGenerate()
+	dataInfo.EventCode = register.EventCode
+	dataInfo.Status = config.REGISTER_WAIT_CONFIRM
+	dataInfo.ParentRegID = register.ParentRegID
+
+	log.Println(c.Count)
+
+	for i := range dataInfo.TicketOptions {
+		dataInfo.TicketOptions[i].RegisterNumber = fmt.Sprintf("%05d", c.Count+1)
+		dataInfo.TicketOptions[i].UserOption.CreatedAt = time.Now()
+		dataInfo.TicketOptions[i].UserOption.UpdatedAt = time.Now()
+	}
+	update := bson.M{"$push": bson.M{"regs": dataInfo}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: register.EventCode}}
+	_, err = db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		log.Println(err.Error())
+		return model.RegisterV2{}, err
+	}
+	SaveRegister(dataInfo, register.EventCode)
+
+	var regModel = model.RegisterV2{
+		Regs:      []model.Regs{dataInfo},
+		EventCode: register.EventCode,
+	}
+
+	return regModel, err
+}
+
 // AddRaceRegister repo for race running
 func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.RegisterRequest) (model.RegisterV2, error) {
 	// register.CreatedAt = time.Now()
 	// register.UpdatedAt = time.Now()
-	filter := bson.M{"event_id": register.EventID}
+	filter := bson.M{"event_code": register.EventCode}
 	dataInfo := register.Regs
 	count, err := registerMongo.ConnectionDB.Collection(registerCollection).CountDocuments(context.TODO(), filter)
 	//log.Printf("[info] count %s", count)
@@ -222,7 +446,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 		log.Println(err)
 	}
 
-	filterBib := bson.D{bson.E{Key: "event_id", Value: register.EventID}}
+	filterBib := bson.D{bson.E{Key: "event_code", Value: register.EventCode}}
 	var ebibEvent model.EbibEvent
 	err = registerMongo.ConnectionDB.Collection(ebibCollection).FindOne(context.TODO(), filterBib).Decode(&ebibEvent)
 	if err != nil {
@@ -284,7 +508,7 @@ func (registerMongo RegisterRepositoryMongo) AddRaceRegister(register model.Regi
 
 	err3 := registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventCode)
 	if err3 != nil {
-		log.Fatal(err3)
+		log.Println(err3)
 	}
 	// if err3 != nil {
 	// 	log.Fatal(err3)
@@ -310,7 +534,7 @@ func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventCod
 	merchant.PaymentType = typePay
 	merchant.Status = string(charge.Status)
 	merchant.OrderID = orderID
-	merchant.OmiseID = charge.ID
+	merchant.OmiseID = charge.Transaction
 	merchant.TotalPrice = charge.Amount / 100
 	merchant.CreatedAt = time.Now()
 	merchant.UpdatedAt = time.Now()
@@ -319,18 +543,34 @@ func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventCod
 	if err != nil {
 		log.Println(res)
 	}
-
-	if registerMongo.UpdatePaymentStatus(rid, eventCode, uid, config.PAYMENT_SUCCESS) {
+	if charge.Status == "failed" {
+		err = fmt.Errorf("Payment failed")
+		return err
+	} else {
+		if registerMongo.UpdatePaymentStatus(rid, eventCode, uid, config.PAYMENT_SUCCESS, config.PAYMENT_CREDIT_CARD) {
+			
+		}
 		return nil
 	}
-	return err
 }
 
 // UpdatePaymentStatus repo
-func (registerMongo RegisterRepositoryMongo) UpdatePaymentStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string) bool {
+func (registerMongo RegisterRepositoryMongo) UpdatePaymentStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string, payType string) bool {
 	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
-	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_type": payType, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
 	_, err := registerMongo.ConnectionDB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		fmt.Println("updating the Data", err)
+		return false
+	}
+	return true
+}
+
+// SlipUpdatePaymentStatus repo
+func SlipUpdatePaymentStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string, payType string, imagePath string) bool {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_type": payType, "regs.$.payment_date": time.Now(), "regs.$.slip": imagePath, "regs.$.updated_at": time.Now()}}
+	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		fmt.Println("updating the Data", err)
 		return false
@@ -341,8 +581,8 @@ func (registerMongo RegisterRepositoryMongo) UpdatePaymentStatus(registerID prim
 // EditRegister repo
 func (registerMongo RegisterRepositoryMongo) EditRegister(registerID string, register model.RegisterRequest) error {
 	regObjectID, err := primitive.ObjectIDFromHex(registerID)
-	eventObjectID := register.EventID
-	filterUpdate := bson.D{bson.E{Key: "event_id", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
+	eventObjectID := register.EventCode
+	filterUpdate := bson.D{bson.E{Key: "event_code", Value: eventObjectID}, bson.E{Key: "regs._id", Value: regObjectID}}
 	//register.UpdatedAt = time.Now()
 	dataInfo := register.Regs
 	dataInfo.UpdatedAt = time.Now()
@@ -398,12 +638,13 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 	//filter := bson.D{{"regs.user_id", objectID}}
 	//unwindStage := bson.D{{"$unwind", "$regs"}}
 	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"regs.user_id": objectID}}}
-	//unwindStage := bson.D{{"$unwind", "$regs"}}
+
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
 	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
-	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	unwindStage := bson.D{primitive.E{Key: "$unwind", Value: "$regs"}}
+	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage, unwindStage})
 	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
@@ -412,7 +653,8 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 
 	//u.Regs = []model.Regs{}
 	for cur.Next(context.TODO()) {
-		var u model.RegisterV2
+		var u Reg
+		var regs = []model.Regs{}
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
 			log.Print(err)
@@ -421,7 +663,15 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserID(userID string) 
 		if err == nil {
 			u.Event = event
 		}
-		register = append(register, u)
+		r := model.RegisterV2{
+			UserCode:  u.UserCode,
+			OwnerID:   u.OwnerID,
+			EventCode: u.EventCode,
+			Event:     event,
+			Ref2:      u.Ref2,
+			Regs:      append(regs, u.Regs),
+		}
+		register = append(register, r)
 	}
 
 	return register, err
@@ -831,92 +1081,45 @@ func (registerMongo RegisterRepositoryMongo) SendRaceMailRegister(registerID str
 func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID string) ([]model.RegisterV2, error) {
 	var register = []model.RegisterV2{}
 	objectID, err := primitive.ObjectIDFromHex(userID)
-	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"regs.user_id": objectID, "regs.status": config.PAYMENT_SUCCESS}}}
-	//unwindStage := bson.D{{"$unwind", "$regs"}}
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"regs.user_id": objectID}}}
+
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
-	projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}, "event_id": 1, "event_code": 1}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$and": []interface{}{bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}, bson.M{"$eq": bson.A{"$$regs.status", config.PAYMENT_SUCCESS}}}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
+	unwindStage := bson.D{primitive.E{Key: "$unwind", Value: "$regs"}}
 	//projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$elemMatch": bson.M{"$$regs.user_id": objectID, "$$regs.status": config.PAYMENT_SUCCESS}}, "event_id": 1}}}
-
-	//filter := bson.D{primitive.E{Key:"user_id",Value: objectID}, primitive.E{Key: "status",Value: "PAYMENT_SUCCESS"}}
-	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage, unwindStage})
+	//cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Find(context.TODO(), filter)
 	//log.Printf("[info] cur %s", cur)
 	if err != nil {
 		log.Println(err)
 	}
 
+	//u.Regs = []model.Regs{}
 	for cur.Next(context.TODO()) {
-		var u model.RegisterV2
-
+		var u Reg
+		var regs = []model.Regs{}
 		// decode the document
 		if err := cur.Decode(&u); err != nil {
-			log.Println(err)
+			log.Print(err)
 		}
-
 		event, err := DetailEventOwnerByCode(u.EventCode)
 		if err == nil {
 			u.Event = event
 		}
-		
-		register = append(register, u)
+		r := model.RegisterV2{
+			UserCode:  u.UserCode,
+			OwnerID:   u.OwnerID,
+			EventCode: u.EventCode,
+			Event:     event,
+			Ref2:      u.Ref2,
+			Regs:      append(regs, u.Regs),
+		}
+		register = append(register, r)
 	}
 
 	return register, err
-
-	/*for cur.Next(context.TODO()) {
-		var u model.Register
-		// decode the document
-		if err := cur.Decode(&u); err != nil {
-			log.Fatal(err)
-		}
-
-		register = append(register, u)
-	}
-	now := time.Now()
-	var events []model.EventRegInfo
-	for _, item := range register {
-		skip := false
-		fmt.Println("registerID :  ", item.ID)
-		var event model.Event
-		eventID := item.EventID
-		//id, _ := primitive.ObjectIDFromHex(eventID)
-		filter := bson.M{"_id": eventID}
-		fmt.Println("eventID :  ", eventID)
-		count, err := registerMongo.ConnectionDB.Collection("event").CountDocuments(context.TODO(), filter)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if count > 0 {
-			err := registerMongo.ConnectionDB.Collection("event").FindOne(context.TODO(), filter).Decode(&event)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if event.StartEvent.Before(now) && event.EndEvent.After(now) && event.IsActive == true {
-
-				eventsNew := model.EventRegInfo{
-					ID:          event.ID,
-					Name:        event.Name,
-					Description: event.Description,
-					Body:        event.Body,
-					IsActive:    event.IsActive,
-					StartEvent:  event.StartEvent,
-					EndEvent:    event.EndEvent,
-				}
-				for _, u := range events {
-					if eventsNew == u {
-						skip = true
-						break
-					}
-				}
-				if !skip {
-					events = append(events, eventsNew)
-				}
-			}
-		}
-	}
-	//uniqueEvents := unique(events)
-	return events, nil*/
 }
 
 //GetRegisterReport all
@@ -1643,7 +1846,7 @@ func PaymentWithSCB(p model.SCBPayment) error {
 
 	res, err = db.DB.Collection(scbPaymentCollection).InsertOne(context.TODO(), p)
 
-	if UpdatePaymentRegStatus(reg.Regs[0].ID, reg.EventCode, reg.Regs[0].UserID, config.PAYMENT_SUCCESS) {
+	if UpdatePaymentRegStatus(reg.Regs[0].ID, reg.EventCode, reg.Regs[0].UserID, config.PAYMENT_SUCCESS, config.PAYMENT_QRCODE) {
 		token, err := GetFirebaseToken(reg.Regs[0].UserID)
 		if err == nil {
 			if len(token.FirebaseTokens) > 0 {
@@ -1664,9 +1867,9 @@ func PaymentWithSCB(p model.SCBPayment) error {
 }
 
 //UpdatePaymentRegStatus repo with register_id, status, user_id
-func UpdatePaymentRegStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string) bool {
+func UpdatePaymentRegStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string, payType string) bool {
 	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
-	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_type": payType, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
 	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		fmt.Println("updating the Data", err)
@@ -1689,4 +1892,14 @@ func IsOwner(eventCode string, userID string) bool {
 	}
 
 	return false
+}
+
+func UpdateRegisterUserInfo(userID primitive.ObjectID, req model.RegUpdateUserInfoRequest) error {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"regs._id": req.RegID}}}
+	t := []model.TicketOptionV2{}
+	t = append(t, req.TicketOption)
+	log.Println(filter)
+	update := bson.M{"$set": bson.M{"regs.$.status": config.PAYMENT_SUCCESS, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now(), "reqs.$.ticket_options.user_option": req.TicketOption.UserOption, "reqs.$.ticket_options.tickets": req.TicketOption.Tickets, "reqs.$.ticket_options.shirts": req.TicketOption.Shirts}}
+	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	return err
 }

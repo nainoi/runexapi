@@ -28,6 +28,12 @@ type ActivityV2 struct {
 	// Activities  Activities         `json:"activities" bson:"activities,omitempty"`
 }
 
+//ActivityDashboard struct
+type ActivityDashboard struct {
+	Activity     []ActivityV2 `json:"activities" bson:"activities"`
+	RegisterData RegisterV2   `json:"register" bson:"register"`
+}
+
 // Activities data per user
 type Activities struct {
 	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`

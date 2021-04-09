@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"thinkdev.app/think/runex/runexapi/api/mail"
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
+	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/pkg/app"
@@ -92,6 +93,7 @@ func (api RegisterAPI) GetByUserID(c *gin.Context) {
 // @Tags register
 // @Accept  application/json
 // @Produce application/json
+// @Param payload body model.RegisterChargeRequest true "payload"
 // @Success 200 {object} response.Response
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
@@ -143,6 +145,43 @@ func (api RegisterAPI) ChargeRegEvent(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "success", charge)
 
+}
+
+// SendSlip api doc
+// @Summary payment charge register event by register id
+// @Description payment charge register event API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegisterAttachSlipRequest true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/sendSlip [post]
+func (api RegisterAPI) SendSlip(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	userID, _ := oauth.GetValuesToken(c)
+
+	var json model.RegisterAttachSlipRequest
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), err.Error())
+		return
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(userID)
+
+	success := repository.SlipUpdatePaymentStatus(json.RegID, json.EventCode, objectID, config.PAYMENT_WAITING_APPROVE, json.PaymentType, json.Image)
+	if !success {
+		log.Println("error add merchant", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), err.Error())
+		return
+	}
+	appG.Response(http.StatusOK, "success", nil)
 }
 
 // GetRegEvent api doc
@@ -230,6 +269,69 @@ func (api RegisterAPI) AddRegister(c *gin.Context) {
 	}
 
 	res.Response(http.StatusOK, "ลงทะเบียนสำเร็จ", registerID)
+}
+
+// AddTeamRegister api godoc
+// @Summary add register event
+// @Description save register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AddTeamRequest true "payload"
+// @Success 200 {object} response.Response{data=model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/team [post]
+func (api RegisterAPI) AddTeamRegister(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+
+	userID, _ := oauth.GetValuesToken(c)
+	ownerObjectID, _ := primitive.ObjectIDFromHex(userID)
+
+	var json model.AddTeamRequest
+
+	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		log.Println(err)
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	if check, _ := repository.CheckTeamLead(json, ownerObjectID); !check {
+		res.Response(http.StatusBadRequest, "Your not team lead.", nil)
+		return
+	}
+
+	if _, check, _ := repository.CheckRunerInTeam(json); !check {
+		res.Response(http.StatusBadRequest, "Team is full.", nil)
+		return
+	}
+
+	check, err := repository.CheckSameUser(json)
+	if err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	if check {
+		res.Response(http.StatusBadRequest, "User in team.", "")
+		return
+	}
+
+	json.Regs.TotalPrice = 0
+	json.Regs.UserID = json.TeamUserID
+	register, err := repository.AddTeamRegister(json)
+	if err != nil {
+		log.Println("error AddRegister", err.Error())
+		res.Response(http.StatusInternalServerError, "Cannot add to team.", gin.H{"message": err.Error()})
+		return
+	}
+
+	res.Response(http.StatusOK, "success", register)
 }
 
 //AddRaceRegister api doc
@@ -476,6 +578,42 @@ func (api RegisterAPI) GetMyRegEventActivate(c *gin.Context) {
 	appG.Response(http.StatusOK, "success", events)
 }
 
+// GetRegEventDashboard api godoc
+// @Summary get register payment success by user id
+// @Description get register payment success API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegEventDashboardRequest true "payload"
+// @Success 200 {object} response.Response{data=model.RegisterV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/myRegEventActivate [get]
+func (api RegisterAPI) GetRegEventDashboard(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var json model.RegEventDashboardRequest
+
+	//categoryObjectID, _ := primitive.ObjectIDFromHex(json.Category.)
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	reg, err := repository.GetRegEventDashboard(json)
+	if err != nil {
+		log.Println("error GetAll activate", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	res.Response(http.StatusOK, "success", reg)
+}
+
 // GetRegEventFromEventer api godoc
 // @Summary get register datas 's eventer and admin
 // @Description get register datas 's eventer and admin
@@ -679,6 +817,42 @@ func (api RegisterAPI) PaymentHook(c *gin.Context) {
 	if err != nil {
 		log.Println("error hook payment", err.Error())
 		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
+}
+
+// RegEventUpdateUserInfo api godoc
+// @Summary get register payment success by user id
+// @Description get register payment success API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegUpdateUserInfoRequest true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/regUpdateUserInfo [post]
+func (api RegisterAPI) RegEventUpdateUserInfo(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var json model.RegUpdateUserInfoRequest
+	userID, _ := oauth.GetValuesToken(c)
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	err := repository.UpdateRegisterUserInfo(userObjectID, json)
+	if err != nil {
+		log.Println("error update user info register", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 

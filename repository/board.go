@@ -14,7 +14,7 @@ import (
 
 // BoardRepository interface
 type BoardRepository interface {
-	GetBoardByEvent(eventID string, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error)
+	GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error)
 }
 
 // BoardRepositoryMongo db struct
@@ -27,7 +27,7 @@ const (
 )
 
 //GetBoardByEvent board ranking
-func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error) {
+func (boardMongo BoardRepositoryMongo) GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int64, []model.Ranking, []model.Ranking, error) {
 	//var activity model.Activity
 	//var activityInfo []model.ActivityInfo
 	var event = model.Event{}
@@ -48,12 +48,13 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID strin
 	var temps = []model.Ranking{}
 
 	//filter := bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
-	filter := bson.D{primitive.E{Key: "event_code", Value: code}}
+	filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "ticket.id", Value: req.TicketID}}
+
 	option := options.Find()
 
 	//filterEvent := bson.D{primitive.E{Key: "_id", Value: objectEventID}}
 
-	event, err = v2.DetailEventByCode(code)
+	event, err = v2.DetailEventByCode(req.EventCode)
 	if err != nil {
 		return event, 0, activities, myActivities, err
 	}
@@ -105,7 +106,7 @@ func (boardMongo BoardRepositoryMongo) GetBoardByEvent(code string, userID strin
 				ActivityInfo:  activity.ActivityInfo,
 				ToTalDistance: activity.ToTalDistance,
 				UserInfo:      user,
-				EventCode:     code,
+				EventCode:     req.EventCode,
 				ID:            activity.ID,
 			}
 			a.RankNo = n + 1

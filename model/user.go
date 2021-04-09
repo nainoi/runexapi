@@ -8,7 +8,7 @@ import (
 
 // User object for db
 type User struct {
-	UserID           primitive.ObjectID   `json:"-" bson:"_id,omitempty"`
+	UserID           primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
 	Email            string               `json:"email" bson:"email"`
 	Provider         string               `json:"provider" bson:"provider"`
 	ProviderID       string               `json:"provider_id" bson:"provider_id"`
@@ -151,4 +151,9 @@ type UserStravaSyncRequest struct {
 type FirebaseUser struct {
 	UserID         primitive.ObjectID `json:"user_id" bson:"user_id"`
 	FirebaseTokens []string           `json:"firebase_tokens" bson:"firebase_tokens"`
+}
+
+// UserRequest model
+type UserRequest struct {
+	UserID primitive.ObjectID `json:"uid" form:"uid"`
 }

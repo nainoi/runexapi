@@ -79,6 +79,7 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	{
 		g.GET("/user", userAPI.GetUser)
 		g.PUT("/user", userAPI.UpdateUser)
+		g.POST("/user", userAPI.Get)
 		g.POST("/logout", userAPI.LogoutUser)
 		g.GET("/logout", userAPI.Signout)
 		g.PUT("/syncStrava", userAPI.UpdateUserStrava)
@@ -249,6 +250,8 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		{
 			group.GET("/all", registerAPI.GetAll)
 			group.POST("/add", registerAPI.AddRegister)
+			group.POST("/team", registerAPI.AddTeamRegister)
+			group.POST("/info", registerAPI.GetRegEventDashboard)
 			group.POST("/addRace", registerAPI.AddRaceRegister)
 			group.PUT("/edit/:id", registerAPI.EditRegister)
 			group.GET("/myRegEvent", registerAPI.GetByUserID)
@@ -257,7 +260,8 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.GET("/myRegEventActivate", registerAPI.GetMyRegEventActivate)
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 			group.POST("/payment", registerAPI.ChargeRegEvent)
-
+			group.POST("/regUpdateUserInfo", registerAPI.RegEventUpdateUserInfo)
+			group.POST("/sendSlip", registerAPI.SendSlip)
 		}
 	}
 

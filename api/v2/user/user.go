@@ -188,6 +188,41 @@ func (api API) GetUser(c *gin.Context) {
 	}
 }
 
+// GetUser godoc
+// @Summary Get user info
+// @Description get user info API calls
+// @Security bearerAuth
+// @Tags user
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.UserRequest true "payload"
+// @Success 200 {object} response.Response{data=model.User}
+// @Failure 400 {object} response.Response
+// @Failure 401 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /user [post]
+func (api API) Get(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var u model.UserRequest
+	err := c.ShouldBindJSON(&u)
+	if err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		c.Abort()
+		return
+	}
+
+	user, err := api.UserRepo.GetUser(u.UserID)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, "user not found", nil)
+		c.Abort()
+		return
+	}
+	res.Response(http.StatusOK, "success", user)
+	return
+}
+
 // AddUser godoc
 // @Summary Add new user
 // @Description add new user API calls

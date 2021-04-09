@@ -246,8 +246,8 @@ func (activityMongo ActivityV2RepositoryMongo) GetActivityByEvent2(eventID strin
 // GetActivityByEvent2 event and activity detail
 func GetActivityEventDashboard(req model.EventActivityDashboardReq, userID string) ([]model.ActivityV2, error) {
 	var activity = []model.ActivityV2{}
-	userObjectID, _ := primitive.ObjectIDFromHex(userID)
-	filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "user_id", Value: userObjectID}}
+	// userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "reg_id", Value: req.RegID}}
 	if !req.ParentRegID.IsZero() {
 		filter = bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "parent_reg_id", Value: req.ParentRegID}}
 	}

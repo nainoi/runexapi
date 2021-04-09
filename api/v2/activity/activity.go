@@ -494,7 +494,7 @@ func (api ActivityV2API) GetActivityByEvent(c *gin.Context) {
 // @Accept  application/json
 // @Produce application/json
 // @Param payload body model.EventActivityDashboardReq true "payload"
-// @Success 200 {object} response.Response{data=[]model.ActivityV2}
+// @Success 200 {object} response.Response{data=[]model.ActivityDashboard}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /activity/dashboard [post]
@@ -512,13 +512,24 @@ func (api ActivityV2API) GetDashboard(c *gin.Context) {
 
 	activity, err := repository.GetActivityEventDashboard(req, userID)
 
+	regRequest := model.RegEventDashboardRequest{
+		EventCode: req.EventCode,
+		ParentRegID: req.ParentRegID,
+		RegID: req.RegID,
+	}
+
+	reg, err := v2.GetRegEventDashboard(regRequest)
+
 	if err != nil {
 		log.Println("error Get Event info2", err.Error())
 		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
 	}
 
-	appG.Response(http.StatusOK, "success", activity)
+	appG.Response(http.StatusOK, "success", model.ActivityDashboard{
+		Activity: activity,
+		RegisterData: reg,
+	})
 }
 
 func (api ActivityV2API) GetHistoryDayByEvent(c *gin.Context) {

@@ -8,11 +8,35 @@ import (
 
 // RegisterRequest struct for request register event
 type RegisterRequest struct {
-	EventID    int64                 `json:"event_id" bson:"event_id"`
-	EventCode  string                `json:"event_code" bson:"event_code"`
+	EventCode  string                `json:"event_code" bson:"event_code" binding:"required"`
 	Regs       Regs                  `json:"regs" bson:"regs"`
 	KoaRequest GetKaoActivityRequest `json:"kao_request" bson:"kao_request"`
 	Event      Event                 `json:"event" bson:"event"`
+}
+
+// RegisterRequest struct for request register event
+type AddTeamRequest struct {
+	EventID     int64              `json:"event_id" bson:"event_id" binding:"required"`
+	TeamUserID  primitive.ObjectID `json:"team_user_id" bson:"team_user_id" binding:"required"`
+	EventCode   string             `json:"event_code" bson:"event_code" binding:"required"`
+	ParentRegID primitive.ObjectID `json:"parent_reg_id" bson:"parent_reg_id" binding:"required"`
+	Regs        Regs               `json:"regs" bson:"regs"`
+	Event       Event              `json:"event" bson:"event"`
+}
+
+// RegisterRequest struct for request register event
+type RegEventDashboardRequest struct {
+	EventCode   string             `json:"event_code" bson:"event_code" binding:"required"`
+	ParentRegID primitive.ObjectID `json:"parent_reg_id" bson:"parent_reg_id"`
+	RegID       primitive.ObjectID `json:"reg_id" bson:"reg_id" binding:"required"`
+	TicketID    string             `json:"ticket_id" bson:"ticket_id" binding:"required"`
+}
+
+// RegisterRequest struct for request register event
+type RegUpdateUserInfoRequest struct {
+	EventCode    string             `json:"event_code" bson:"event_code" binding:"required"`
+	RegID        primitive.ObjectID `json:"reg_id" bson:"reg_id" binding:"required"`
+	TicketOption TicketOptionV2     `json:"ticket_options" bson:"ticket_options" binding:"required"`
 }
 
 // RegisterV2 struct for register v2 event data
@@ -39,6 +63,7 @@ type Regs struct {
 	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
 	EventID       primitive.ObjectID `json:"event_id" bson:"event_id"`
+	TicketID      string             `json:"ticket_id" bson:"ticket_id"`
 	EventCode     string             `json:"event_code" bson:"event_code"`
 	Status        string             `json:"status" bson:"status"`
 	PaymentType   string             `json:"payment_type" bson:"payment_type"`
@@ -46,8 +71,10 @@ type Regs struct {
 	DiscountPrice float64            `json:"discount_price" bson:"discount_price"`
 	PromoCode     string             `json:"promo_code" bson:"promo_code"`
 	OrderID       string             `json:"order_id" bson:"order_id"`
+	IsTeamLead    bool               `json:"is_team_lead" bson:"is_team_lead"`
 	RegDate       time.Time          `json:"reg_date" bson:"reg_date"`
 	PaymentDate   time.Time          `json:"payment_date" bson:"payment_date"`
+	Slip          string             `json:"slip" bson:"slip"`
 	Coupon        Coupon             `json:"coupon" bson:"coupon"`
 	TicketOptions []TicketOptionV2   `json:"ticket_options" bson:"ticket_options"`
 	Partner       PartnerEvent       `json:"partner" bson:"partner"`
@@ -63,6 +90,7 @@ type RegsReport struct {
 	EventCode     string               `json:"event_code" bson:"event_code"`
 	Status        string               `json:"status" bson:"status"`
 	PaymentType   string               `json:"payment_type" bson:"payment_type"`
+	Slip          string               `json:"slip" bson:"slip"`
 	TotalPrice    float64              `json:"total_price" bson:"total_price"`
 	OrderID       string               `json:"order_id" bson:"order_id"`
 	RegDate       time.Time            `json:"reg_date" bson:"reg_date"`
@@ -115,4 +143,15 @@ type RegisterChargeRequest struct {
 	Price      float64 `json:"price" form:"price"`
 	OrderID    string  `json:"order_id" form:"order_id"`
 	Ref2       string  `json:"ref2" bson:"ref2"`
+}
+
+//RegisterChargeRequest payment charge request
+type RegisterAttachSlipRequest struct {
+	RegID       primitive.ObjectID `json:"reg_id" form:"reg_id"`
+	EventCode   string             `json:"event_code" form:"event_code"`
+	OrderID     string             `json:"order_id" form:"order_id"`
+	Ref2        string             `json:"ref2" bson:"ref2"`
+	PaymentType string             `json:"payment_type" bson:"payment_type"`
+	Image       string             `json:"image" bson:"image"`
+	Status      string             `json:"status" bson:"status"`
 }
