@@ -11,6 +11,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 	"thinkdev.app/think/runex/runexapi/utils"
 )
 
@@ -131,7 +132,12 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 				ParentRegID:   activity.ParentRegID,
 			}
 
-			_, err := activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
+			u, err := repository.GetUserInfo(activityModel)
+			if err == nil {
+				activityModel.UserInfo = u
+			}
+
+			_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
 
 			activityLogInfo := model.LogActivityInfo{
 				UserID:         activity.UserID,
@@ -174,8 +180,11 @@ func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddAct
 				RegID:         activity.RegID,
 				ParentRegID:   activity.ParentRegID,
 			}
-
-			_, err := activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
+			u, err := repository.GetUserInfo(activityModel)
+			if err == nil {
+				activityModel.UserInfo = u
+			}
+			_, err = activityMongo.ConnectionDB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
 			if err != nil {
 				return err
 			}
@@ -251,7 +260,7 @@ func GetActivityEventDashboard(req model.EventActivityDashboardReq, userID strin
 	if !req.ParentRegID.IsZero() {
 		filter = bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "parent_reg_id", Value: req.ParentRegID}}
 	}
-	
+
 	count, err := db.DB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
 	if count > 0 {
 		curr, err := db.DB.Collection(activityV2Collection).Find(context.TODO(), filter)
@@ -453,7 +462,7 @@ func GetActivityWaitApprove(eventCode string) ([]model.ActivityV2, error) {
 	var activityInfos = []model.ActivityV2{}
 
 	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": eventCode}}}
-	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"activity_info": bson.M{"$filter": bson.M{"input": "$activity_info", "as": "activity_info", "cond": bson.M{"$eq": bson.A{"$$activity_info.status", config.ACTIVITY_STATUS_WAITING}}}}, "event_code": 1, "order_id": 1, "reg_id": 1, "ticket": 1, "parent_reg_id": 1, "user_id": 1, "total_distance": 1, "id": 1}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"activity_info": bson.M{"$filter": bson.M{"input": "$activity_info", "as": "activity_info", "cond": bson.M{"$eq": bson.A{"$$activity_info.status", config.ACTIVITY_STATUS_WAITING}}}}, "event_code": 1, "order_id": 1, "reg_id": 1, "ticket": 1, "parent_reg_id": 1, "user_id": 1, "total_distance": 1, "id": 1, "user_info": 1}}}
 	curr, err := db.DB.Collection(activityV2Collection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
 
 	// filterActivityInfo := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activity_info.status", Value: config.ACTIVITY_STATUS_WAITING}}
@@ -473,4 +482,24 @@ func GetActivityWaitApprove(eventCode string) ([]model.ActivityV2, error) {
 		activityInfos = append(activityInfos, u)
 	}
 	return activityInfos, nil
+}
+
+func UpdateActivity(req model.UpdateActivityReq) error {
+
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"user_id": req.UserID}, bson.M{"reg_id": req.RegID}, bson.M{"activity_info._id": req.ActivityID}}}
+	var act model.ActivityV2
+	if req.Status == config.ACTIVITY_STATUS_APPROVE {
+		err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&act)
+		if err != nil {
+			return err
+		}
+		distance := act.ToTalDistance + req.Distance
+		update := bson.M{"$set": bson.M{"activity_info.$.status": req.Status, "activity_info.$.reason": req.Reason, "activity_info.$.updated_at": time.Now(), "activity_info.$.is_approve": true, "total_distance": utils.ToFixed(distance, 2),  "activity_info.$.distance": utils.ToFixed(req.Distance, 2)}}
+		result := db.DB.Collection(activityV2Collection).FindOneAndUpdate(context.TODO(), filter, update)
+		return result.Err()
+	}
+
+	update := bson.M{"$set": bson.M{"activity_info.$.status": req.Status, "activity_info.$.updated_at": time.Now(), "activity_info.$.is_approve": true}}
+	result := db.DB.Collection(activityV2Collection).FindOneAndUpdate(context.TODO(), filter, update)
+	return result.Err()
 }

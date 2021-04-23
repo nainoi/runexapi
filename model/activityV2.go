@@ -24,6 +24,7 @@ type ActivityV2 struct {
 	ParentRegID   primitive.ObjectID `json:"parent_reg_id" bson:"parent_reg_id"`
 	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
 	ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
+	UserInfo      UserOption         `json:"user_info" bson:"user_info"`
 	ActivityInfo  []ActivityInfo     `json:"activity_info" bson:"activity_info,omitempty"`
 	// Activities  Activities         `json:"activities" bson:"activities,omitempty"`
 }
@@ -96,4 +97,16 @@ type EventActivityDashboardReq struct {
 	ParentRegID primitive.ObjectID `form:"parent_reg_id" json:"parent_reg_id" bson:"parent_reg_id"`
 	RegID       primitive.ObjectID `form:"reg_id" json:"reg_id" bson:"reg_id" binding:"required"`
 	OrderID     string             `form:"order_id" json:"order_id" bson:"order_id" binding:"required"`
+}
+
+type UpdateActivityReq struct {
+	// EventID   string       `json:"event_id" bson:"event_id"`
+	EventCode  string             `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`
+	RegID      primitive.ObjectID `form:"reg_id" json:"reg_id" bson:"reg_id" binding:"required"`
+	ActivityID primitive.ObjectID `form:"act_id" json:"act_id" bson:"act_id" binding:"required"`
+	UserID     primitive.ObjectID `form:"user_id" json:"user_id" bson:"user_id" binding:"required"`
+	OrderID    string             `form:"order_id" json:"order_id" bson:"order_id" binding:"required"`
+	Status     string             `form:"status" json:"status" bson:"status" binding:"required"`
+	Distance   float64            `form:"distance" json:"distance" bson:"distance" binding:"required"`
+	Reason     string             `form:"reason" json:"reason" bson:"reason"`
 }

@@ -173,10 +173,7 @@ func SendRegEventMail2(data model.EmailTemplateData2) {
 		"<p>Payment Type : " + data.PaymentType + "\n</p>" +
 		"<p>ราคา : " + strconv.FormatFloat(data.Price, 'f', 2, 64) + "\n</p>" +
 		"<p>ที่อยู่จัดส่ง : " + data.ShipingAddress + "\n</p>" +
-		"<p>Web site : <a href='https://runex.co'>runex.co</a>\n</p>" +
-		"<p>* ส่งสลิปโอนเงินได้ที่ Line ID : <a href='http://line.me/ti/p/~runex.co'>runex.co</a>\n</p>" +
-		"<p>บัญชีธนาคาร : 674-2-04828-2\n</p>" +
-		"<p>ชื่อบัญชี : บจก. ธิงค์เทคโนโลยี\n</p>"
+		"<p>Web site : <a href='https://runex.co'>runex.co</a>\n</p>"
 
 	//admin := "runex.contact@gmail.com"
 	e := email.NewEmail()

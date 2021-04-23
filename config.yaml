@@ -4,12 +4,12 @@ app:
     debug: true
 
 mongodb:
-    connection: "mongodb://128.199.163.81:27017"
+    connection: "mongodb://188.166.219.22:27017"
     db: "Runex"
     user: "idever"
     pass: "idever@987"
 redis:
-    host: "128.199.163.81"
+    host: "188.166.219.22"
     port: "6379"
     pass: "__@redis__P@ss"
 
@@ -18,7 +18,7 @@ log:
     format: "json"
 
 events:
-    api: "https://events-api.thinkdev.app"
+    api: "https://events-api.runex.co"
 
 omise:
     OmisePublicKey: "pkey_test_5i6ivm4cotoab601bfr"

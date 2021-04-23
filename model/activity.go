@@ -85,6 +85,7 @@ type ActivityInfo struct {
 	Time         int64              `form:"time" json:"time" bson:"time"`
 	IsApprove    bool               `form:"is_approve" json:"is_approve" bson:"is_approve"`
 	Status       string             `form:"status" json:"status" bson:"status"`
+	Reason       string             `form:"reason" json:"reason" bson:"reason"`
 	ActivityDate time.Time          `form:"activity_date" json:"activity_date" bson:"activity_date"`
 	CreatedAt    time.Time          `form:"created_at" json:"created_at" bson:"created_at"`
 	UpdatedAt    time.Time          `form:"updated_at" json:"updated_at" bson:"updated_at"`

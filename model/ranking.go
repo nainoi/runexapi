@@ -9,13 +9,15 @@ import (
 type Ranking struct {
 	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
+	RegID         primitive.ObjectID `json:"reg_id" bson:"reg_id"`
+	ParentRegID   primitive.ObjectID `json:"parent_reg_id" bson:"parent_reg_id"`
 	EventID       int                `json:"event_id" bson:"event_id"`
 	EventCode     string             `json:"event_code" bson:"event_code"`
-	EventUser     string             `json:"event_user" bson:"event_user"`
+	TicketID      string             `json:"ticket_id" bson:"ticket_id"`
 	ActivityInfo  []ActivityInfo     `json:"activity_info" bson:"activity_info,omitempty"`
 	ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
 	RankNo        int                `json:"rank_no"`
-	UserInfo      UserEvent          `json:"user_info"`
+	UserInfo      UserOption         `json:"user_info"`
 	// Distance     float32   `json:"distance" bson:"distance"`
 	// ImageURL     string    `json:"img_url" bson:"img_url"`
 	// ActivityDate time.Time `json:"activity_date" bson:"activity_date"`

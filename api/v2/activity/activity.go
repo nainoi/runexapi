@@ -648,3 +648,47 @@ func (api ActivityV2API) GetActivityWaiting(c *gin.Context) {
 
 	res.Response(http.StatusOK, "success", datas)
 }
+
+// UpdateActivity api godoc
+// @Summary update activity status
+// @Description update activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.UpdateActivityReq true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/update [put]
+func (api ActivityV2API) UpdateActivity(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	var req model.UpdateActivityReq
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	if token != key {
+		appG.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	// if !v2.IsOwner(req.EventCode, req.OwnerID) {
+	// 	res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+	// 	return
+	// }
+
+	err := repository.UpdateActivity(req)
+
+	if err != nil {
+		log.Println("error updated Event activity", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", nil)
+}

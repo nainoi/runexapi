@@ -8,13 +8,8 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/response"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
 	"thinkdev.app/think/runex/runexapi/model"
-	"thinkdev.app/think/runex/runexapi/repository"
+	"thinkdev.app/think/runex/runexapi/repository/v2"
 )
-
-// BoardAPI struct ref repo
-type BoardAPI struct {
-	BoardRepository repository.BoardRepository
-}
 
 // BoardEvent struct
 type BoardEvent struct {
@@ -41,7 +36,7 @@ type BoardResponse struct {
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
 // @Router /api/v1/board/ranking/:{eventID} [get]
-func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
+func GetBoardByEvent(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
 	)
@@ -53,7 +48,7 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	//userID := "5d772660c8a56133c2d7c5ba"
 	userID, _ := oauth.GetValuesToken(c)
 
-	event, count, allActivities, myActivities, err := api.BoardRepository.GetBoardByEvent(req, userID)
+	event, count, allActivities, myActivities, err := repository.GetBoardByEvent(req, userID)
 
 	if err != nil {
 		log.Println("error Get Event info", err.Error())
@@ -74,4 +69,8 @@ func (api BoardAPI) GetBoardByEvent(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, "success", ranks)
+}
+
+func GetBoardUpdateActivity(c *gin.Context) {
+	repository.UpdateActivityV3()
 }

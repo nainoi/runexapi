@@ -155,3 +155,15 @@ type RegisterAttachSlipRequest struct {
 	Image       string             `json:"image" bson:"image"`
 	Status      string             `json:"status" bson:"status"`
 }
+
+//AdminAttachSlipRequest payment charge request
+type AdminAttachSlipRequest struct {
+	RegID       primitive.ObjectID `json:"reg_id" form:"reg_id" bson:"reg_id"`
+	UserID      primitive.ObjectID `json:"user_id" form:"user_id" bson:"user_id"`
+	EventCode   string             `json:"event_code" form:"event_code" bson:"event_code"`
+	OrderID     string             `json:"order_id" form:"order_id" bson:"order_id"`
+	Ref2        string             `json:"ref2" bson:"ref2" form:"ref2"`
+	PaymentType string             `json:"payment_type" bson:"payment_type" form:"payment_type"`
+	Image       string             `json:"image" bson:"image" form:"image"`
+	Status      string             `json:"status" bson:"status" form:"status"`
+}

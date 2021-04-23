@@ -184,6 +184,42 @@ func (api RegisterAPI) SendSlip(c *gin.Context) {
 	appG.Response(http.StatusOK, "success", nil)
 }
 
+// AdminSendSlip api doc
+// @Summary payment charge register event by register id
+// @Description payment charge register event API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AdminAttachSlipRequest true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/adminUpdatePayment [post]
+func (api RegisterAPI) AdminSendSlip(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var json model.AdminAttachSlipRequest
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	if err := c.ShouldBindJSON(&json); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	success := repository.AdminUpdateSlipPaymentStatus(json.RegID, json.EventCode, json.UserID, json.Status, json.PaymentType, json.Image)
+	if !success {
+		res.Response(http.StatusInternalServerError, "Update failed!", nil)
+		return
+	}
+	res.Response(http.StatusOK, "success", nil)
+}
+
 // GetRegEvent api doc
 func (api RegisterAPI) GetRegEvent(c *gin.Context) {
 	var (

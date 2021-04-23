@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/omise/omise-go"
@@ -72,6 +73,10 @@ const (
 	registerAllCollection = "register_all"
 	scbPaymentCollection  = "scbpayment"
 )
+
+type CountBiB struct {
+	Count int `json:"count" bson:"count"`
+}
 
 // GetRegisterAll repo
 func (registerMongo RegisterRepositoryMongo) GetRegisterAll() ([]model.RegisterV2, error) {
@@ -239,17 +244,22 @@ func (registerMongo RegisterRepositoryMongo) AddRegister(register model.Register
 		SaveRegister(dataInfo, register.EventCode)
 	}
 	go registerMongo.SendMailRegisterNew(dataInfo.ID.Hex(), register.EventCode)
+	type refVal struct {
+		Ref2        string             `json:"ref2" bson:"ref2"`
+	}
+	var ref2 refVal
+	err = registerMongo.ConnectionDB.Collection(registerCollection).FindOne(context.TODO(),bson.M{"event_code": register.EventCode}).Decode(&ref2)
+	if err != nil {
+		ref2.Ref2 = strings.ToUpper(register.EventCode)
+	}
 
 	var regModel = model.RegisterV2{
 		Regs:      []model.Regs{dataInfo},
 		EventCode: register.EventCode,
+		Ref2: ref2.Ref2,
 	}
 
 	return regModel, err
-}
-
-type CountBiB struct {
-	Count int `json:"count" bson:"count"`
 }
 
 func CheckTeamLead(register model.AddTeamRequest, userID primitive.ObjectID) (bool, error) {
@@ -550,6 +560,24 @@ func (registerMongo RegisterRepositoryMongo) AddMerChant(userID string, eventCod
 		if registerMongo.UpdatePaymentStatus(rid, eventCode, uid, config.PAYMENT_SUCCESS, config.PAYMENT_CREDIT_CARD) {
 			
 		}
+	// var mailTemplate model.EmailTemplateData2
+	// mailTemplate.RefID = orderID
+	// mailTemplate.IdentificationNumber = user.CitycenID
+	// mailTemplate.ContactPhone = user.Phone
+	// mailTemplate.CompetitionType = register.TicketOptions[0].Tickets.Title
+	// mailTemplate.RegisterNumber = register.TicketOptions[0].RegisterNumber
+	// mailTemplate.TicketName = register.TicketOptions[0].Tickets.Title
+	// mailTemplate.Status = register.Status
+	// mailTemplate.PaymentType = register.PaymentType
+	// mailTemplate.ShipingAddress = register.TicketOptions[0].UserOption.Address
+
+	// fmt.Println("Mail Object :  ", mailTemplate)
+
+	// if register.PaymentType == "PAYMENT_FREE" {
+	// 	mail.SendRegFreeEventMail2(mailTemplate)
+	// } else {
+	// 	mail.SendRegEventMail2(mailTemplate)
+	// }
 		return nil
 	}
 }
@@ -1866,11 +1894,24 @@ func PaymentWithSCB(p model.SCBPayment) error {
 	return nil
 }
 
+// AdminUpdateSlipPaymentStatus repo
+func AdminUpdateSlipPaymentStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string, payType string, imagePath string) bool {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
+	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_type": payType, "regs.$.payment_date": time.Now(), "regs.$.slip": imagePath, "regs.$.updated_at": time.Now()}}
+	result := db.DB.Collection(registerCollection).FindOneAndUpdate(context.TODO(), filter, update)
+	if result.Err() != nil {
+		fmt.Println("updating the Data", result.Err())
+		return false
+	}
+	return true
+}
+
 //UpdatePaymentRegStatus repo with register_id, status, user_id
 func UpdatePaymentRegStatus(registerID primitive.ObjectID, eventCode string, userID primitive.ObjectID, status string, payType string) bool {
 	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"regs.user_id": userID}, bson.M{"regs._id": registerID}}}
 	update := bson.M{"$set": bson.M{"regs.$.status": status, "regs.$.payment_type": payType, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now()}}
 	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
+	
 	if err != nil {
 		fmt.Println("updating the Data", err)
 		return false

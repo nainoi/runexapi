@@ -427,7 +427,7 @@ func (registerMongo RegisterRepositoryMongo) SendMailRegister(registerID string)
 	mailTemplate.PaymentType = register.PaymentType
 	mailTemplate.ShipingAddress = address
 
-	fmt.Println("Mail Object :  ", mailTemplate)
+	// fmt.Println("Mail Object :  ", mailTemplate)
 
 	if register.PaymentType == "PAYMENT_FREE" {
 		mail.SendRegFreeEventMail2(mailTemplate)

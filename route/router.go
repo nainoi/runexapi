@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	handle_workouts "thinkdev.app/think/runex/runexapi/api/v1/workouts"
 	handle_activity_v2 "thinkdev.app/think/runex/runexapi/api/v2/activity"
+	"thinkdev.app/think/runex/runexapi/api/v2/board"
 	"thinkdev.app/think/runex/runexapi/api/v2/config"
 	eventV2 "thinkdev.app/think/runex/runexapi/api/v2/event"
 	"thinkdev.app/think/runex/runexapi/api/v2/kao"
@@ -41,6 +42,7 @@ func Router(route *gin.Engine, connectionDB *mongo.Database) {
 		reportGroup(*api, connectionDB)
 		tambonGroup(*api)
 		payMethodGroup(*api)
+		boardGroup(*api)
 	}
 }
 
@@ -161,6 +163,7 @@ func activityGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	group := g.Group("/activity")
 	{
 		group.POST("/waiting", activityV2API.GetActivityWaiting)
+		group.PUT("/update", activityV2API.UpdateActivity)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("/add", activityV2API.AddActivity)
@@ -246,6 +249,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	{
 		group.POST("/payment_hook", registerAPI.PaymentHook)
 		group.POST("/regsEvent", registerAPI.GetRegEventFromOwner)
+		group.POST("/adminUpdatePayment", registerAPI.AdminSendSlip)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.GET("/all", registerAPI.GetAll)
@@ -281,4 +285,18 @@ func reportGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.GET("/dashboard/:eventID", reportAPI.GetDashboardByEvent)
 	}
 
+}
+
+//reportGroup ready board
+func boardGroup(g gin.RouterGroup) {
+	api := g.Group("/board")
+	{
+
+		api.Use(oauth.AuthMiddleware())
+		{
+			api.POST("/ranking", board.GetBoardByEvent)
+			api.POST("/update", board.GetBoardUpdateActivity)
+
+		}
+	}
 }
