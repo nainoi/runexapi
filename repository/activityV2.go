@@ -438,6 +438,54 @@ func (activityMongo ActivityV2RepositoryMongo) DeleteActivity(eventCode string, 
 	return err
 }
 
+func RemoveActivity(req model.EventActivityRemoveReq, userID string) error {
+
+	var activity model.ActivityV2
+
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	//filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+
+	filterActivityInfo := bson.D{
+		primitive.E{Key: "event_code", Value: req.EventCode},
+		primitive.E{Key: "reg_id", Value: req.RegID},
+		primitive.E{Key: "user_id", Value: userObjectID},
+	}
+	err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filterActivityInfo).Decode(&activity)
+	// //log.Println("[info] activity %s", activity)
+	// if err2 != nil {
+	// 	log.Println(err2)
+	// 	return err2
+	// }
+	// for _, item := range activity.ActivityInfo {
+	// 	if objectID == item.ID {
+	// 		activityInfo = item
+	// 		break
+	// 	}
+	// }
+	if req.ActivityInfo.Status == config.ACTIVITY_STATUS_APPROVE {
+		var toTalDistance = activity.ToTalDistance - req.ActivityInfo.Distance
+
+		updated := bson.M{"$set": bson.M{"total_distance": toTalDistance}}
+
+		_, err = db.DB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterActivityInfo, updated)
+		if err != nil {
+			return err
+		}
+	}
+
+	delete := bson.M{"$pull": bson.M{"activity_info": bson.M{"_id": req.ActivityInfo.ID}}}
+
+	_, err = db.DB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterActivityInfo, delete)
+	if err != nil {
+		//log.Fatal(res)
+		return err
+	}
+
+	//activityInfo = activity.ActivityInfo
+
+	return err
+}
+
 // UpdateWorkout repository for insert workouts
 func (activityMongo ActivityV2RepositoryMongo) UpdateWorkout(workout model.WorkoutActivityInfo, userID primitive.ObjectID) error {
 	filter := bson.D{primitive.E{Key: "user_id", Value: userID}, primitive.E{Key: "activity_info._id", Value: workout.ID}}
@@ -494,7 +542,7 @@ func UpdateActivity(req model.UpdateActivityReq) error {
 			return err
 		}
 		distance := act.ToTalDistance + req.Distance
-		update := bson.M{"$set": bson.M{"activity_info.$.status": req.Status, "activity_info.$.reason": req.Reason, "activity_info.$.updated_at": time.Now(), "activity_info.$.is_approve": true, "total_distance": utils.ToFixed(distance, 2),  "activity_info.$.distance": utils.ToFixed(req.Distance, 2)}}
+		update := bson.M{"$set": bson.M{"activity_info.$.status": req.Status, "activity_info.$.reason": req.Reason, "activity_info.$.updated_at": time.Now(), "activity_info.$.is_approve": true, "total_distance": utils.ToFixed(distance, 2), "activity_info.$.distance": utils.ToFixed(req.Distance, 2)}}
 		result := db.DB.Collection(activityV2Collection).FindOneAndUpdate(context.TODO(), filter, update)
 		return result.Err()
 	}

@@ -413,3 +413,40 @@ func (api WorkoutsAPI) GetWorkoutDetail(c *gin.Context) {
 	res.Response(http.StatusOK, "success", workout)
 	c.Abort()
 }
+
+// RemoveWorkoutActivity api godoc
+// @Summary get workouts remove
+// @Description get workouts API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags workouts
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RemoveWorkoutReq true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /workout [delete]
+func (api WorkoutsAPI) RemoveWorkoutActivity(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var req model.RemoveWorkoutReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	userID, _ := oauth.GetValuesToken(c)
+
+	err := repository.DeleteWorkout(userID, req)
+
+	if err != nil {
+		log.Println("error Delete Activity", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
+
+}

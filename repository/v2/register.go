@@ -1940,7 +1940,17 @@ func UpdateRegisterUserInfo(userID primitive.ObjectID, req model.RegUpdateUserIn
 	t := []model.TicketOptionV2{}
 	t = append(t, req.TicketOption)
 	log.Println(filter)
-	update := bson.M{"$set": bson.M{"regs.$.status": config.PAYMENT_SUCCESS, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now(), "reqs.$.ticket_options.user_option": req.TicketOption.UserOption, "reqs.$.ticket_options.tickets": req.TicketOption.Tickets, "reqs.$.ticket_options.shirts": req.TicketOption.Shirts}}
+	update := bson.M{"$set": bson.M{"regs.$.status": config.PAYMENT_SUCCESS, "regs.$.payment_date": time.Now(), "regs.$.updated_at": time.Now(), "regs.$.ticket_options": t}}
 	_, err := db.DB.Collection(registerCollection).UpdateOne(context.TODO(), filter, update)
 	return err
+}
+
+func EditUserOption(userID primitive.ObjectID, req model.RegUpdateUserInfoRequest) error {
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"regs._id": req.RegID}}}
+	t := []model.TicketOptionV2{}
+	t = append(t, req.TicketOption)
+	log.Println(req.TicketOption.UserOption)
+	update := bson.M{"$set": bson.M{"regs.$.updated_at": time.Now(), "regs.$.ticket_options": t}}
+	result := db.DB.Collection(registerCollection).FindOneAndUpdate(context.TODO(), filter, update)
+	return result.Err()
 }

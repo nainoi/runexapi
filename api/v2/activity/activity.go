@@ -513,9 +513,9 @@ func (api ActivityV2API) GetDashboard(c *gin.Context) {
 	activity, err := repository.GetActivityEventDashboard(req, userID)
 
 	regRequest := model.RegEventDashboardRequest{
-		EventCode: req.EventCode,
+		EventCode:   req.EventCode,
 		ParentRegID: req.ParentRegID,
-		RegID: req.RegID,
+		RegID:       req.RegID,
 	}
 
 	reg, err := v2.GetRegEventDashboard(regRequest)
@@ -527,7 +527,7 @@ func (api ActivityV2API) GetDashboard(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, "success", model.ActivityDashboard{
-		Activity: activity,
+		Activity:     activity,
 		RegisterData: reg,
 	})
 }
@@ -606,6 +606,43 @@ func (api ActivityV2API) DeleteActivityEvent(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, e.SUCCESS, nil)
+
+}
+
+// RemoveActivityEvent api godoc
+// @Summary get activity waiting approve
+// @Description get activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.EventActivityRemoveReq true "payload"
+// @Success 200 {object} response.Response{data=model.ActivityV2}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/remove [delete]
+func (api ActivityV2API) RemoveActivityEvent(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var req model.EventActivityRemoveReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	userID, _ := oauth.GetValuesToken(c)
+
+	err := repository.RemoveActivity(req, userID)
+
+	if err != nil {
+		log.Println("error Delete Activity", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
 
 }
 

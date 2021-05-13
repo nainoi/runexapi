@@ -17,6 +17,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/api/v2/report"
 	"thinkdev.app/think/runex/runexapi/api/v2/strava"
 	"thinkdev.app/think/runex/runexapi/api/v2/tambon"
+	"thinkdev.app/think/runex/runexapi/api/v2/team"
 	"thinkdev.app/think/runex/runexapi/api/v2/upload"
 	"thinkdev.app/think/runex/runexapi/api/v2/user"
 	"thinkdev.app/think/runex/runexapi/middleware/oauth"
@@ -88,6 +89,8 @@ func userGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		g.POST("/registerFirebase", userAPI.RegFirebase)
 		g.POST("/uploads", upload.Uploads)
 		g.POST("/uploadCover", upload.UploadCover)
+		g.POST("/teamIcon", team.UploadTeamIcon)
+		g.POST("/getTeamIcon", team.GetTeamIcon)
 	}
 }
 
@@ -130,6 +133,7 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)
 		g.POST("/workouts", workoutsAPI.AddMultiWorkout)
+		g.DELETE("/workout", workoutsAPI.RemoveWorkoutActivity)
 		g.GET("/workouts", workoutsAPI.GetWorkouts)
 		g.POST("/workouts/history", workoutsAPI.GetWorkoutsHistoryMonth)
 		g.GET("/workouts/historyAll", workoutsAPI.GetWorkoutsHistoryAll)
@@ -167,6 +171,7 @@ func activityGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("/add", activityV2API.AddActivity)
+			group.DELETE("/remove", activityV2API.RemoveActivityEvent)
 			group.GET("/getByEvent/:event", activityV2API.GetActivityByEvent)
 			group.GET("/getByEvent2/:event", activityV2API.GetActivityByEvent2)
 			group.POST("/dashboard", activityV2API.GetDashboard)
@@ -265,6 +270,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 			group.POST("/payment", registerAPI.ChargeRegEvent)
 			group.POST("/regUpdateUserInfo", registerAPI.RegEventUpdateUserInfo)
+			group.POST("/editUserInfo", registerAPI.EditUserInfo)
 			group.POST("/sendSlip", registerAPI.SendSlip)
 		}
 	}

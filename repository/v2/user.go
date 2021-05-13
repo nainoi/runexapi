@@ -56,7 +56,7 @@ func (db RepoUserDB) Signin(u model.UserProviderRequest) (model.User, error) {
 	if count == 0 {
 		log.Println("***************** create new user ***********************")
 		user, err = db.AddUser(u)
-	}else {
+	} else {
 		err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	}
 	return user, err
@@ -176,7 +176,7 @@ func (db RepoUserDB) UpdateUser(u model.User, userID string) (model.User, error)
 	u.UpdatedAt = time.Now()
 	isUpsert := true
 	clientOptions := options.FindOneAndUpdateOptions{Upsert: &isUpsert}
-	
+
 	var user model.User
 	err = db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
@@ -185,7 +185,7 @@ func (db RepoUserDB) UpdateUser(u model.User, userID string) (model.User, error)
 	u.Provider = user.Provider
 	u.ProviderID = user.ProviderID
 	update := bson.M{"$set": u}
-	
+
 	result := db.ConnectionDB.Collection(userConlection).FindOneAndUpdate(context.TODO(), filter, update, &clientOptions)
 	if result.Err() == nil {
 		u.UserID = id
@@ -229,11 +229,11 @@ func (db RepoUserDB) FirebaseRegister(token string, userID string) error {
 	if count == 0 {
 		fcm := model.FirebaseUser{
 			UserID:         id,
-			FirebaseTokens: []string{ token },
+			FirebaseTokens: []string{token},
 		}
 		_, err = db.ConnectionDB.Collection(fcmConlection).InsertOne(context.TODO(), fcm)
 		return err
-		
+
 	}
 	err = db.ConnectionDB.Collection(fcmConlection).FindOne(context.TODO(), filter).Decode(&fcm)
 	if err != nil {
@@ -291,8 +291,8 @@ func (db RepoUserDB) FirebaseRemove(u model.RegisterTokenRequest, userID string)
 	if err != nil {
 		return err
 	}
-	filter := bson.M{"user_id":id}
-	update := bson.M{"$pull": bson.M{"firebase_tokens": u.FirebaseToken }}
+	filter := bson.M{"user_id": id}
+	update := bson.M{"$pull": bson.M{"firebase_tokens": u.FirebaseToken}}
 	_, err = db.ConnectionDB.Collection(fcmConlection).UpdateOne(context.TODO(), filter, update)
 	return err
 }
@@ -318,6 +318,16 @@ func (db RepoUserDB) UpdateUserStrava(u model.UserStravaSyncRequest, userID stri
 		return user, err
 	}
 	return user, err
+}
+
+func GetUserAvatar(id primitive.ObjectID) (string, error) {
+	var user model.User
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	err := db.DB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		return "", err
+	}
+	return user.Avatar, err
 }
 
 // UpdateProvider api update account login without provider

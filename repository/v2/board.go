@@ -100,6 +100,8 @@ func GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int6
 
 					a.RankNo = n + 1
 					//a.UserInfo = user
+					url, _ := GetUserAvatar(a.UserID)
+					a.ImageURL = url
 					activities = append(activities, a)
 				}
 
@@ -118,37 +120,43 @@ func GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int6
 		//index := SliceIndex(len(activities), func(i int) bool { return activities[i].UserID == objectUserID })
 		if index != -1 {
 
-			if (index - 2) >= 0 {
-				// log.Printf("[info] userID %s", userID)
-				ranking := temps[index-2]
-				if err != nil {
-					log.Println(err)
-				}
-				ranking.RankNo = index - 1
-				myActivities = append(myActivities, ranking)
-			}
+			// if (index - 2) >= 0 {
+			// 	// log.Printf("[info] userID %s", userID)
+			// 	ranking := temps[index-2]
+			// 	if err != nil {
+			// 		log.Println(err)
+			// 	}
+			// 	ranking.RankNo = index - 1
+			// 	myActivities = append(myActivities, ranking)
+			// }
 			if (index - 1) >= 0 {
 				ranking := temps[index-1]
 				if err != nil {
 					log.Println(err)
 				}
 				ranking.RankNo = index
+				url, _ := GetUserAvatar(ranking.UserID)
+				ranking.ImageURL = url
 				myActivities = append(myActivities, ranking)
 			}
 
 			ranking := temps[index]
 
 			ranking.RankNo = index + 1
+			url, _ := GetUserAvatar(ranking.UserID)
+			ranking.ImageURL = url
 			myActivities = append(myActivities, ranking)
 			if (index + 1) < len(temps) {
 				ranking := temps[index+1]
 				ranking.RankNo = index + 2
+				url, _ := GetUserAvatar(ranking.UserID)
+				ranking.ImageURL = url
 				myActivities = append(myActivities, ranking)
 			}
-			if (index + 2) < len(temps) {
-				ranking.RankNo = index + 3
-				myActivities = append(myActivities, ranking)
-			}
+			// if (index + 2) < len(temps) {
+			// 	ranking.RankNo = index + 3
+			// 	myActivities = append(myActivities, ranking)
+			// }
 		}
 
 		// //activityInfo = activity.ActivityInfo
@@ -233,6 +241,8 @@ func GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int6
 			if n < 10 {
 				if err == nil {
 					//a.UserInfo = user
+					url, _ := GetUserAvatar(t.UserID)
+					a.ImageURL = url
 					activities = append(activities, a)
 				}
 			}
@@ -251,35 +261,38 @@ func GetBoardByEvent(req model.RankingRequest, userID string) (model.Event, int6
 
 		//index := SliceIndex(len(activities), func(i int) bool { return activities[i].UserID == objectUserID })
 		if index != -1 {
-			if (index - 2) >= 0 {
-				ranking := temps[index-2]
-				if err != nil {
-					log.Println(err)
-				}
-				ranking.RankNo = index - 1
-				myActivities = append(myActivities, ranking)
-			}
+			// if (index - 2) >= 0 {
+			// 	ranking := temps[index-2]
+			// 	if err != nil {
+			// 		log.Println(err)
+			// 	}
+			// 	ranking.RankNo = index - 1
+			// 	myActivities = append(myActivities, ranking)
+			// }
 			if (index - 1) >= 0 {
 				ranking := temps[index-1]
 				ranking.RankNo = index
+				url, _ := GetUserAvatar(ranking.UserID)
+				ranking.ImageURL = url
 				myActivities = append(myActivities, ranking)
 			}
 			ranking := temps[index]
 			ranking.RankNo = index + 1
+			url, _ := GetUserAvatar(ranking.UserID)
+			ranking.ImageURL = url
 			myActivities = append(myActivities, ranking)
 			if (index + 1) < len(temps) {
 				ranking := temps[index+1]
-				if err != nil {
-					log.Println(err)
-				}
+				url, _ := GetUserAvatar(ranking.UserID)
+				ranking.ImageURL = url
 				ranking.RankNo = index + 2
 				myActivities = append(myActivities, ranking)
 			}
-			if (index + 2) < len(temps) {
-				ranking := temps[index+2]
-				ranking.RankNo = index + 3
-				myActivities = append(myActivities, ranking)
-			}
+			// if (index + 2) < len(temps) {
+			// 	ranking := temps[index+2]
+			// 	ranking.RankNo = index + 3
+			// 	myActivities = append(myActivities, ranking)
+			// }
 		}
 
 		count = int64(len(temps))

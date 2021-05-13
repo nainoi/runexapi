@@ -894,3 +894,39 @@ func (api RegisterAPI) RegEventUpdateUserInfo(c *gin.Context) {
 
 	res.Response(http.StatusOK, "success", nil)
 }
+
+// EditUserInfo api godoc
+// @Summary get register payment success by user id
+// @Description get register payment success API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegUpdateUserInfoRequest true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/editUserInfo [post]
+func (api RegisterAPI) EditUserInfo(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	var json model.RegUpdateUserInfoRequest
+	userID, _ := oauth.GetValuesToken(c)
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	err := repository.EditUserOption(userObjectID, json)
+	if err != nil {
+		log.Println("error update user info register", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	res.Response(http.StatusOK, "success", nil)
+}

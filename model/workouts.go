@@ -32,6 +32,7 @@ type WorkoutActivityInfo struct {
 	NetElevationGain float64            `json:"net_elevation_gain" bson:"net_elevation_gain"`
 	IsSync           bool               `json:"is_sync" bson:"is_sync"`
 	Locations        []Location         `json:"locations" bson:"locations"`
+	LocURL           string             `json:"loc_url" bson:"loc_url"`
 }
 
 // AddWorkout struct model for request
@@ -145,4 +146,9 @@ type WorkoutHistoryAllInfo struct {
 	TimeString    string                `json:"time_string" json:"time_string" bson:"time_string"`
 	Calory        float64               `json:"calory" bson:"calory" bson:"calory"`
 	HistoryDay    []WorkoutActivityInfo `json:"workout_day" bson:"workout_day" bson:"workout_day"`
+}
+
+type RemoveWorkoutReq struct {
+	// ID                  primitive.ObjectID  `json:"id" bson:"_id,omitempty" binding:"required"`
+	WorkoutActivityInfo WorkoutActivityInfo `json:"activity_info" bson:"activity_info" binding:"required"`
 }

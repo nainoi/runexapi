@@ -99,6 +99,15 @@ type EventActivityDashboardReq struct {
 	OrderID     string             `form:"order_id" json:"order_id" bson:"order_id" binding:"required"`
 }
 
+type EventActivityRemoveReq struct {
+	// EventID   string       `json:"event_id" bson:"event_id"`
+	EventCode    string             `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`
+	TicketD      string             `form:"ticket_id" json:"ticket_id" bson:"ticket_id"`
+	RegID        primitive.ObjectID `form:"reg_id" json:"reg_id" bson:"reg_id" binding:"required"`
+	OrderID      string             `form:"order_id" json:"order_id" bson:"order_id" binding:"required"`
+	ActivityInfo ActivityInfo       `form:"activity_info" json:"activity_info" bson:"activity_info" binding:"required"`
+}
+
 type UpdateActivityReq struct {
 	// EventID   string       `json:"event_id" bson:"event_id"`
 	EventCode  string             `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`

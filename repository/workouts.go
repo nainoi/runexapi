@@ -1,15 +1,21 @@
 package repository
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"mime/multipart"
+	"net/http"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/firebase"
 	"thinkdev.app/think/runex/runexapi/model"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
@@ -88,6 +94,8 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 			return dataInfo, err
 		}
 		dataInfo.ID = primitive.NewObjectID()
+		dataInfo.LocURL = SaveLocation(dataInfo, dataInfo.ID.Hex()).URL
+		dataInfo.Locations = []model.Location{}
 		update := bson.M{"$push": bson.M{"activity_info": dataInfo}}
 		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 		if err != nil {
@@ -100,6 +108,8 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddWorkout(workout model.AddWorkout
 
 		dataInfo := workout.WorkoutActivityInfo
 		dataInfo.ID = primitive.NewObjectID()
+		dataInfo.LocURL = SaveLocation(dataInfo, dataInfo.ID.Hex()).URL
+		dataInfo.Locations = []model.Location{}
 		arrActivityInfo = append(arrActivityInfo, dataInfo)
 		workoutsModel := model.Workouts{
 			UserID:              workout.UserID,
@@ -134,25 +144,29 @@ func (workoutsMongo WorkoutsRepositoryMongo) WorkoutHook(workout model.HookWorko
 		return err
 	}
 	total := 0.0
-	for _, s := range workout.WorkoutActivityInfo {
+	for index, s := range workout.WorkoutActivityInfo {
 		total += s.Distance
+		workout.WorkoutActivityInfo[index].LocURL = SaveLocation(workout.WorkoutActivityInfo[index], workout.WorkoutActivityInfo[index].ID.Hex()).URL
+		workout.WorkoutActivityInfo[index].Locations = []model.Location{}
 	}
 	if count > 0 {
 		var workoutsModel model.Workouts
 		err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workoutsModel)
 
 		var totalDistance = workoutsModel.TotalDistance + total
-		for _, s := range workout.WorkoutActivityInfo {
-			workoutsModel.WorkoutActivityInfo = append(workoutsModel.WorkoutActivityInfo, s)
-		}
-
-		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance, "activity_info": workoutsModel.WorkoutActivityInfo}}
+		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
 		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
 		if err != nil {
 			log.Printf("[info] err %s", err)
 			return err
 		}
+		for _, s := range workout.WorkoutActivityInfo {
+			updateWorkout := bson.M{"$push": bson.M{"activity_info": s}}
+			_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateWorkout)
+		}
 
+		log.Printf("[info] err %s", err)
+		return err
 		// update := bson.M{"$push": bson.M{"activity_info": workouts}}
 		// _, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
 		// if err != nil {
@@ -161,6 +175,7 @@ func (workoutsMongo WorkoutsRepositoryMongo) WorkoutHook(workout model.HookWorko
 		// }
 
 	} else {
+
 		workoutsModel := model.Workouts{
 			UserID:              user.UserID,
 			WorkoutActivityInfo: workout.WorkoutActivityInfo,
@@ -206,7 +221,9 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddMultiWorkout(userID string, work
 		return err
 	}
 	total := 0.0
-	for _, s := range workouts {
+	for index, s := range workouts {
+		workouts[index].LocURL = SaveLocation(workouts[index], s.ID.Hex()).URL
+		workouts[index].Locations = []model.Location{}
 		total += s.Distance
 	}
 	if count > 0 {
@@ -214,16 +231,31 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddMultiWorkout(userID string, work
 		err := workoutsMongo.ConnectionDB.Collection(workoutsCollection).FindOne(context.TODO(), filter).Decode(&workoutsModel)
 
 		var totalDistance = workoutsModel.TotalDistance + total
-		for _, s := range workouts {
-			workoutsModel.WorkoutActivityInfo = append(workoutsModel.WorkoutActivityInfo, s)
-		}
 
-		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance, "activity_info": workoutsModel.WorkoutActivityInfo}}
+		updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance}}
 		_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
 		if err != nil {
 			log.Printf("[info] err %s", err)
 			return err
 		}
+		for _, s := range workouts {
+			updateWorkout := bson.M{"$push": bson.M{"activity_info": s}}
+			_, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateWorkout)
+		}
+
+		log.Printf("[info] err %s", err)
+		return err
+		// for _, s := range workouts {
+
+		// 	workoutsModel.WorkoutActivityInfo = append(workoutsModel.WorkoutActivityInfo, s)
+		// }
+
+		// updateDistance := bson.M{"$set": bson.M{"total_distance": totalDistance, "activity_info": workoutsModel.WorkoutActivityInfo}}
+		// _, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, updateDistance)
+		// if err != nil {
+		// 	log.Printf("[info] err %s", err)
+		// 	return err
+		// }
 
 		// update := bson.M{"$push": bson.M{"activity_info": workouts}}
 		// _, err = workoutsMongo.ConnectionDB.Collection(workoutsCollection).UpdateOne(context.TODO(), filter, update)
@@ -529,8 +561,116 @@ func (workoutsMongo WorkoutsRepositoryMongo) WorkoutInfo(userID primitive.Object
 	return false, workoutInfo, err
 }
 
-func (workoutsMongo WorkoutsRepositoryMongo) SyncWorkout() {
+func WorkoutLocation() {
 
+}
+
+func DeleteWorkout(userID string, req model.RemoveWorkoutReq) error {
+	var workout model.Workouts
+
+	userObjectID, _ := primitive.ObjectIDFromHex(userID)
+	//filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+
+	filterWorkoutInfo := bson.D{
+		primitive.E{Key: "user_id", Value: userObjectID},
+	}
+	err := db.DB.Collection(workoutsCollection).FindOne(context.TODO(), filterWorkoutInfo).Decode(&workout)
+	if err != nil {
+		return err
+	}
+
+	var toTalDistance = workout.TotalDistance - req.WorkoutActivityInfo.Distance
+	updated := bson.M{"$set": bson.M{"total_distance": toTalDistance}}
+
+	_, err = db.DB.Collection(workoutsCollection).UpdateOne(context.TODO(), filterWorkoutInfo, updated)
+	if err != nil {
+		return err
+	}
+
+	delete := bson.M{"$pull": bson.M{"activity_info": bson.M{"_id": req.WorkoutActivityInfo.ID}}}
+
+	_, err = db.DB.Collection(workoutsCollection).UpdateOne(context.TODO(), filterWorkoutInfo, delete)
+	if err != nil {
+		//log.Fatal(res)
+		return err
+	}
+
+	//activityInfo = activity.ActivityInfo
+
+	return err
+}
+
+func SaveLocation(activity model.WorkoutActivityInfo, filename string) model.UploadResponse {
+
+	//pathDir := "." + config.UPLOAD_IMAGE
+	// if _, err := os.Stat(pathDir); os.IsNotExist(err) {
+	// 	os.MkdirAll(pathDir, os.ModePerm)
+	// }
+	location, _ := json.Marshal(activity)
+	err := ioutil.WriteFile(filename+".json", location, 0644)
+	if err != nil {
+		log.Println(err.Error())
+	}
+
+	url := "https://storage.runex.co/upload-activities/"
+	method := "POST"
+
+	payload := &bytes.Buffer{}
+	writer := multipart.NewWriter(payload)
+	var resObject = model.UploadResponse{}
+
+	writer.CreateFormField("file")
+	part1, errFile1 := writer.CreateFormFile("file", fmt.Sprintf("%s", filename+".json"))
+	// _, errFile1 = io.Copy(part1, file)
+	part1.Write(location)
+
+	// file, errFile1 := os.Open("/C:/Users/frogconn/Downloads/5f7324f2da1d9600135ed041vid1601548947586.mp4")
+	//defer file.Close()
+	//part1, errFile1 := writer.CreateFormField("file")
+
+	if errFile1 != nil {
+		fmt.Println(errFile1)
+		log.Println("error create field")
+	}
+	err = writer.Close()
+	if err != nil {
+		log.Println("error close")
+		fmt.Println(err)
+	}
+
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
+
+	if err != nil {
+		log.Println("error req")
+		fmt.Println(err)
+	}
+	req.Header.Add("token", "5Dk2o03a4hVjQPglSueFEah577fCGQfM")
+	// req.Header.Add("path", fmt.Sprintf("runex/workouts/"))
+	req.Header.Add("Cookie", "__cfduid=dd42cd8b41a9c49d5b75f756dc64e01451604633984")
+
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	res, err := client.Do(req)
+	if err != nil {
+		log.Println("error do req")
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Println("error read upload")
+		fmt.Println(err)
+	}
+
+	if res.StatusCode == 200 {
+		err = json.Unmarshal(body, &resObject)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Println(resObject)
+	}
+	return resObject
 }
 
 // func fmtDuration(d time.Duration) string {

@@ -18,8 +18,7 @@ type Ranking struct {
 	ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
 	RankNo        int                `json:"rank_no"`
 	UserInfo      UserOption         `json:"user_info"`
-	// Distance     float32   `json:"distance" bson:"distance"`
-	// ImageURL     string    `json:"img_url" bson:"img_url"`
+	ImageURL      string             `json:"img_url" bson:"img_url"`
 	// ActivityDate time.Time `json:"activity_date" bson:"activity_date"`
 	// CreatedAt    time.Time `json:"created_at" bson:"created_at"`
 	// UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
