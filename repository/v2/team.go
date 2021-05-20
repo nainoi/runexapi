@@ -16,8 +16,9 @@ func UpdateIcon(form model.TeamIcon) error {
 	filter := bson.M{"reg_id": form.RegID}
 	count, err := db.DB.Collection(teamCollection).CountDocuments(context.TODO(), filter)
 	if count > 0 {
-		_, err = db.DB.Collection(teamCollection).UpdateOne(context.TODO(), filter, form)
-		return err
+		update := bson.M{"$set": bson.M{"icon_url": form.IconURL}}
+		res := db.DB.Collection(teamCollection).FindOneAndUpdate(context.TODO(), filter, update)
+		return res.Err()
 	}
 	_, err = db.DB.Collection(teamCollection).InsertOne(context.TODO(), form)
 	return err

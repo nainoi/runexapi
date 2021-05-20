@@ -286,6 +286,25 @@ func GetActivityEventDashboard(req model.EventActivityDashboardReq, userID strin
 	return activity, err
 }
 
+// GetActivity event and activity detail
+func GetActivity(regID primitive.ObjectID) (model.ActivityV2, error) {
+	var activity = model.ActivityV2{}
+	// eventObjectID, _ := primitive.ObjectIDFromHex(eventID)
+	filter := bson.D{primitive.E{Key: "reg_id", Value: regID}}
+	count, err := db.DB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if count > 0 {
+		err = db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activity)
+		if err != nil {
+			log.Println(err)
+			return activity, err
+		}
+		//activityInfo = activity.ActivityInfo
+
+		return activity, err
+	}
+	return activity, err
+}
+
 func (activityMongo ActivityV2RepositoryMongo) GetHistoryDayByEvent(event_id string, user_id string, year int, month int) (model.HistoryDayInfo, error) {
 	var activity model.ActivityV2
 	var activityInfo []model.ActivityInfo

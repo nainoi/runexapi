@@ -532,6 +532,53 @@ func (api ActivityV2API) GetDashboard(c *gin.Context) {
 	})
 }
 
+// GetDashboard api godoc
+// @Summary get activity dashboard
+// @Description get activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.EventActivityDashboardReq true "payload"
+// @Success 200 {object} response.Response{data=[]model.ActivityDashboard}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/removeActivityMember [post]
+func (api ActivityV2API) RemoveActivityMember(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	var req model.EventActivityDashboardReq
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+	//userID := "5d772660c8a56133c2d7c5ba"
+	userID, _ := oauth.GetValuesToken(c)
+
+	activity, err := repository.GetActivityEventDashboard(req, userID)
+
+	regRequest := model.RegEventDashboardRequest{
+		EventCode:   req.EventCode,
+		ParentRegID: req.ParentRegID,
+		RegID:       req.RegID,
+	}
+
+	reg, err := v2.GetRegEventDashboard(regRequest)
+
+	if err != nil {
+		log.Println("error Get Event info2", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", model.ActivityDashboard{
+		Activity:     activity,
+		RegisterData: reg,
+	})
+}
+
 func (api ActivityV2API) GetHistoryDayByEvent(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}

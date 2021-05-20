@@ -129,6 +129,7 @@ func workoutGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 		WorkoutsRepository: &workoutsRepository,
 	}
 	g.POST("/workout_hook", workoutsAPI.AddWorkoutHook)
+	g.GET("/workoutUpdateLocation/:user_id", workoutsAPI.ManageWorkoutLocation)
 	g.Use(oauth.AuthMiddleware())
 	{
 		g.POST("/workout", workoutsAPI.AddWorkout)

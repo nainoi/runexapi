@@ -146,6 +146,7 @@ func (workoutsMongo WorkoutsRepositoryMongo) WorkoutHook(workout model.HookWorko
 	total := 0.0
 	for index, s := range workout.WorkoutActivityInfo {
 		total += s.Distance
+		workout.WorkoutActivityInfo[index].ID = primitive.NewObjectID()
 		workout.WorkoutActivityInfo[index].LocURL = SaveLocation(workout.WorkoutActivityInfo[index], workout.WorkoutActivityInfo[index].ID.Hex()).URL
 		workout.WorkoutActivityInfo[index].Locations = []model.Location{}
 	}
@@ -222,6 +223,7 @@ func (workoutsMongo WorkoutsRepositoryMongo) AddMultiWorkout(userID string, work
 	}
 	total := 0.0
 	for index, s := range workouts {
+		workouts[index].ID = primitive.NewObjectID()
 		workouts[index].LocURL = SaveLocation(workouts[index], s.ID.Hex()).URL
 		workouts[index].Locations = []model.Location{}
 		total += s.Distance
@@ -561,10 +563,6 @@ func (workoutsMongo WorkoutsRepositoryMongo) WorkoutInfo(userID primitive.Object
 	return false, workoutInfo, err
 }
 
-func WorkoutLocation() {
-
-}
-
 func DeleteWorkout(userID string, req model.RemoveWorkoutReq) error {
 	var workout model.Workouts
 
@@ -607,10 +605,10 @@ func SaveLocation(activity model.WorkoutActivityInfo, filename string) model.Upl
 	// 	os.MkdirAll(pathDir, os.ModePerm)
 	// }
 	location, _ := json.Marshal(activity)
-	err := ioutil.WriteFile(filename+".json", location, 0644)
-	if err != nil {
-		log.Println(err.Error())
-	}
+	// err := ioutil.WriteFile(filename+".json", location, 0644)
+	// if err != nil {
+	// 	log.Println(err.Error())
+	// }
 
 	url := "https://storage.runex.co/upload-activities/"
 	method := "POST"
@@ -632,7 +630,7 @@ func SaveLocation(activity model.WorkoutActivityInfo, filename string) model.Upl
 		fmt.Println(errFile1)
 		log.Println("error create field")
 	}
-	err = writer.Close()
+	err := writer.Close()
 	if err != nil {
 		log.Println("error close")
 		fmt.Println(err)
@@ -668,7 +666,6 @@ func SaveLocation(activity model.WorkoutActivityInfo, filename string) model.Upl
 		if err != nil {
 			log.Println(err)
 		}
-		log.Println(resObject)
 	}
 	return resObject
 }
@@ -682,3 +679,50 @@ func SaveLocation(activity model.WorkoutActivityInfo, filename string) model.Upl
 // 	s := d / time.Second
 // 	return fmt.Sprintf("%02d:%02d:%02d", h, m, s)
 // }
+
+// GetWorkouts repository for get workouts data
+func GetWorkoutFileLocation(userID primitive.ObjectID) (model.Workouts, error) {
+	var workout model.Workouts
+	filter := bson.M{"user_id": userID}
+	option := options.FindOne()
+	//option.SetSort(bson.D{primitive.E{Key: "activity_info.workout_date", Value: -1}})
+	//option.SetSort(bson.D{primitive.E{Key: "activity_info.workout_date", Value: -1}})
+	// count, err := db.DB.Collection(workoutsCollection).CountDocuments(context.TODO(), filter)
+	// log.Printf("[info] count %d", count)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return true, workout, err
+	// }
+	// if count == 0 {
+	// 	workout.UserID = userID
+	// 	workout.TotalDistance = 0
+	// 	workout.WorkoutActivityInfo = []model.WorkoutActivityInfo{}
+	// 	return false, workout, nil
+	// }
+
+	//limit := bson.D{primitive.E{Key: "$limit", Value: 1}}
+	err := db.DB.Collection(workoutsCollection).FindOne(context.TODO(), filter, option).Decode(&workout)
+	if err != nil {
+		return workout, err
+	}
+	for _, item := range workout.WorkoutActivityInfo {
+		if len(item.Locations) > 0 {
+			//url := SaveLocation(item, item.ID.Hex()).URL
+			item.Locations = []model.Location{}
+
+			if item.ID.IsZero() {
+				filter = bson.M{"user_id": userID, "activity_info._id": item.ID}
+				update := bson.M{"$set": bson.M{"activity_info.$._id": primitive.NewObjectID()}}
+				// update := bson.M{"$set": bson.M{"activity_info.$.loc_url": url, "activity_info.$.locations": []model.Location{}}}
+				log.Println(item.ID)
+				res := db.DB.Collection(workoutsCollection).FindOneAndUpdate(context.TODO(), filter, update)
+				if res.Err() != nil {
+					log.Printf("[info] err %s", res.Err())
+				}
+			}
+
+		}
+	}
+
+	return workout, err
+}

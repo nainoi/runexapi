@@ -450,3 +450,28 @@ func (api WorkoutsAPI) RemoveWorkoutActivity(c *gin.Context) {
 	res.Response(http.StatusOK, "success", nil)
 
 }
+
+func (api WorkoutsAPI) ManageWorkoutLocation(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	// body, _ := ioutil.ReadAll(c.Request.Body)
+	// println(string(body))
+
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+
+	id := c.Param("user_id")
+	userID, _ := primitive.ObjectIDFromHex(id)
+	w, err := repository.GetWorkoutFileLocation(userID)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, "", w)
+		return
+	}
+	res.Response(http.StatusOK, "success", w)
+	return
+}

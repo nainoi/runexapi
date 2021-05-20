@@ -51,6 +51,7 @@ type Event struct {
 	IsOpenPayment          bool      `json:"isOpenPayment"`
 	IsOpenRegister         bool      `json:"isOpenRegister"`
 	IsOpenSendActivity     bool      `json:"isOpenSendActivity"`
+	IsOpenEditProfile      bool      `json:"isOpenEditProfile"`
 	IsPublish              bool      `json:"isPublish"`
 	IsTransactionFixedRate bool      `json:"isTransactionFixedRate"`
 	Organizer              string    `json:"organizer"`
