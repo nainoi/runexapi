@@ -330,6 +330,16 @@ func GetUserAvatar(id primitive.ObjectID) (string, error) {
 	return user.Avatar, err
 }
 
+func GetTeamAvatar(id primitive.ObjectID) (string, error) {
+	var user model.User
+	filter := bson.D{primitive.E{Key: "_id", Value: id}}
+	err := db.DB.Collection(teamCollection).FindOne(context.TODO(), filter).Decode(&user)
+	if err != nil {
+		return "", err
+	}
+	return user.Avatar, err
+}
+
 // UpdateProvider api update account login without provider
 /*func (db RepoDB) UpdateProvider(u model.User, p model.UserProviderRequest) error {
 	filter := bson.D{primitive.E{Key: "_id", Value: u.UserID}}

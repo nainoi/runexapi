@@ -30,3 +30,8 @@ type RankingRequest struct {
 	TicketID    string             `json:"ticket_id" bson:"ticket_id" binding:"required"`
 	ParentRegID primitive.ObjectID `form:"parent_reg_id" json:"parent_reg_id"`
 }
+
+type AllRankingRequest struct {
+	EventCode string `json:"event_code" bson:"event_code" binding:"required"`
+	TicketID  string `json:"ticket_id" bson:"ticket_id" binding:"required"`
+}

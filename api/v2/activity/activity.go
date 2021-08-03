@@ -353,6 +353,7 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	)
 	var form model.AddActivityForm2
 	if err := c.ShouldBind(&form); err != nil {
+		log.Println(err)
 		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
 		return
 	}
@@ -363,51 +364,58 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 
 	var resObject = model.UploadResponse{}
 	path := ""
-
-	if err != nil {
-		fmt.Println("Error Retrieving the File")
-		path = ""
-	} else {
-		img, str, err := image.Decode(file)
-		log.Println(str)
+	if file != nil {
 		if err != nil {
-			log.Println(err)
+			fmt.Println("Error Retrieving the File")
+			path = ""
+		} else {
+			img, str, err := image.Decode(file)
+			log.Println(str)
+			if err != nil {
+				log.Println(err)
+			}
+
+			// resize to width 1000 using Lanczos resampling
+			// and preserve aspect ratio
+			m := resize.Resize(960, 0, img, resize.Lanczos3)
+
+			filename := header.Filename
+			fmt.Println(filename)
+
+			uniqidFilename := guuid.New()
+			fmt.Printf("github.com/google/uuid:         %s\n", uniqidFilename.String())
+
+			t := time.Now()
+			year := t.Year()
+			month := t.Month()
+
+			pathDir := "./upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month))
+			if _, err := os.Stat(pathDir); os.IsNotExist(err) {
+				os.MkdirAll(pathDir, os.ModePerm)
+			}
+
+			out, err := os.Create(pathDir + "/" + uniqidFilename.String() + ".png")
+
+			path = "/upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month)) + "/" + uniqidFilename.String() + ".png"
+			if err != nil {
+				log.Println(err)
+			}
+			defer out.Close()
+			// write new image to file
+			jpeg.Encode(out, m, nil)
+
+			resObject = upload.UploadWithFolderToS3(pathDir+"/"+uniqidFilename.String()+".png", "activty", uniqidFilename.String()+".png")
 		}
 
-		// resize to width 1000 using Lanczos resampling
-		// and preserve aspect ratio
-		m := resize.Resize(960, 0, img, resize.Lanczos3)
+		defer file.Close()
+		defer os.Remove(path)
 
-		filename := header.Filename
-		fmt.Println(filename)
+		log.Println(resObject.URL)
 
-		uniqidFilename := guuid.New()
-		fmt.Printf("github.com/google/uuid:         %s\n", uniqidFilename.String())
+		form.ActivityInfo.ImageURL = resObject.URL
 
-		t := time.Now()
-		year := t.Year()
-		month := t.Month()
-
-		pathDir := "./upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month))
-		if _, err := os.Stat(pathDir); os.IsNotExist(err) {
-			os.MkdirAll(pathDir, os.ModePerm)
-		}
-
-		out, err := os.Create(pathDir + "/" + uniqidFilename.String() + ".png")
-
-		path = "/upload/image/running/" + strconv.Itoa(year) + "_" + strconv.Itoa(int(month)) + "/" + uniqidFilename.String() + ".png"
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer out.Close()
-		// write new image to file
-		jpeg.Encode(out, m, nil)
-
-		resObject = upload.UploadWithFolderToS3(pathDir+"/"+uniqidFilename.String()+".png", "activty", uniqidFilename.String()+".png")
 	}
 
-	defer file.Close()
-	defer os.Remove(path)
 	// fmt.Println(form)
 	// time1, err := time.Parse(time.RFC3339, form.ActivityInfo.ActivityDate)
 	// if err != nil {
@@ -419,10 +427,6 @@ func (api ActivityV2API) AddActivity(c *gin.Context) {
 	userObjectID, err := primitive.ObjectIDFromHex(userID)
 	pRegID, err := primitive.ObjectIDFromHex(form.ParentRegID)
 	regID, err := primitive.ObjectIDFromHex(form.RegID)
-
-	log.Println(resObject.URL)
-
-	form.ActivityInfo.ImageURL = resObject.URL
 
 	form.ActivityInfo.CreatedAt = time.Now()
 	form.ActivityInfo.UpdatedAt = time.Now()
@@ -775,4 +779,88 @@ func (api ActivityV2API) UpdateActivity(c *gin.Context) {
 	}
 
 	appG.Response(http.StatusOK, "success", nil)
+}
+
+// AdminDeleteActivity api godoc
+// @Summary delete activity by admin
+// @Description delete activity by admin API calls
+// @Consume application/x-www-form-urlencoded
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.EventActivityRemoveReq true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/adminDelete [post]
+func (api ActivityV2API) AdminDeleteActivity(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	var req model.EventActivityRemoveReq
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	if token != key {
+		appG.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	// if !v2.IsOwner(req.EventCode, req.OwnerID) {
+	// 	res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+	// 	return
+	// }
+
+	err := repository.RemoveActivityByAdmin(req)
+
+	if err != nil {
+		log.Println("error delete activity", err.Error())
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", nil)
+}
+
+// GetActivityWithStatus api godoc
+// @Summary get activity waiting approve
+// @Description get activity API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.OwnerRequest true "payload"
+// @Success 200 {object} response.Response{data=[]model.ActivityInfo}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/waiting [post]
+func (api ActivityV2API) GetActivityWithStatus(c *gin.Context) {
+	var res = response.Gin{C: c}
+	var form model.ActivityWithStatusReq
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	if err := c.ShouldBindJSON(&form); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+	if token != key {
+		res.Response(http.StatusNotFound, "", nil)
+		return
+	}
+	if !v2.IsOwner(form.EventCode, form.OwnerID) {
+		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+		return
+	}
+
+	datas, err := repository.GetActivityWithStatus(form)
+	if err != nil {
+		res.Response(http.StatusInternalServerError, err.Error(), nil)
+		return
+	}
+
+	res.Response(http.StatusOK, "success", datas)
 }

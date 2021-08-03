@@ -1114,7 +1114,7 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterActivateEvent(userID str
 	//matchSubStage := bson.D{{"$match", bson.M{"regs.user_id": bson.M{"$eq": objectID}}}}
 	//groupStage := bson.D{{"_id", "$_id"}, {"event_id", "$event_id"}, {"regs", bson.M{"$push": "$regs"}}}
 	//filterStage := bson.D{{"$project", bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}}}}}}
-	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$and": []interface{}{bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}, bson.M{"$eq": bson.A{"$$regs.status", config.PAYMENT_SUCCESS}}}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"regs": bson.M{"$filter": bson.M{"input": "$regs", "as": "regs", "cond": bson.M{"$and": []interface{}{ bson.M{"$eq": bson.A{"$$regs.user_id", objectID}}, bson.M{"$eq": bson.A{"$$regs.status", config.PAYMENT_SUCCESS}}}}}}, "event_code": 1, "ref2": 1, "event": 1}}}
 	unwindStage := bson.D{primitive.E{Key: "$unwind", Value: "$regs"}}
 	//projectStage := bson.D{primitive.E{Key: "$project", Value: bson.M{"regs": bson.M{"$elemMatch": bson.M{"$$regs.user_id": objectID, "$$regs.status": config.PAYMENT_SUCCESS}}, "event_id": 1}}}
 	cur, err := registerMongo.ConnectionDB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage, unwindStage})
@@ -1949,8 +1949,8 @@ func EditUserOption(userID primitive.ObjectID, req model.RegUpdateUserInfoReques
 	filter := bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"regs._id": req.RegID}}}
 	t := []model.TicketOptionV2{}
 	t = append(t, req.TicketOption)
-	log.Println(req.TicketOption.UserOption)
 	update := bson.M{"$set": bson.M{"regs.$.updated_at": time.Now(), "regs.$.ticket_options": t}}
 	result := db.DB.Collection(registerCollection).FindOneAndUpdate(context.TODO(), filter, update)
+	
 	return result.Err()
 }

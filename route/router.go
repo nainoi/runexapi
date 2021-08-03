@@ -168,7 +168,9 @@ func activityGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 	group := g.Group("/activity")
 	{
 		group.POST("/waiting", activityV2API.GetActivityWaiting)
+		group.POST("/activityWithState", activityV2API.GetActivityWithStatus)
 		group.PUT("/update", activityV2API.UpdateActivity)
+		group.POST("/adminDelete", activityV2API.AdminDeleteActivity)
 		group.Use(oauth.AuthMiddleware())
 		{
 			group.POST("/add", activityV2API.AddActivity)
@@ -298,6 +300,7 @@ func reportGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 func boardGroup(g gin.RouterGroup) {
 	api := g.Group("/board")
 	{
+		api.POST("/rankings", board.GetAllBoardByEvent)
 
 		api.Use(oauth.AuthMiddleware())
 		{

@@ -470,17 +470,42 @@ func RemoveActivity(req model.EventActivityRemoveReq, userID string) error {
 		primitive.E{Key: "user_id", Value: userObjectID},
 	}
 	err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filterActivityInfo).Decode(&activity)
-	// //log.Println("[info] activity %s", activity)
-	// if err2 != nil {
-	// 	log.Println(err2)
-	// 	return err2
-	// }
-	// for _, item := range activity.ActivityInfo {
-	// 	if objectID == item.ID {
-	// 		activityInfo = item
-	// 		break
-	// 	}
-	// }
+
+	if req.ActivityInfo.Status == config.ACTIVITY_STATUS_APPROVE {
+		var toTalDistance = activity.ToTalDistance - req.ActivityInfo.Distance
+
+		updated := bson.M{"$set": bson.M{"total_distance": toTalDistance}}
+
+		_, err = db.DB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterActivityInfo, updated)
+		if err != nil {
+			return err
+		}
+	}
+
+	delete := bson.M{"$pull": bson.M{"activity_info": bson.M{"_id": req.ActivityInfo.ID}}}
+
+	_, err = db.DB.Collection(activityV2Collection).UpdateOne(context.TODO(), filterActivityInfo, delete)
+	if err != nil {
+		//log.Fatal(res)
+		return err
+	}
+
+	//activityInfo = activity.ActivityInfo
+
+	return err
+}
+
+func RemoveActivityByAdmin(req model.EventActivityRemoveReq) error {
+
+	var activity model.ActivityV2
+	//filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+
+	filterActivityInfo := bson.D{
+		primitive.E{Key: "event_code", Value: req.EventCode},
+		primitive.E{Key: "reg_id", Value: req.RegID},
+	}
+	err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filterActivityInfo).Decode(&activity)
+	
 	if req.ActivityInfo.Status == config.ACTIVITY_STATUS_APPROVE {
 		var toTalDistance = activity.ToTalDistance - req.ActivityInfo.Distance
 
@@ -551,6 +576,36 @@ func GetActivityWaitApprove(eventCode string) ([]model.ActivityV2, error) {
 	return activityInfos, nil
 }
 
+func GetActivityWithStatus(req model.ActivityWithStatusReq) ([]model.ActivityV2, error) {
+	var activityInfos = []model.ActivityV2{}
+
+	matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"event_code": req.EventCode}}}
+
+	projectStage := bson.D{bson.E{Key: "$project", Value: bson.M{"activity_info": bson.M{"$filter": bson.M{"input": "$activity_info", "as": "activity_info", "cond": bson.M{"$and": []interface{}{ bson.M{ "$eq": bson.A{"$$activity_info.status", req.Status}}, bson.M{"$gt": bson.A{"$$activity_info.activity_date", req.StartDate}}, bson.M{"$lt": bson.A{"$$activity_info.activity_date", req.EndDate}}}}}}, "event_code": 1, "order_id": 1, "reg_id": 1, "ticket": 1, "parent_reg_id": 1, "user_id": 1, "total_distance": 1, "id": 1, "user_info": 1}}}
+	if req.Status == "" {
+		projectStage = bson.D{bson.E{Key: "$project", Value: bson.M{"activity_info": bson.M{"$filter": bson.M{"input": "$activity_info", "as": "activity_info", "cond": bson.M{"$and": []interface{}{bson.M{"$gt": bson.A{"$$activity_info.activity_date", req.StartDate}}, bson.M{"$lt": bson.A{"$$activity_info.activity_date", req.EndDate}}}}}}, "event_code": 1, "order_id": 1, "reg_id": 1, "ticket": 1, "parent_reg_id": 1, "user_id": 1, "total_distance": 1, "id": 1, "user_info": 1}}}
+	}
+	curr, err := db.DB.Collection(activityV2Collection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, projectStage})
+
+	// filterActivityInfo := bson.D{primitive.E{Key: "event_code", Value: eventCode}, primitive.E{Key: "activity_info.status", Value: config.ACTIVITY_STATUS_WAITING}}
+	// curr, err := db.DB.Collection(activityV2Collection).Find(context.TODO(), filterActivityInfo)
+	// //log.Println("[info] activity %s", activity)
+	if err != nil {
+		return activityInfos, err
+	}
+
+	for curr.Next(context.TODO()) {
+		var u model.ActivityV2
+		// decode the document
+		if err := curr.Decode(&u); err != nil {
+			log.Println(err)
+		}
+		//fmt.Printf("post: %+v\n", p)
+		activityInfos = append(activityInfos, u)
+	}
+	return activityInfos, nil
+}
+
 func UpdateActivity(req model.UpdateActivityReq) error {
 
 	filter := bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"user_id": req.UserID}, bson.M{"reg_id": req.RegID}, bson.M{"activity_info._id": req.ActivityID}}}
@@ -569,4 +624,16 @@ func UpdateActivity(req model.UpdateActivityReq) error {
 	update := bson.M{"$set": bson.M{"activity_info.$.status": req.Status, "activity_info.$.updated_at": time.Now(), "activity_info.$.is_approve": true}}
 	result := db.DB.Collection(activityV2Collection).FindOneAndUpdate(context.TODO(), filter, update)
 	return result.Err()
+}
+
+func UpdateUserInfoActivity(userOption model.UserOption, eventCode string, userID primitive.ObjectID, regID primitive.ObjectID) error {
+
+	filter := bson.M{"$and": []interface{}{bson.M{"event_code": eventCode}, bson.M{"user_id": userID}, bson.M{"reg_id": regID}}}
+	count, err := db.DB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if count > 0 {
+		update := bson.M{"$set": bson.M{"user_info": userOption}}
+		result := db.DB.Collection(activityV2Collection).FindOneAndUpdate(context.TODO(), filter, update)
+		return result.Err()
+	}
+	return err
 }

@@ -17,6 +17,7 @@ import (
 	"thinkdev.app/think/runex/runexapi/pkg/app"
 	"thinkdev.app/think/runex/runexapi/pkg/e"
 	"thinkdev.app/think/runex/runexapi/repository/v2"
+	repoV1 "thinkdev.app/think/runex/runexapi/repository"
 	"thinkdev.app/think/runex/runexapi/utils"
 )
 
@@ -926,6 +927,11 @@ func (api RegisterAPI) EditUserInfo(c *gin.Context) {
 		log.Println("error update user info register", err.Error())
 		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
 		return
+	}
+
+	err = repoV1.UpdateUserInfoActivity(json.TicketOption.UserOption, json.EventCode, userObjectID, json.RegID)
+	if err != nil {
+		log.Println("Update userinfo activity fail")
 	}
 
 	res.Response(http.StatusOK, "success", nil)

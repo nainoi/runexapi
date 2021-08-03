@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -118,4 +120,23 @@ type UpdateActivityReq struct {
 	Status     string             `form:"status" json:"status" bson:"status" binding:"required"`
 	Distance   float64            `form:"distance" json:"distance" bson:"distance" binding:"required"`
 	Reason     string             `form:"reason" json:"reason" bson:"reason"`
+}
+
+type AdminDeleteActivityReq struct {
+	// EventID   string       `json:"event_id" bson:"event_id"`
+	EventCode  string             `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`
+	RegID      primitive.ObjectID `form:"reg_id" json:"reg_id" bson:"reg_id" binding:"required"`
+	ActivityID primitive.ObjectID `form:"act_id" json:"act_id" bson:"act_id" binding:"required"`
+	OrderID    string             `form:"order_id" json:"order_id" bson:"order_id" binding:"required"`
+	Status     string             `form:"status" json:"status" bson:"status" binding:"required"`
+	Distance   float64            `form:"distance" json:"distance" bson:"distance" binding:"required"`
+	Reason     string             `form:"reason" json:"reason" bson:"reason"`
+}
+
+type ActivityWithStatusReq struct {
+	EventCode string    `form:"event_code" json:"event_code" bson:"event_code" binding:"required"`
+	OwnerID   string    `form:"owner_id" json:"owner_id" bson:"owner_id" binding:"required"`
+	Status    string    `form:"status" json:"status" bson:"status"`
+	StartDate time.Time `form:"start_date" json:"start_date" bson:"start_date"`
+	EndDate   time.Time `form:"end_date" json:"end_date" bson:"end_date"`
 }

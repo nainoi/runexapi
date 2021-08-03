@@ -32,10 +32,11 @@ type BoardResponse struct {
 // @Tags board
 // @Accept  application/json
 // @Produce application/json
+// @Param payload body model.RankingRequest true "payload"
 // @Success 200 {object} response.Response{data=BoardResponse}
 // @Failure 400 {object} response.Response
 // @Failure 500 {object} response.Response
-// @Router /api/v1/board/ranking/:{eventID} [get]
+// @Router /api/v1/board/ranking [post]
 func GetBoardByEvent(c *gin.Context) {
 	var (
 		appG = response.Gin{C: c}
@@ -66,6 +67,51 @@ func GetBoardByEvent(c *gin.Context) {
 		TotalActivity: count,
 		AllRank:       allActivities,
 		MyRank:        myActivities,
+	}
+
+	appG.Response(http.StatusOK, "success", ranks)
+}
+
+// GetAllBoardByEvent api godoc
+// @Summary get leader board activty
+// @Description get leader board activty API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags board
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.AllRankingRequest true "payload"
+// @Success 200 {object} response.Response{data=BoardResponse}
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /api/v1/board/rankings [post]
+func GetAllBoardByEvent(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	var req model.AllRankingRequest
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	event, count, allActivities, err := repository.GetAllBoardByEvent(req)
+
+	if err != nil {
+		log.Println("error Get Event info", err.Error())
+		appG.Response(http.StatusBadRequest, "Error Get Event info", BoardResponse{
+			Event:         event,
+			TotalActivity: count,
+			AllRank:       []model.Ranking{},
+			MyRank:        []model.Ranking{},
+		})
+		return
+	}
+
+	ranks := BoardResponse{
+		Event:         event,
+		TotalActivity: count,
+		AllRank:       allActivities,
 	}
 
 	appG.Response(http.StatusOK, "success", ranks)
