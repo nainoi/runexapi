@@ -115,6 +115,7 @@ type TicketOptionReport struct {
 	TotalPrice     float64          `json:"total_price" bson:"total_price"`
 	RegisterNumber string           `json:"register_number" bson:"register_number"`
 	Tickets        TicketsReport    `json:"tickets" bson:"tickets"`
+	Shirts         Shirts           `json:"shirts" bson:"shirts"`
 }
 
 // Tickets new model

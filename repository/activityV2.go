@@ -637,3 +637,17 @@ func UpdateUserInfoActivity(userOption model.UserOption, eventCode string, userI
 	}
 	return err
 }
+
+func GetActivityUserByAdmin(req model.EventActivityDashboardReq) (model.ActivityV2, error) {
+
+	var activity model.ActivityV2
+	//filter := bson.D{{"event_id", eventObjectID}, {"activities.user_id", userObjectID}}
+
+	filterActivityInfo := bson.D{
+		primitive.E{Key: "event_code", Value: req.EventCode},
+		primitive.E{Key: "reg_id", Value: req.RegID},
+	}
+	err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filterActivityInfo).Decode(&activity)
+	
+	return activity, err
+}

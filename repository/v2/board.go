@@ -3,11 +3,15 @@ package repository
 import (
 	"context"
 	"log"
+	"sort"
+	"strconv"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"thinkdev.app/think/runex/runexapi/config"
 	"thinkdev.app/think/runex/runexapi/config/db"
 	"thinkdev.app/think/runex/runexapi/model"
 )
@@ -406,24 +410,48 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 			if err := cur.Decode(&activity); err != nil {
 				log.Println(err)
 			}
+			regs, err := GetRegisterNumber(activity.EventCode, activity.RegID)
+
 			if err == nil {
-				a = model.Ranking{
-					UserID:        activity.UserID,
-					ActivityInfo:  []model.ActivityInfo{},
-					ToTalDistance: activity.ToTalDistance,
-					UserInfo:      activity.UserInfo,
-					EventCode:     req.EventCode,
-					ID:            activity.ID,
-					RegID:         activity.RegID,
-				}
-				a.RankNo = n + 1
+				if len(regs.TicketOptions) > 0 {
+					a = model.Ranking{
+						UserID:        activity.UserID,
+						ActivityInfo:  []model.ActivityInfo{},
+						ToTalDistance: activity.ToTalDistance,
+						UserInfo:      activity.UserInfo,
+						EventCode:     req.EventCode,
+						ID:            activity.ID,
+						RegID:         activity.RegID,
+						BibNo:         regs.TicketOptions[0].RegisterNumber,
+					}
+					a.RankNo = n + 1
 					//a.UserInfo = user
+
 					url, _ := GetUserAvatar(a.UserID)
 					a.ImageURL = url
 					activities = append(activities, a)
 
-				temps = append(temps, a)
+					temps = append(temps, a)
+				} else {
+					a = model.Ranking{
+						UserID:        activity.UserID,
+						ActivityInfo:  []model.ActivityInfo{},
+						ToTalDistance: activity.ToTalDistance,
+						UserInfo:      activity.UserInfo,
+						EventCode:     req.EventCode,
+						ID:            activity.ID,
+						RegID:         activity.RegID,
+						BibNo:         "",
+					}
+					a.RankNo = n + 1
+					//a.UserInfo = user
 
+					url, _ := GetUserAvatar(a.UserID)
+					a.ImageURL = url
+					activities = append(activities, a)
+
+					temps = append(temps, a)
+				}
 				n++
 			}
 		}
@@ -529,6 +557,278 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 		}
 
 		count = int64(len(temps))
+		// //activityInfo = activity.ActivityInfo
+
+		// filter = bson.D{{"event_id", objectEventID}}
+		// option := options.Find()
+		// option.SetLimit(10)
+		// option.SetSort(bson.D{{"total_distance", -1}})
+		// cur, err := boardMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter, option)
+
+		return event, count, activities, err
+	}
+}
+
+func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.RankingFinish, error) {
+	//var activity model.Activity
+	//var activityInfo []model.ActivityInfo
+	var event = model.Event{}
+	var activities = []model.RankingFinish{}
+	//var ticket model.Tickets
+
+	// objectEventID, err := primitive.ObjectIDFromHex(eventID)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	return event, 0, activities, myActivities, err
+	// }
+	event, err := DetailEventByCode(req.EventCode)
+	if err != nil {
+		return event, 0, activities, err
+	}
+	isTeam := false
+	var ticketDistance = 0.0
+	for _, s := range event.Tickets {
+		if s.ID == req.TicketID {
+			dist, err := strconv.ParseFloat(s.Distance, 64)
+			if err == nil {
+				ticketDistance = dist
+			}
+			if s.Category == "team" {
+				isTeam = true
+			}
+			break
+		}
+	}
+
+	var temps = []model.RankingFinish{}
+
+	if !isTeam {
+		//filter := bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
+		filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "ticket.id", Value: req.TicketID}}
+
+		option := options.Find()
+		//option.SetLimit(10)
+		count, err := db.DB.Collection(activityCollection).CountDocuments(context.TODO(), filter)
+		if count == 0 {
+			return event, count, activities, err
+		}
+		//filter = bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
+		option.SetSort(bson.D{primitive.E{Key: "total_distance", Value: -1}})
+		cur, err := db.DB.Collection(activityCollection).Find(context.TODO(), filter, option)
+
+		if err != nil {
+			log.Println(err)
+			return event, count, activities, err
+		}
+
+		//n := 0
+
+		for cur.Next(context.TODO()) {
+			// if n >= 10 {
+			// 	break
+			// }
+
+			var activity model.ActivityV2
+			var a model.RankingFinish
+			// decode the document
+			if err := cur.Decode(&activity); err != nil {
+				log.Println(err)
+			}
+			var sumTotal = 0.0
+			var dateFinished time.Time
+			for _, s := range activity.ActivityInfo {
+				if s.Status == config.ACTIVITY_STATUS_APPROVE {
+					sumTotal += float64(s.Distance)
+					if sumTotal >= ticketDistance {
+						dateFinished = s.ActivityDate
+						//break
+					}
+				}
+			}
+			if err == nil {
+				if !dateFinished.IsZero() {
+					a = model.RankingFinish{
+						UserID:        activity.UserID,
+						ActivityInfo:  []model.ActivityInfo{},
+						ToTalDistance: sumTotal,
+						UserInfo:      activity.UserInfo,
+						EventCode:     req.EventCode,
+						ID:            activity.ID,
+						RegID:         activity.RegID,
+						DateFinished:  dateFinished,
+					}
+					//a.RankNo = n + 1
+					//a.UserInfo = user
+					url, _ := GetUserAvatar(a.UserID)
+					a.ImageURL = url
+					activities = append(activities, a)
+
+					temps = append(temps, a)
+				}
+				//n++
+			}
+		}
+
+		sort.SliceStable(activities, func(i, j int) bool {
+			return activities[i].DateFinished.Before(activities[j].DateFinished)
+		})
+
+		count = int64(len(activities))
+		// //activityInfo = activity.ActivityInfo
+
+		// filter = bson.D{{"event_id", objectEventID}}
+		// option := options.Find()
+		// option.SetLimit(10)
+		// option.SetSort(bson.D{{"total_distance", -1}})
+		// cur, err := boardMongo.ConnectionDB.Collection(activityCollection).Find(context.TODO(), filter, option)
+
+		return event, count, activities, err
+	} else {
+		filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "ticket.id", Value: req.TicketID}}
+		//filter := bson.D{primitive.E{Key: "event_code", Value: req.EventCode}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
+
+		event, err = DetailEventByCode(req.EventCode)
+		if err != nil {
+			return event, 0, activities, err
+		}
+		//option.SetLimit(10)
+		count, err := db.DB.Collection(activityCollection).CountDocuments(context.TODO(), filter)
+		if count == 0 {
+			return event, count, activities, err
+		}
+		//filter = bson.D{primitive.E{Key: "event_id", Value: objectEventID}, primitive.E{Key: "activities.user_id", Value: objectUserID}}
+		matchStage := bson.D{primitive.E{Key: "$match", Value: bson.M{"$and": []interface{}{bson.M{"event_code": req.EventCode}, bson.M{"ticket.id": req.TicketID}}}}}
+		unwindStage := bson.D{primitive.E{Key: "$unwind", Value: "$activity_info"}}
+		groupStage := bson.D{primitive.E{Key: "$group", Value: bson.M{"_id": bson.M{"parent_reg_id": "$parent_reg_id", "event_code": "$event_code", "ticket_id": "$ticket_id"},
+			// "total_distance": bson.M{"$sum": "$total_distance"},
+			"reg_id":        bson.M{"$first": "$reg_id"},
+			"user_id":       bson.M{"$first": "$user_id"},
+			"user_info":     bson.M{"$first": "$user_info"},
+			"parent_reg_id": bson.M{"$first": "$parent_reg_id"},
+			"ticket":        bson.M{"$first": "$ticket"},
+			"activities":    bson.M{"$push": "$activity_info"},
+		}}}
+		// sortStage := bson.D{primitive.E{Key: "$sort", Value: bson.M{"date": -1}}}
+		type ActivityTemp struct {
+			EventCode     string               `json:"event_code" bson:"event_code"`
+			Ticket        model.Tickets        `json:"ticket" bson:"ticket"`
+			OrderID       string               `json:"order_id" bson:"order_id"`
+			RegID         primitive.ObjectID   `json:"reg_id" bson:"reg_id"`
+			ParentRegID   primitive.ObjectID   `json:"parent_reg_id" bson:"parent_reg_id"`
+			UserID        primitive.ObjectID   `json:"user_id" bson:"user_id"`
+			ToTalDistance float64              `json:"total_distance" bson:"total_distance"`
+			UserInfo      model.UserOption     `json:"user_info" bson:"user_info"`
+			Activities    []model.ActivityInfo `json:"activities" bson:"activities"`
+		}
+		cur, err := db.DB.Collection(activityCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, unwindStage, groupStage})
+		if err != nil {
+			log.Println(err)
+			return event, count, activities, err
+		}
+
+		//n := 0
+		for cur.Next(context.TODO()) {
+			// if n >= 10 {
+			// 	break
+			// }
+			// log.Println(cur)
+			//var activity model.ActivityV2
+			var t ActivityTemp
+			var a model.RankingFinish
+			// decode the document
+			if err := cur.Decode(&t); err != nil {
+				log.Println(err)
+			}
+
+			sort.SliceStable(t.Activities, func(i, j int) bool {
+				return t.Activities[i].ActivityDate.Before(t.Activities[j].ActivityDate)
+			})
+
+			var sumTotal = 0.0
+			var dateFinished time.Time
+			for _, s := range t.Activities {
+				if s.Status == config.ACTIVITY_STATUS_APPROVE {
+					sumTotal += float64(s.Distance)
+					if sumTotal >= ticketDistance {
+						dateFinished = s.ActivityDate
+						//break
+					}
+				}
+			}
+			if err == nil {
+				if !dateFinished.IsZero() {
+					a = model.RankingFinish{
+						UserID:        t.UserID,
+						ActivityInfo:  []model.ActivityInfo{},
+						ToTalDistance: sumTotal,
+						UserInfo:      t.UserInfo,
+						EventCode:     req.EventCode,
+						RegID:         t.RegID,
+						ParentRegID:   t.ParentRegID,
+						DateFinished:  dateFinished,
+					}
+					//a.RankNo = n + 1
+					//a.UserInfo = user
+					url, _ := GetUserAvatar(t.UserID)
+					teamModel := model.TeamIcon{
+						RegID:   a.ParentRegID,
+						IconURL: url,
+					}
+					teamModel, err = GetTeamIcon(teamModel)
+					//
+					a.ImageURL = teamModel.IconURL
+					u, err := GetTeamInfo(req.EventCode, t.ParentRegID)
+					if err == nil {
+						a.UserInfo = u
+					}
+					activities = append(activities, a)
+
+					temps = append(temps, a)
+				}
+				//n++
+			}
+			// activity = t.ID
+
+			// activity.RegID = activity.RegID
+			// activity.UserID = activity.UserID
+			// activity.UserInfo = activity.UserInfo
+			// a = model.RankingFinish{
+			// 	UserID:        t.UserID,
+			// 	ActivityInfo:  []model.ActivityInfo{},
+			// 	ToTalDistance: t.ToTalDistance,
+			// 	UserInfo:      t.UserInfo,
+			// 	EventCode:     req.EventCode,
+			// 	ParentRegID:   t.ParentRegID,
+			// 	TicketID:      req.TicketID,
+			// 	RegID:         t.ParentRegID,
+			// }
+			//a.RankNo = n + 1
+			// if err == nil {
+			// 	//a.UserInfo = user
+			// 	url, _ := GetUserAvatar(t.UserID)
+			// 	teamModel := model.TeamIcon{
+			// 		RegID:   a.ParentRegID,
+			// 		IconURL: url,
+			// 	}
+			// 	teamModel, err = GetTeamIcon(teamModel)
+			// 	//
+			// 	a.ImageURL = teamModel.IconURL
+			// 	u, err := GetTeamInfo(req.EventCode, t.ParentRegID)
+			// 	if err == nil {
+			// 		a.UserInfo = u
+			// 	}
+			// 	activities = append(activities, a)
+			// }
+
+			// temps = append(temps, a)
+			//n++
+		}
+
+		sort.SliceStable(activities, func(i, j int) bool {
+			return activities[i].DateFinished.Before(activities[j].DateFinished)
+		})
+
+		count = int64(len(activities))
 		// //activityInfo = activity.ActivityInfo
 
 		// filter = bson.D{{"event_id", objectEventID}}

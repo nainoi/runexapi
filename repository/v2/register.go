@@ -782,6 +782,62 @@ func (registerMongo RegisterRepositoryMongo) GetRegisterByUserAndEvent(userID st
 	return register, err
 }
 
+//GetRegisterByUserAndEvent detail reg
+func GetRegisterNumber(eventCode string, id primitive.ObjectID) (model.Regs, error) {
+
+	var reg model.Regs
+	//filter := bson.D{primitive.E{Key: "_id", Value: regID}}
+	matchStg := bson.D{bson.E{Key: "$match", Value: bson.M{"event_code": eventCode}}}
+	unwindStg := bson.D{bson.E{Key: "$unwind", Value: "$regs"}}
+	matchStg2 := bson.D{bson.E{Key: "$match", Value: bson.M{"regs._id": id}}}
+	result, err := db.DB.Collection(registerCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStg, unwindStg,matchStg2})
+	//log.Printf("[info] cur %s", cur)
+	if err != nil {
+		log.Println(err)
+	}
+	type tmpRegs struct {
+		Regs model.Regs
+	}
+	for result.Next(context.TODO()) {
+		var r tmpRegs
+
+		// decode the document
+		if err := result.Decode(&r); err != nil {
+			log.Print(err)
+		}
+
+		// var event model.EventRegV2
+		// filter := bson.D{primitive.E{Key: "_id", Value: u.EventID}}
+		// err := registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), filter).Decode(&event)
+		// event, err := DetailEventByCode(u.EventCode)
+		// if err != nil {
+		// 	log.Print(err)
+		// }
+		//u.Regs[0].Event = event
+		// var event model.Event
+		// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(), bson.D{{"_id", u.EventID}}).Decode(&event)
+		// //fmt.Printf("post: %+v\n", p)
+		//u.Event = event
+		reg = r.Regs
+		return reg, err
+	}
+	// for cur.Next(context.TODO()) {
+	// 	var u model.Register
+	// 	// decode the document
+	// 	if err := cur.Decode(&u); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	// var event model.Event
+	// 	// registerMongo.ConnectionDB.Collection(eventCollection).FindOne(context.TODO(),bson.D{{"_id",u.EventID}}).Decode(&event)
+	// 	// //fmt.Printf("post: %+v\n", p)
+	// 	// u.Event = event
+	// 	register = append(register, u)
+	// }
+
+
+	return reg, err
+}
+
 //NotifySlipRegister repo for send mail on user send slip
 func (registerMongo RegisterRepositoryMongo) NotifySlipRegister(registerID string, slip model.SlipTransfer) error {
 	objectID, err := primitive.ObjectIDFromHex(registerID)

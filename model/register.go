@@ -237,6 +237,7 @@ type UserOptionReport struct {
 	Phone     string    `json:"phone" bson:"phone"`
 	BirthDate time.Time `json:"birthdate" bson:"birthdate"`
 	Gender    string    `json:"gender" bson:"gender"`
+	Address   string    `json:"address" bson:"address"`
 }
 
 type ShipingAddressUpdateForm struct {
