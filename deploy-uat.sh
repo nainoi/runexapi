@@ -1,4 +1,4 @@
-SERVER_IP=128.199.163.81
+SERVER_IP=ip.thinkdev.app
 docker image build -t registry.thinkdev.app/think/runex/runexapi:dev -f Dockerfile.uat .
 
 docker save registry.thinkdev.app/think/runex/runexapi:dev > runexapi.tar \

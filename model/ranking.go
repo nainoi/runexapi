@@ -22,6 +22,7 @@ type Ranking struct {
 	UserInfo      UserOption         `json:"user_info"`
 	ImageURL      string             `json:"img_url" bson:"img_url"`
 	BibNo         string             `json:"bib_no" bson:"bib_no"`
+	Teams         []UserOption       `json:"teams"`
 	// ActivityDate time.Time `json:"activity_date" bson:"activity_date"`
 	// CreatedAt    time.Time `json:"created_at" bson:"created_at"`
 	// UpdatedAt    time.Time `json:"updated_at" bson:"updated_at"`
@@ -43,6 +44,7 @@ type RankingFinish struct {
 	UserInfo      UserOption         `json:"user_info"`
 	ImageURL      string             `json:"img_url" bson:"img_url"`
 	BibNo         string             `json:"bib_no" bson:"bib_no"`
+	Teams         []UserOption       `json:"teams"`
 	DateFinished  time.Time          `json:"date_finished" bson:"date_finished"`
 	// ActivityDate time.Time `json:"activity_date" bson:"activity_date"`
 	// CreatedAt    time.Time `json:"created_at" bson:"created_at"`

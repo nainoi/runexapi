@@ -423,6 +423,7 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 						ID:            activity.ID,
 						RegID:         activity.RegID,
 						BibNo:         regs.TicketOptions[0].RegisterNumber,
+						Teams:         []model.UserOption{},
 					}
 					a.RankNo = n + 1
 					//a.UserInfo = user
@@ -486,6 +487,7 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 			"reg_id":         bson.M{"$first": "$reg_id"},
 			"user_id":        bson.M{"$first": "$user_id"},
 			"user_info":      bson.M{"$first": "$user_info"},
+			"teams":          bson.M{"$push": "$user_info"},
 			"parent_reg_id":  bson.M{"$first": "$parent_reg_id"},
 			"ticket":         bson.M{"$first": "$ticket"},
 		}}}
@@ -499,6 +501,7 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 			UserID        primitive.ObjectID `json:"user_id" bson:"user_id"`
 			ToTalDistance float64            `json:"total_distance" bson:"total_distance"`
 			UserInfo      model.UserOption   `json:"user_info" bson:"user_info"`
+			Teams         []model.UserOption `json:"teams" bson:"teams"`
 		}
 		cur, err := db.DB.Collection(activityCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, groupStage, sortStage})
 		if err != nil {
@@ -533,6 +536,7 @@ func GetAllBoardByEvent(req model.AllRankingRequest) (model.Event, int64, []mode
 				ParentRegID:   t.ParentRegID,
 				TicketID:      req.TicketID,
 				RegID:         t.ParentRegID,
+				Teams:         t.Teams,
 			}
 			a.RankNo = n + 1
 			if err == nil {
@@ -645,6 +649,7 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 					}
 				}
 			}
+			regs, err := GetRegisterNumber(activity.EventCode, activity.RegID)
 			if err == nil {
 				if !dateFinished.IsZero() {
 					a = model.RankingFinish{
@@ -656,6 +661,8 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 						ID:            activity.ID,
 						RegID:         activity.RegID,
 						DateFinished:  dateFinished,
+						BibNo:         regs.TicketOptions[0].RegisterNumber,
+						Teams:         []model.UserOption{},
 					}
 					//a.RankNo = n + 1
 					//a.UserInfo = user
@@ -704,6 +711,7 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 			"reg_id":        bson.M{"$first": "$reg_id"},
 			"user_id":       bson.M{"$first": "$user_id"},
 			"user_info":     bson.M{"$first": "$user_info"},
+			"teams":         bson.M{"$push": "$user_info"},
 			"parent_reg_id": bson.M{"$first": "$parent_reg_id"},
 			"ticket":        bson.M{"$first": "$ticket"},
 			"activities":    bson.M{"$push": "$activity_info"},
@@ -718,6 +726,7 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 			UserID        primitive.ObjectID   `json:"user_id" bson:"user_id"`
 			ToTalDistance float64              `json:"total_distance" bson:"total_distance"`
 			UserInfo      model.UserOption     `json:"user_info" bson:"user_info"`
+			Teams         []model.UserOption   `json:"teams" bson:"teams"`
 			Activities    []model.ActivityInfo `json:"activities" bson:"activities"`
 		}
 		cur, err := db.DB.Collection(activityCollection).Aggregate(context.TODO(), mongo.Pipeline{matchStage, unwindStage, groupStage})
@@ -755,6 +764,11 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 					}
 				}
 			}
+			regs, err := GetRegisterNumber(t.EventCode, t.RegID)
+			var bib = ""
+			if l := len(regs.TicketOptions); l > 0 {
+				bib = regs.TicketOptions[0].RegisterNumber
+			}
 			if err == nil {
 				if !dateFinished.IsZero() {
 					a = model.RankingFinish{
@@ -766,6 +780,8 @@ func GetRankFinish(req model.AllRankingRequest) (model.Event, int64, []model.Ran
 						RegID:         t.RegID,
 						ParentRegID:   t.ParentRegID,
 						DateFinished:  dateFinished,
+						BibNo:         bib,
+						Teams:         t.Teams,
 					}
 					//a.RankNo = n + 1
 					//a.UserInfo = user

@@ -35,7 +35,7 @@ func (repo RepoStravaDB) AddActivity(stravaReq model.StravaAddRequest) error {
 	userRepo := repository.RepoUserDB{
 		ConnectionDB: repo.ConnectionDB,
 	}
-	user, err := userRepo.GetUserWithProvider(stravaReq.Provider, stravaReq.ProviderID)
+	user, err := repository.GetUserWithProvider(stravaReq.Provider, stravaReq.ProviderID)
 	if err != nil {
 		return err
 	}

@@ -31,6 +31,18 @@ type ActivityV2 struct {
 	// Activities  Activities         `json:"activities" bson:"activities,omitempty"`
 }
 
+// ActivityV2 data per event
+type ActivityRegister struct {
+	ID            primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
+	UserID        primitive.ObjectID   `json:"user_id" bson:"user_id"`
+	EventCode     string               `json:"event_code" bson:"event_code"`
+	ParentRegID   string               `json:"parent_reg_id" bson:"parent_reg_id"`
+	ToTalDistance float64              `json:"total_distance" bson:"total_distance"`
+	RegisterInfo  RegisterActivityInfo `json:"user_info" bson:"user_info"`
+	ActivityInfo  []ActivityInfo       `json:"activity_info" bson:"activity_info,omitempty"`
+	// Activities  Activities         `json:"activities" bson:"activities,omitempty"`
+}
+
 //ActivityDashboard struct
 type ActivityDashboard struct {
 	Activity     []ActivityV2 `json:"activities" bson:"activities"`
