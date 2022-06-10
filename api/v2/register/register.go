@@ -213,6 +213,7 @@ func (api RegisterAPI) AdminSendSlip(c *gin.Context) {
 		res.Response(http.StatusNotFound, "", nil)
 		return
 	}
+	log.Println(json)
 	success := repository.AdminUpdateSlipPaymentStatus(json.RegID, json.EventCode, json.UserID, json.Status, json.PaymentType, json.Image)
 	if !success {
 		res.Response(http.StatusInternalServerError, "Update failed!", nil)
@@ -573,6 +574,39 @@ func (api RegisterAPI) CheckUserRegisterEventCode(c *gin.Context) {
 	res.Response(http.StatusOK, "success", gin.H{"is_reg": check})
 }
 
+// CheckUserRegisterER api godoc
+// @Summary check register by user id and event code
+// @Description check register API calls
+// @Consume application/x-www-form-urlencoded
+// @Security bearerAuth
+// @Tags register
+// @Accept  application/json
+// @Produce application/json
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /register/checkRegER [post]
+func (api RegisterAPI) CheckUserRegisterER(c *gin.Context) {
+	var (
+		res = response.Gin{C: c}
+	)
+	userID, _ := oauth.GetValuesToken(c)
+	var json model.CheckRegisterERRequest
+
+	if err := c.ShouldBindJSON(&json); err != nil {
+		res.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+	check, err := repository.CheckUserRegisterER(json.EventCode, userID, json.TicketID, json.CitycenID)
+	if err != nil {
+		log.Println("error CountRegisterEvent", err.Error())
+		res.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	res.Response(http.StatusOK, "success", gin.H{"is_reg": check})
+}
+
 func (api RegisterAPI) SendMailRegister2(c *gin.Context) {
 	var (
 		appG = app.Gin{C: c}
@@ -707,10 +741,10 @@ func (api RegisterAPI) GetRegEventFromOwner(c *gin.Context) {
 		res.Response(http.StatusNotFound, "", nil)
 		return
 	}
-	if !repository.IsOwner(form.EventCode, form.OwnerID) {
-		res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
-		return
-	}
+	// if !repository.IsOwner(form.EventCode, form.OwnerID) {
+	// 	res.Response(http.StatusUnauthorized, "You do not have access to the information.", nil)
+	// 	return
+	// }
 
 	datas, err := api.RegisterRepository.GetRegisterByEvent(form.EventCode)
 	if err != nil {

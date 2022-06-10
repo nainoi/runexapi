@@ -907,3 +907,42 @@ func (api ActivityV2API) AdminGetActivityByUser(c *gin.Context) {
 
 	appG.Response(http.StatusOK, "success", activity)
 }
+
+// CreateActivityOnRegister api godoc
+// @Summary create activity on register event
+// @Description create activity on register event
+// @Consume application/x-www-form-urlencoded
+// @Tags activity
+// @Accept  application/json
+// @Produce application/json
+// @Param payload body model.RegisterActivityInfo true "payload"
+// @Success 200 {object} response.Response
+// @Failure 400 {object} response.Response
+// @Failure 500 {object} response.Response
+// @Router /activity/create [post]
+func (api ActivityV2API) CreateActivityOnRegister(c *gin.Context) {
+	var (
+		appG = response.Gin{C: c}
+	)
+	token := c.GetHeader("token")
+	key := viper.GetString("public.token")
+	var req model.RegisterActivityInfo
+	if err := c.ShouldBind(&req); err != nil {
+		appG.Response(http.StatusBadRequest, err.Error(), gin.H{"error": err.Error()})
+		return
+	}
+
+	if token != key {
+		appG.Response(http.StatusNotFound, "", nil)
+		return
+	}
+
+	err := repository.CreateActivityOnReg(req)
+
+	if err != nil {
+		appG.Response(http.StatusInternalServerError, err.Error(), gin.H{"message": err.Error()})
+		return
+	}
+
+	appG.Response(http.StatusOK, "success", nil)
+}

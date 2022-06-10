@@ -39,6 +39,36 @@ const (
 	activityKaoLog       = "activity_kao_log"
 )
 
+func CreateActivityOnReg(regInfo model.RegisterActivityInfo) error {
+	filter := bson.D{primitive.E{Key: "event_code", Value: regInfo.EventCode}, primitive.E{Key: "register_id", Value: regInfo.RegisterId}, primitive.E{Key: "ticket_id", Value: regInfo.TicketId}}
+	count, err := db.DB.Collection(activityV2Collection).CountDocuments(context.TODO(), filter)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	if count > 0 {
+		var activityModel model.ActivityRegister
+		err := db.DB.Collection(activityV2Collection).FindOne(context.TODO(), filter).Decode(&activityModel)
+		return err
+	}else {
+		user, err := repository.GetUserWithProvider(regInfo.ProviderName, regInfo.ProviderId)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		var activityModel = model.ActivityRegister{
+			ID: primitive.NewObjectID(),
+			UserID: user.UserID,
+			EventCode: regInfo.EventCode,
+			ToTalDistance: 0,
+			RegisterInfo: regInfo,
+			ActivityInfo: []model.ActivityInfo{},
+		}
+		_, err = db.DB.Collection(activityV2Collection).InsertOne(context.TODO(), activityModel)
+		return err
+	}
+}
+
 // AddActivity repo add activity
 func (activityMongo ActivityV2RepositoryMongo) AddActivity(activity model.AddActivityV2) error {
 	//model := activity.

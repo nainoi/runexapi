@@ -15,6 +15,13 @@ type RegisterRequest struct {
 }
 
 // RegisterRequest struct for request register event
+type CheckRegisterERRequest struct {
+	EventCode string `json:"event_code" bson:"event_code" binding:"required"`
+	TicketID  string `json:"ticket_id" bson:"ticket_id" binding:"required"`
+	CitycenID string `json:"citycen_id" bson:"citycen_id" binding:"required"`
+}
+
+// RegisterRequest struct for request register event
 type AddTeamRequest struct {
 	EventID     int64              `json:"event_id" bson:"event_id" binding:"required"`
 	TeamUserID  primitive.ObjectID `json:"team_user_id" bson:"team_user_id" binding:"required"`
@@ -167,4 +174,42 @@ type AdminAttachSlipRequest struct {
 	PaymentType string             `json:"payment_type" bson:"payment_type" form:"payment_type"`
 	Image       string             `json:"image" bson:"image" form:"image"`
 	Status      string             `json:"status" bson:"status" form:"status"`
+}
+
+type RegisterActivityInfo struct {
+	EventCode           string  `json:"event_code" form:"event_code" bson:"event_code"`
+	EventTitle          string  `json:"event_title" form:"event_title" bson:"event_title"`
+	EventCover          string  `json:"event_cover" form:"event_cover" bson:"event_cover"`
+	EventCoverThumbnail string  `json:"event_cover_thumbnail" form:"event_cover_thumbnail" bson:"event_cover_thumbnail"`
+	EventDate           string  `json:"event_date" bson:"event_date" form:"event_date"`
+	TicketId            string  `json:"ticket_id" bson:"ticket_id" form:"ticket_id"`
+	TicketCategory      string  `json:"ticket_category" bson:"ticket_category" form:"ticket_category"`
+	TicketDistance      string  `json:"ticket_distance" bson:"ticket_distance" form:"ticket_distance"`
+	TicketTitle         string  `json:"ticket_title" bson:"ticket_title" form:"ticket_title"`
+	TicketPrice         string  `json:"ticket_price" bson:"ticket_price" form:"ticket_price"`
+	ProviderName        string  `json:"provider_name" bson:"provider_name" form:"provider_name"`
+	ProviderId          string  `json:"provider_id" bson:"provider_id" form:"provider_id"`
+	ShirtSize           string  `json:"shirt_size" bson:"shirt_size" form:"shirt_size"`
+	Firstname           string  `json:"firstname" bson:"firstname" form:"firstname"`
+	Lastname            string  `json:"lastname" bson:"lastname" form:"lastname"`
+	CardId              string  `json:"card_id" bson:"card_id" form:"card_id"`
+	PhoneNumber         string  `json:"phone_number" bson:"phone_number" form:"phone_number"`
+	Bib                 string  `json:"bib" bson:"bib" form:"bib"`
+	Gender              string  `json:"gender" bson:"gender" form:"gender"`
+	Birthday            string  `json:"birthday" bson:"birthday" form:"birthday"`
+	Blood               string  `json:"blood" bson:"blood" form:"blood"`
+	Address             string  `json:"address" bson:"address" form:"address"`
+	Moo                 string  `json:"moo" bson:"moo" form:"moo"`
+	ZipCode             string  `json:"zip_code" bson:"zip_code" form:"zip_code"`
+	District            string  `json:"district" bson:"district" form:"district"`
+	Amphoe              string  `json:"amphoe" bson:"amphoe" form:"amphoe"`
+	Province            string  `json:"province" bson:"province" form:"province"`
+	TeamName            string  `json:"team_name" bson:"team_name" form:"team_name"`
+	Options             Options `json:"options" bson:"options" form:"options"`
+	RegisterId          string  `json:"register_id" bson:"register_id" form:"register_id"`
+}
+
+type Options struct {
+	Color      string `json:"color" bson:"color" form:"color"`
+	EmployeeId string `json:"employee_id" bson:"employee_id" form:"employee_id"`
 }

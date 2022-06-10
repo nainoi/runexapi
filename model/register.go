@@ -238,6 +238,9 @@ type UserOptionReport struct {
 	BirthDate time.Time `json:"birthdate" bson:"birthdate"`
 	Gender    string    `json:"gender" bson:"gender"`
 	Address   string    `json:"address" bson:"address"`
+	Passport  string    `json:"passport" bson:"passport"`
+	CitycenID string    `json:"citycen_id" bson:"citycen_id"`
+	BloodType string    `json:"blood_type" bson:"blood_type"`
 }
 
 type ShipingAddressUpdateForm struct {

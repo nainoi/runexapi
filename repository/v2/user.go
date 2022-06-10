@@ -127,10 +127,10 @@ func (db RepoUserDB) GetUser(id primitive.ObjectID) (model.User, error) {
 }
 
 // GetUserWithProvider with user id and return user info
-func (db RepoUserDB) GetUserWithProvider(provider string, providerID string) (model.User, error) {
+func GetUserWithProvider(provider string, providerID string) (model.User, error) {
 	var user model.User
 	filter := bson.D{primitive.E{Key: "provider", Value: provider}, primitive.E{Key: "provider_id", Value: providerID}}
-	err := db.ConnectionDB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
+	err := db.DB.Collection(userConlection).FindOne(context.TODO(), filter).Decode(&user)
 	if err != nil {
 		log.Println(err)
 	}

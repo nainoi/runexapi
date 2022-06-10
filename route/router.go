@@ -270,6 +270,7 @@ func registerGroup(g gin.RouterGroup, connectionDB *mongo.Database) {
 			group.GET("/myRegEvent", registerAPI.GetByUserID)
 			group.GET("/checkUserRegisterEvent/:eventID", registerAPI.CheckUserRegisterEvent)
 			group.GET("/checkRegEventCode/:code", registerAPI.CheckUserRegisterEventCode)
+			group.POST("/checkRegER", registerAPI.CheckUserRegisterER)
 			group.GET("/myRegEventActivate", registerAPI.GetMyRegEventActivate)
 			group.GET("/regsEvent/:eventID", registerAPI.GetRegEventFromEventer)
 			group.POST("/payment", registerAPI.ChargeRegEvent)

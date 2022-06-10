@@ -4,12 +4,12 @@ app:
     debug: true
 
 mongodb:
-    connection: "mongodb://128.199.163.81:27017"
+    connection: "mongodb://ip.thinkdev.app:27017"
     db: "Runex"
     user: "idever"
     pass: "idever@987"
 redis:
-    host: "128.199.163.81"
+    host: "ip.thinkdev.app"
     port: "6379"
     pass: "__@redis__P@ss"
 
