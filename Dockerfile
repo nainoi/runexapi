@@ -25,7 +25,7 @@ RUN go mod download
 COPY . .
 
 # download swaggo and generate docs
-RUN go get -u github.com/swaggo/swag/cmd/swag && swag init
+# RUN go get -u github.com/swaggo/swag/cmd/swag && swag init
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .

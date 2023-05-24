@@ -71,7 +71,7 @@ func initJaeger(service string) (stdopentracing.Tracer, io.Closer) {
 func main() {
 	os.Setenv("TZ", "Asia/Bangkok")
 	// time.FixedZone("UTC+7", +7*60*60)
-	viper.SetConfigName("config")
+	viper.SetConfigName("config-prd")
 	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 
